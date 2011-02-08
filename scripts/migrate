@@ -4,7 +4,7 @@
 /**
  * ZUtils to Zefram migrator.
  *
- * Version: 2011-02-07
+ * Version: 2011-02-08
  * Author: Xemlock
  */
 
@@ -30,17 +30,24 @@ function migrate($dir) {
         }
         if (is_dir($path)) {
             // migrate directory contents
-            migrate($path);
+            if (file_exists($path . '/__ZUTILS_TO_ZEFRAM_MIGRATION_IGNORE__')) {
+                echo "$pathName: directory ignored (sigil)\n";
+                continue;
+            } else {
+                migrate($path);
+            }
         } elseif (is_file($path)) {          
             $contents = file_get_contents($path);
             if (strpos($contents, '__ZUTILS_TO_ZEFRAM_MIGRATION_IGNORE__')) {
                 // ignore migration if file contains this sigil
                 echo "$pathName: ignored (sigil)\n";
                 continue;
-            } else {
+            } elseif (strpos($contents, 'ZUtils') !== false) {
                 $migrated = str_replace('ZUtils', 'Zefram', $contents);
                 $result = @file_put_contents($path, $migrated);
                 echo "$pathName: " . ($result ? "migrated" : "migration failed") . "\n";
+            } else {
+                echo "$pathName: no migration needed\n";
             }
         } else {
             echo "$pathName: ignored\n";
