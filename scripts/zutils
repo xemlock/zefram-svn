@@ -18,9 +18,9 @@ function create_model($className, $tableName = null) {
   $php =<<<END_STRING
 <?php
 
-require_once 'ZUtils/Db/BaseModel.php';
+require_once 'Zefram/Db/BaseModel.php';
 
-class {$className} extends ZUtils_Db_BaseModel
+class {$className} extends Zefram_Db_BaseModel
 {
     protected \$_name = '{$tableName}';
 }

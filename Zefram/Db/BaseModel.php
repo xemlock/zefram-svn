@@ -1,9 +1,9 @@
 <?php
 
-abstract class ZUtils_Db_BaseModel extends Zend_Db_Table {
+abstract class Zefram_Db_BaseModel extends Zend_Db_Table {
     protected $_id = 'id';
     protected $_ordering;
-    protected $_rowClass = 'ZUtils_Db_BaseRow';
+    protected $_rowClass = 'Zefram_Db_BaseRow';
     
     public static function ConvertCamelCase($camelCase, $separator = '_') {
         $dashed = '';

@@ -1,12 +1,12 @@
 <?php
 
 require_once 'Zend/Db/Table/Abstract.php';
-require_once 'ZUtils/Db/Driver/Abstract.php';
+require_once 'Zefram/Db/Driver/Abstract.php';
 
 /**
  * Driver for Zend_Db ORM
  */
-class ZUtils_Db_Driver_Zend extends ZUtils_DB_Driver_Abstract
+class Zefram_Db_Driver_Zend extends Zefram_DB_Driver_Abstract
 {
     protected $_model = null;
 
@@ -140,7 +140,7 @@ class ZUtils_Db_Driver_Zend extends ZUtils_DB_Driver_Abstract
             }
 
             $foreignModel = (string) $rel['refTableClass'];
-            $foreignDriver = ZUtils_Db_Driver::get($foreignModel);
+            $foreignDriver = Zefram_Db_Driver::get($foreignModel);
 
             // foreign end of the relation must be a primary key of a $foreignModel table
             // (yep, this can happen for example in MySQL or SQLite)

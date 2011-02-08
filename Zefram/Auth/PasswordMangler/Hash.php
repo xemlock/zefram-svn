@@ -2,7 +2,7 @@
 
 require_once 'Zend/Crypt.php';
 
-class ZUtils_Auth_PasswordMangler_Hash extends ZUtils_Auth_PasswordMangler
+class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
 {
     protected $_hashName;
     protected $_saltSeparator = '.';

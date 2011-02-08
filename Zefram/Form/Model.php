@@ -2,7 +2,7 @@
 
 require_once 'Zend/Form.php';
 
-class ZUtils_Form_Model extends Zend_Form
+class Zefram_Form_Model extends Zend_Form
 {
     const CREATE = 'CREATE';
     const UPDATE = 'UPDATE';
@@ -20,7 +20,7 @@ class ZUtils_Form_Model extends Zend_Form
     {
         $this->_formMode = $mode;
         $this->_modelName = $modelName;
-        $this->_driver = ZUtils_Db_Driver::get($modelName);
+        $this->_driver = Zefram_Db_Driver::get($modelName);
         $this->_record = $record;
         $this->_spec = $this->buildElementsSpec($modelName, $mode, $record);
  
@@ -77,7 +77,7 @@ class ZUtils_Form_Model extends Zend_Form
         //    trigger_error("Row is not an instance of given model class", E_USER_ERROR);
         //    return;
         //}
-        $driver = ZUtils_Db_Driver::get($modelName);
+        $driver = Zefram_Db_Driver::get($modelName);
         $primary = $driver->getIdentifier();
         if (is_array($primary)) {
             throw new Exception('Multicolumn Primary Keys are not supported');
@@ -206,7 +206,7 @@ class ZUtils_Form_Model extends Zend_Form
     }
 
     public function _buildElementsSpec($modelName, $mode, $row = null) {
-        $driver = ZUtils_Db_Driver::get($modelName);
+        $driver = Zefram_Db_Driver::get($modelName);
         $specs = $driver->getSpecs();
 
         // build elements specification based on columns definition
@@ -288,8 +288,8 @@ class ZUtils_Form_Model extends Zend_Form
                 } else {
                     // prevent overwriting existing record that has the same id
                     // as newly created one
-                    require_once 'ZUtils/Controller/Form/NoRecord.php';
-                    $fields[$pk]['options']['validators'][] = new ZUtils_Controller_Form_NoRecord($row);
+                    require_once 'Zefram/Controller/Form/NoRecord.php';
+                    $fields[$pk]['options']['validators'][] = new Zefram_Controller_Form_NoRecord($row);
                 }
                 break;
         }

@@ -1,6 +1,6 @@
 <?php
 
-abstract class ZUtils_Db_Driver_Abstract
+abstract class Zefram_Db_Driver_Abstract
 {
     protected $_modelName;
 

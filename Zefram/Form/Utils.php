@@ -1,6 +1,6 @@
 <?php
 
-abstract class ZUtils_Form_Utils
+abstract class Zefram_Form_Utils
 {
     static public function formDecorators() 
     {

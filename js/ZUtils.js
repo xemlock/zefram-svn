@@ -1,19 +1,19 @@
-var ZUtils = {};
+var Zefram = {};
 
-ZUtils.Form = {};
+Zefram.Form = {};
 
 
 
 //if (typeof advAJAX != 'undefined') {
   // load default AJAX drivers 
-//  ZUtils.ajax.get = advAJAX.get;
-//  ZUtils.ajax.post = advAJAX.post;
-//  ZUtils.ajax.submit = advAJAX.submit;
+//  Zefram.ajax.get = advAJAX.get;
+//  Zefram.ajax.post = advAJAX.post;
+//  Zefram.ajax.submit = advAJAX.submit;
 //} else if (typeof jQuery != 'undefined') {
   
 
 
-  ZUtils.Form.submit = function(form, params) {
+  Zefram.Form.submit = function(form, params) {
     params.data = jQuery(form).serialize();
 
     if (params.showSpinner) params.showSpinner(form);
@@ -31,7 +31,7 @@ ZUtils.Form = {};
   }
 
 
-ZUtils.Form.newResponseHandler = function(element, params, form) { // {{{
+Zefram.Form.newResponseHandler = function(element, params, form) { // {{{
   return function (data, textStatus, xhr) {
     var success = true;
     if (data.code == '200') {
@@ -59,7 +59,7 @@ ZUtils.Form.newResponseHandler = function(element, params, form) { // {{{
       
     } else {
       // error: invalid data provided - import new form
-      ZUtils.Form.importHTMLFromResponse(data, element, params);
+      Zefram.Form.importHTMLFromResponse(data, element, params);
       if (params.hideSpinner) params.hideSpinner();
     }
 
@@ -68,7 +68,7 @@ ZUtils.Form.newResponseHandler = function(element, params, form) { // {{{
 } // }}}
 
 // onsubmit - attachSubmit
-ZUtils.Form.attachSubmit = function(form, params) { // {{{
+Zefram.Form.attachSubmit = function(form, params) { // {{{
 
   params = params || {};
   if (!params.action) {
@@ -106,9 +106,9 @@ ZUtils.Form.attachSubmit = function(form, params) { // {{{
     }
 
     // show overlay
-    ZUtils.Form.submit(this, {
+    Zefram.Form.submit(this, {
       url: params.action, 
-      success: ZUtils.Form.newResponseHandler(params.wrapper, params, form),
+      success: Zefram.Form.newResponseHandler(params.wrapper, params, form),
       error: params.error,
       showSpinner: params.showSpinner,
       hideSpinner: params.hideSpinner      
@@ -117,13 +117,13 @@ ZUtils.Form.attachSubmit = function(form, params) { // {{{
   }
 } // }}}
 
-ZUtils.Form.importHTMLFromResponse = function(ajaxData, element, params) { // {{{
+Zefram.Form.importHTMLFromResponse = function(ajaxData, element, params) { // {{{
   if (!ajaxData.xml) return;
 
   params = params || {};
   function replaceSubmit(elem) {
     if (('' + elem.tagName).toLowerCase() == 'form') {
-      ZUtils.Form.attachSubmit(elem, params);
+      Zefram.Form.attachSubmit(elem, params);
       return;
     }
     for (var i = 0; i < elem.childNodes.length; i++) {
@@ -162,7 +162,7 @@ ZUtils.Form.importHTMLFromResponse = function(ajaxData, element, params) { // {{
  *  .noAjaxSubmit - ustawienie gdy wczytane formularze nie maja byc przesylane AJAXem
 */
 
-ZUtils.Form.fetch = function(url, element, params) { // {{{
+Zefram.Form.fetch = function(url, element, params) { // {{{
   params = params || {};
   params.action = url; // .action nie .url bo Chrome dla pustego action sam ustawia wartosc!
   // Firefox: <form> -> form.action == form.getAttribute('action') == ''
@@ -172,7 +172,7 @@ ZUtils.Form.fetch = function(url, element, params) { // {{{
     dataType: 'json',
     url: url,
     success: function(data) {
-      ZUtils.Form.importHTMLFromResponse(data, element, params);
+      Zefram.Form.importHTMLFromResponse(data, element, params);
     }
   });
 } // }}}

@@ -2,7 +2,7 @@
 
 require_once 'Zend/Validate/Abstract.php';
 
-class ZUtils_Controller_Form_NoRecord extends Zend_Validate_Abstract
+class Zefram_Controller_Form_NoRecord extends Zend_Validate_Abstract
 {
     const RECORD_EXISTS = 'recordExists';
 

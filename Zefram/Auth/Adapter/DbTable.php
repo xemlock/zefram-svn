@@ -1,6 +1,6 @@
 <?php
 
-class ZUtils_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
+class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
 {
     protected $_db;
 
@@ -104,8 +104,8 @@ class ZUtils_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
         unset($row[self::CREDENTIAL_TREATMENT_COLUMN]);       
         if ($this->_credentialCallback) {
             $validationResult = false;
-            require_once 'ZUtils/Auth/PasswordMangler.php';
-            if ($this->_credentialCallback instanceof ZUtils_Auth_PasswordMangler) {
+            require_once 'Zefram/Auth/PasswordMangler.php';
+            if ($this->_credentialCallback instanceof Zefram_Auth_PasswordMangler) {
                 $validationResult = $this->_credentialCallback->validate($this->_credential, $row[$this->_credentialColumn], $row);
             } else {
                 $validationResult = call_user_func($this->_credentialCallback, $this->_credential, $row[$this->_credentialColumn], $row);

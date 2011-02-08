@@ -1,12 +1,12 @@
 <?php
 
-require_once 'ZUtils/Controller/Form.php';
+require_once 'Zefram/Controller/Form.php';
 
-class ZUtils_Controller_Model extends ZUtils_Controller_Form
+class Zefram_Controller_Model extends Zefram_Controller_Form
 {
     protected $modelName;
     protected $driver;
-    protected $formClass = 'ZUtils_Form_Model';
+    protected $formClass = 'Zefram_Form_Model';
 
     public function init() 
     {
@@ -15,7 +15,7 @@ class ZUtils_Controller_Model extends ZUtils_Controller_Form
         if (null === $this->modelName) {
             $this->modelName = preg_replace('/Controller$/i', '', get_class($this));
         }
-        $this->driver = ZUtils_Db_Driver::get($this->modelName);
+        $this->driver = Zefram_Db_Driver::get($this->modelName);
     }
 
     /**
@@ -79,8 +79,8 @@ class ZUtils_Controller_Model extends ZUtils_Controller_Form
 
     }
 
-    public function addAction()  { $this->_process(ZUtils_Form_Model::CREATE); }
-    public function editAction() { $this->_process(ZUtils_Form_Model::UPDATE); }
+    public function addAction()  { $this->_process(Zefram_Form_Model::CREATE); }
+    public function editAction() { $this->_process(Zefram_Form_Model::UPDATE); }
 }
 
 // vim: et sw=4 fdm=marker

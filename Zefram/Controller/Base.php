@@ -2,7 +2,7 @@
 
 require_once 'Zend/Controller/Action.php';
 
-abstract class ZUtils_Controller_Base extends Zend_Controller_Action
+abstract class Zefram_Controller_Base extends Zend_Controller_Action
 {
     public function init() 
     {

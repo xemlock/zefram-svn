@@ -1,12 +1,12 @@
 <?php
 
-require_once 'ZUtils/Db/Driver/Abstract.php';
-require_once 'ZUtils/Db/Driver.php';
+require_once 'Zefram/Db/Driver/Abstract.php';
+require_once 'Zefram/Db/Driver.php';
 
 /**
  * Driver for Doctrine ORM 1.2
  */
-class ZUtils_Db_Driver_Doctrine extends ZUtils_Db_Driver_Abstract
+class Zefram_Db_Driver_Doctrine extends Zefram_Db_Driver_Abstract
 {
     protected $_model = null;
 
@@ -148,7 +148,7 @@ class ZUtils_Db_Driver_Doctrine extends ZUtils_Db_Driver_Abstract
 
             $foreignModel = $rel->getClass();
             // expected local end column name: {target_class}_ptr_id
-            $localExpected = ZUtils_Db_Driver::tableName($foreignModel) . '_ptr_id';
+            $localExpected = Zefram_Db_Driver::tableName($foreignModel) . '_ptr_id';
 
             if ($local != $localExpected) {
                 if ($log) {
@@ -157,7 +157,7 @@ class ZUtils_Db_Driver_Doctrine extends ZUtils_Db_Driver_Abstract
                 break; // no more checks - the primary key's table name is incorrect
             }
 
-            $foreignDriver = ZUtils_Db_Driver::get($foreignModel);
+            $foreignDriver = Zefram_Db_Driver::get($foreignModel);
 
             // foreign end of the relation must be a primary key of a $foreignModel table
             // (yep, this can happen for example in MySQL or SQLite)

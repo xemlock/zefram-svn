@@ -1,14 +1,14 @@
 <?php
 
-abstract class ZUtils_Db_Driver 
+abstract class Zefram_Db_Driver 
 {
-    private static $_driver = 'ZUtils_Db_Driver_Zend';
+    private static $_driver = 'Zefram_Db_Driver_Zend';
 
     public static function set($driver) 
     {
-        require_once 'ZUtils/Db/Driver/Abstract.php';
-        if (!is_subclass_of($driver, 'ZUtils_Db_Driver_Abstract')) {
-            throw new Exception('Supplied driver is not a subclass of ZUtils_Db_Driver');
+        require_once 'Zefram/Db/Driver/Abstract.php';
+        if (!is_subclass_of($driver, 'Zefram_Db_Driver_Abstract')) {
+            throw new Exception('Supplied driver is not a subclass of Zefram_Db_Driver');
         }
         self::$_driver = $driver;
     }

@@ -1,8 +1,8 @@
 <?php
 
-require_once 'ZUtils/Controller/Base.php';
+require_once 'Zefram/Controller/Base.php';
 
-abstract class ZUtils_Controller_Form extends ZUtils_Controller_Base
+abstract class Zefram_Controller_Form extends Zefram_Controller_Base
 {
     protected function _processSentData($form, &$context) {}
     protected function _redirectAfterSave($context) {}

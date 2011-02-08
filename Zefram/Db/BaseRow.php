@@ -1,6 +1,6 @@
 <?php
 
-class ZUtils_Db_BaseRow extends Zend_Db_Table_Row {
+class Zefram_Db_BaseRow extends Zend_Db_Table_Row {
     protected $_nullifyEmpty = true;
 
     protected function nullifyEmptyNullableCols() {
