@@ -20,7 +20,8 @@ abstract class Zefram_Db_Driver
 
     public static function getDefaultConnection()
     {
-        return get_class(self::$_driver)::getDefaultConnection();
+        $driver = self::$_driver;
+        return $driver::getDefaultConnection();
     }
 
     public static function tableName($modelName) 
