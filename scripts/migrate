@@ -1,0 +1,51 @@
+#!/bin/env php
+<?php
+
+/**
+ * ZUtils to Zefram migrator.
+ *
+ * Version: 2011-02-07
+ * Author: Xemlock
+ */
+
+// __ZUTILS_TO_ZEFRAM_MIGRATION_IGNORE__
+
+$args = $_SERVER['argv'];
+$dir = count($args) > 1 ? $args[1] : '.';
+if (!is_dir($dir)) {
+    echo 'not a directory: ' . $dir . "\n";
+    exit;
+}
+migrate($dir);
+
+
+function migrate($dir) {
+    foreach (scandir($dir) as $entry) {
+        if (substr($entry, 0, 1) == '.') continue;
+        $path = $dir . '/' . $entry;
+        if (substr($path, 0, 2) == './') {
+            $pathName = substr($path, 2);
+        } else {
+            $pathName = $path;
+        }
+        if (is_dir($path)) {
+            // migrate directory contents
+            migrate($path);
+        } elseif (is_file($path)) {          
+            $contents = file_get_contents($path);
+            if (strpos($contents, '__ZUTILS_TO_ZEFRAM_MIGRATION_IGNORE__')) {
+                // ignore migration if file contains this sigil
+                echo "$pathName: ignored (sigil)\n";
+                continue;
+            } else {
+                $migrated = str_replace('ZUtils', 'Zefram', $contents);
+                $result = @file_put_contents($path, $migrated);
+                echo "$pathName: " . ($result ? "migrated" : "migration failed") . "\n";
+            }
+        } else {
+            echo "$pathName: ignored\n";
+        }
+    }
+}
+
+# vim: ft=php

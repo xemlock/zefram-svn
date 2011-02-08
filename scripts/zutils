@@ -1,0 +1,54 @@
+#!/usr/bin/env php
+<?php
+
+$opts = array(
+  'create-model' => array(
+    'args' => array('class_name'),
+    'call' => 'create_model',
+  ),
+);
+
+function create_model($className, $tableName = null) {
+  $className = trim($className);
+  if ($tableName === null) {
+    $tableName = $className;
+  }
+  $tableName = strtolower(trim($tableName));
+
+  $php =<<<END_STRING
+<?php
+
+require_once 'ZUtils/Db/BaseModel.php';
+
+class {$className} extends ZUtils_Db_BaseModel
+{
+    protected \$_name = '{$tableName}';
+}
+
+?>
+END_STRING;
+  file_put_contents($className .'.php', $php);
+}
+
+$argv = $_SERVER['argv'];
+
+$action = @$argv[1];
+$actionArgs = array_splice($argv, 2);
+
+foreach ($opts as $name => $spec) {
+  if ($name == $action) {
+    if (count($actionArgs) >= count($spec['args'])) {
+      call_user_func_array($spec['call'], $actionArgs);
+      exit;
+    }
+    break;
+  }
+}
+
+echo "Usage: " . $argv[0] . " action\n\n";
+echo "Actions:\n";
+foreach ($opts as $name => $spec) {
+  echo "  $name " . implode(" ", $spec['args']) . "\n";
+}
+
+
