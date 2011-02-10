@@ -136,12 +136,18 @@ dostepne:
 - getViewScript
 - view
 - getHelper->{viewRenderer}
+- render
 for ctl specific:
 - getForm
 - onSubmit
 - buildXmlResponse
 - getRedirect 
-*/ 
+*/  
+    /**
+     * Logic for form handling in action within a controller.
+     *
+     * @param Zend_Controller_Action implementing Zefram_Controller_Form_Control
+     */
     public static function processForm(Zefram_Controller_Form_Control $formControl) 
     {
         if (!($formControl instanceof Zend_Controller_Action)) {
@@ -251,7 +257,7 @@ for ctl specific:
         } else {
             // render form using view template
             $formControl->view->form = $form;
-            $content = $this->render();
+            $content = $formControl->render();
         }
 
         // NO INPUT
