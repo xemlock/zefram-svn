@@ -15,8 +15,11 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
     public function validate($password, $challenge, $context = null)
     {
         $pos = strpos($challenge, $this->_saltSeparator);
+        if ($pos === false) {
+            return false;
+        }
         $salt = substr($challenge, 0, $pos);
-        $hash = substr($challenge, $pos + 1);
+        $hash = substr($challenge, $pos + 1);        
         return Zend_Crypt::hash($this->_hashName, $salt . $password) == $hash;
     }
 

@@ -9,7 +9,7 @@ abstract class Zefram_Controller_Form extends Zefram_Controller_Base
 
     protected function _prepareXmlResponse(&$response) {}
 
-    protected function _processForm($form, $context = null) 
+    protected function _processForm($form, $context = null) // {{{
     {
         $isAjax = $this->_isAjaxRequest();
         if ($this->_request->isPost()) {
@@ -128,7 +128,7 @@ abstract class Zefram_Controller_Form extends Zefram_Controller_Base
 
         // no more rendering here
         $this->_helper->viewRenderer->setNoRender();
-    }
+    } // }}}
 
 /*
 dostepne:
@@ -202,6 +202,7 @@ for ctl specific:
                     }
                 } catch (Exception $e) {
                     $error_m = ': ' . $e->getMessage();
+                    echo '<b>' . $error_m . '</b>';
                     $form->addError(get_class($e) . $error_m);
                 }
             }
@@ -268,4 +269,4 @@ for ctl specific:
 
 }
 
-// vim: et sw=4
+// vim: et sw=4 fdm=marker
