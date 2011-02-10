@@ -129,6 +129,143 @@ abstract class Zefram_Controller_Form extends Zefram_Controller_Base
         // no more rendering here
         $this->_helper->viewRenderer->setNoRender();
     }
+
+/*
+dostepne:
+- getRequest
+- getViewScript
+- view
+- getHelper->{viewRenderer}
+for ctl specific:
+- getForm
+- onSubmit
+- buildXmlResponse
+- getRedirect 
+*/ 
+    public static function processForm(Zefram_Controller_Form_Control $formControl) 
+    {
+        if (!($formControl instanceof Zend_Controller_Action)) {
+            throw new Exception('Form control object is not an instance of Zend_Controller_Action');
+        }
+
+        $viewRenderer = $formControl->getHelper('viewRenderer');
+        $layout = $formControl->getHelper('layout');
+
+        $request = $formControl->getRequest();
+        $isAjax = $request->isXmlHttpRequest();
+
+        $form = $formControl->getForm();
+        if ($request->isPost()) {
+            if ($form->isValid($request->getPost())) {
+                try {
+                    $formControl->onSubmit();
+                    $redir = $formControl->getRedirect();
+                    if (!$redir) {
+                        // reload page
+                        $params = $request->getUserParams();
+                        $redir = array($params['controller'], $params['action']);
+                        unset($params['controller'], $params['action']);
+                        if ($params['module'] == 'default') unset($params['module']);
+                        foreach ($params as $key => $value) {
+                            $redir[] = $key;
+                            $redir[] = $value;
+                        }
+                        $redir = '/' . implode('/', $redir);
+                    }
+
+                    $layout->disableLayout();
+                    $viewRenderer->setNoRender();
+
+                    // AFTER SUCCESSFUL SUBMIT
+                    if ($isAjax) {
+                        // helper->json sends header with proper MIME-type
+                        //$this->_helper->json(array('code'=>'200', 'message'=>'Success'));
+                        $redirect = $request->getBaseUrl() . $redir;
+                        $response = array('code'=>'200', 'message'=>'Success', 'redirect'=>$redirect);
+                        $formControl->buildXmlResponse($response);
+                        echo Zend_Json::encode($response);
+                    } else {
+                        $formControl->getHelper('redirector')->gotoUrl($redir);
+                    }
+                    return;
+
+                } catch (Zefram_Controller_Form_Exception $e) {
+                    foreach ($e->getMessages() as $field => $errors) {
+                        $where = $form->getElement($field);
+                        $msg = '';
+                        if (!$where) { 
+                            $where = $form; 
+                            $msg .= "$field: "; 
+                        }
+                        $msg .= "Constraint validation failed (" . implode(', ', $errors) . ")";
+                        $where->addError($msg);
+                    }
+                } catch (Exception $e) {
+                    $error_m = ': ' . $e->getMessage();
+                    $form->addError(get_class($e) . $error_m);
+                }
+            }
+
+            // mark erroneous fields
+            foreach ($form as $field) {
+                if ($field instanceof Zend_Form) {
+                    // FIXME przechwytywac bledy
+                    continue;
+                }
+
+                if ($field->hasErrors()) {
+                    $tag = $field->getDecorator('HtmlTag');
+                    if (!$tag) continue;
+                    $tag->setOption('class', trim($tag->getOption('class') . ' error'));
+                }
+            }
+
+
+            // isValid populates form with sent data, so there is no need to call
+            // form->populate
+            // INVALID DATA
+            if ($isAjax) {
+                $layout->disableLayout();
+                $viewRenderer->setNoRender();
+                $formControl->view->doctype('XHTML1_STRICT');
+                // return json with form
+                $response = array('code'=>'400', 'message'=>'Validation error'.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
+                $formControl->buildXmlResponse($response);
+                echo Zend_Json::encode($response);
+                return;
+            }
+        }
+
+
+        if ($isAjax) {
+            $formControl->view->doctype('XHTML1_STRICT');
+            $layout->disableLayout();
+        }
+
+        $template = $formControl->view->getScriptPath($formControl->getViewScript());
+        if (!file_exists($template)) {
+            // show form even if template does not exist
+            $form->setView($formControl->view); // use XHTML elements when needed
+            $content = $form->__toString();
+        } else {
+            // render form using view template
+            $formControl->view->form = $form;
+            $content = $this->render();
+        }
+
+        // NO INPUT
+        if ($isAjax) {
+            $response = array('code'=>'200', 'message'=>'OK', 'xml'=>'<xml>' . $content . '</xml>');
+            $formControl->buildXmlResponse($response);
+            echo Zend_Json::encode($response);
+        } else {
+            echo $content;
+        }
+
+        // no more rendering here
+        $viewRenderer->setNoRender();
+    }
+
 }
 
 // vim: et sw=4
