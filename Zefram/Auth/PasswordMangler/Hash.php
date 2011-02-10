@@ -36,8 +36,8 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
         $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $length = mt_rand(4, 16);
 
-        for ($i = 0, $len = strlen($chars); $i < $length; ++$i) {
-            $str .= $chars[mt_rand(0, $len)];
+        for ($i = 0, $max = strlen($chars) - 1; $i < $length; ++$i) {
+            $str .= $chars[mt_rand(0, $max)];
         }
 
         return $str;
