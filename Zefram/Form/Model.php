@@ -111,7 +111,8 @@ class Zefram_Form_Model extends Zend_Form
           $conn->commit();
         } catch(Exception $e) {
             $conn->rollback();
-            throw $e;
+            // TODO exception translation
+            throw Zefram_Db_Driver::translateException($e);
         }
     }
 

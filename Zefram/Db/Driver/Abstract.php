@@ -27,4 +27,14 @@ abstract class Zefram_Db_Driver_Abstract
     abstract public function populateRecord($record, $data);
 
     abstract public static function getDefaultConnection();
+
+    /**
+     * Translates driver specific exception into general one.
+     *
+     * @param Exception $e exception to be translated
+     * @return Exception|Zefram_Db_Driver_Exception
+     */
+    public static function translateException(Exception $e) {
+        return $e;
+    }
 }

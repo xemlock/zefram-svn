@@ -24,6 +24,12 @@ abstract class Zefram_Db_Driver
         return $driver::getDefaultConnection();
     }
 
+    public static function translateException(Exception $e)
+    {
+        $driver = self::$_driver;
+        return $driver::translateException($e);
+    }
+
     public static function tableName($modelName) 
     {
         return strtolower(

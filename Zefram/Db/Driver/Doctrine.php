@@ -16,6 +16,21 @@ class Zefram_Db_Driver_Doctrine extends Zefram_Db_Driver_Abstract
         return Doctrine_Manager::getCurrentConnection();
     }
 
+    public static function translateException(Exception $e)
+    {
+        require_once 'Doctrine/Validator/Exception.php';
+        if ($e instanceof Doctrine_Validator_Exception) {
+            $exception = new Zefram_Db_Driver_Exception;
+            foreach ($e->getInvalidRecords() as $record) {
+                foreach ($record->getErrorStack() as $field => $errors) {
+                    $exception->addMessages($errors, $field);
+                }
+            }
+            return $exception;
+        }
+        return $e;
+    }
+
     /**
      * Returns underlying table object specific to used driver.
      * @returns Doctrine_Table object
