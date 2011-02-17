@@ -141,7 +141,8 @@ for ctl specific:
 - getForm
 - onSubmit
 - buildXmlResponse
-- getRedirect 
+- getRedirect
+- getController 
 */  
     /**
      * Logic for form handling in action within a controller.
@@ -150,15 +151,17 @@ for ctl specific:
      */
     public static function processForm(Zefram_Controller_Form_Control $formControl) 
     {
-        if (!($formControl instanceof Zend_Controller_Action)) {
-            throw new Exception('Form control object is not an instance of Zend_Controller_Action');
+        $controller = $formControl->getController();
+
+        if (!($controller instanceof Zend_Controller_Action)) {
+            throw new Exception('Form_Control::getController() must return an instance of Zend_Controller_Action');
         }
 
-        $viewRenderer = $formControl->getHelper('viewRenderer');
-        $layout = $formControl->getHelper('layout');
-
-        $request = $formControl->getRequest();
-        $isAjax = $request->isXmlHttpRequest();
+        $view = $controller->view;
+        $viewRenderer = $controller->getHelper('viewRenderer');
+        $layout  = $controller->getHelper('layout');
+        $request = $controller->getRequest();
+        $isAjax  = $request->isXmlHttpRequest();
 
         $form = $formControl->getForm();
         if ($request->isPost()) {
@@ -191,7 +194,7 @@ for ctl specific:
                         $formControl->buildXmlResponse($response);
                         echo Zend_Json::encode($response);
                     } else {
-                        $formControl->getHelper('redirector')->gotoUrl($redir);
+                        $controller->getHelper('redirector')->gotoUrl($redir);
                     }
                     return;
 
@@ -234,7 +237,7 @@ for ctl specific:
             if ($isAjax) {
                 $layout->disableLayout();
                 $viewRenderer->setNoRender();
-                $formControl->view->doctype('XHTML1_STRICT');
+                $view->doctype('XHTML1_STRICT');
                 // return json with form
                 $response = array('code'=>'400', 'message'=>'Validation error'.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
                 $formControl->buildXmlResponse($response);
@@ -245,19 +248,19 @@ for ctl specific:
 
 
         if ($isAjax) {
-            $formControl->view->doctype('XHTML1_STRICT');
+            $view->doctype('XHTML1_STRICT');
             $layout->disableLayout();
         }
 
-        $template = $formControl->view->getScriptPath($formControl->getViewScript());
+        $template = $view->getScriptPath($formControl->getViewScript());
         if (!file_exists($template)) {
             // show form even if template does not exist
-            $form->setView($formControl->view); // use XHTML elements when needed
+            $form->setView($view); // use XHTML elements when needed
             $content = $form->__toString();
         } else {
             // render form using view template
-            $formControl->view->form = $form;
-            $content = $formControl->render();
+            $view->form = $form;
+            $content = $controller->render();
         }
 
         // NO INPUT
