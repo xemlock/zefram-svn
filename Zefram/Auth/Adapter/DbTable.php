@@ -52,7 +52,6 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
     }
 
 
-
     /**
      * May be overriden in subclasses.
      */
@@ -60,15 +59,22 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
     {
         $credentialColumn = $this->_credentialColumn;
         $identityColumn = $this->_identityColumn;
+        // If credentialCallback is set and credentialTreatment is not,
+        // do not use default credential treatment (password = ?)
         $sql = sprintf(
             "SELECT *, (CASE WHEN %s THEN 1 ELSE 0 END) AS %s FROM %s WHERE %s = ?",
             null !== $this->_credentialTreatment 
                     ? $this->_credentialTreatment
-                    : ($this->_db->quoteIdentifier($this->_credentialColumn) . ' = ' . $this->_db->quote($this->_credential)),
+                    : (
+                        null !== $this->_credentialCallback
+                        ? 1
+                        : ($this->_db->quoteIdentifier($this->_credentialColumn) . ' = ' . $this->_db->quote($this->_credential))
+                      ),
             self::CREDENTIAL_TREATMENT_COLUMN,
             $this->_db->quoteIdentifier($this->_tableName),
             $this->_db->quoteIdentifier($this->_identityColumn)
         );
+        echo $sql;
         try {
             $rows = $this->_db->fetchAssoc($sql, $this->_identity);
             return $rows;
