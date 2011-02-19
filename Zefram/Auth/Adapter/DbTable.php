@@ -74,7 +74,6 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
             $this->_db->quoteIdentifier($this->_tableName),
             $this->_db->quoteIdentifier($this->_identityColumn)
         );
-        echo $sql;
         try {
             $rows = $this->_db->fetchAssoc($sql, $this->_identity);
             return $rows;
