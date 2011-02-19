@@ -1,10 +1,39 @@
 <?php
 
-interface Zefram_Controller_Form_Control
+abstract class Zefram_Controller_Form_Control implements Zefram_Controller_Form_Control_Interface
 {
-    public function getForm();
-    public function getController();
-    public function onSubmit();
-    public function getRedirect();
-    public function buildXmlResponse(&$response);
+    protected $_form;
+    protected $_controller;
+
+    public function __construct($controller, $form) 
+    {
+        $this->_controller = $controller;
+        $this->_form = $form;
+    }
+
+    public function getForm()
+    {
+        return $this->_form;
+    }
+
+    public function getController()
+    {
+        return $this->_controller;
+    }
+
+    public function getRedirect()
+    {
+        // reload current page
+        return null;
+    }
+
+    public function buildXmlResponse(&$response)
+    {
+        // nothing to add to response
+    }
+
+    public function run()
+    {
+        Zefram_Controller_Form::processForm($this);
+    }
 }

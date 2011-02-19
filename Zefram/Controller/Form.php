@@ -252,7 +252,7 @@ for ctl specific:
             $layout->disableLayout();
         }
 
-        $template = $view->getScriptPath($formControl->getViewScript());
+        $template = $view->getScriptPath($controller->getViewScript());
         if (!file_exists($template)) {
             // show form even if template does not exist
             $form->setView($view); // use XHTML elements when needed
