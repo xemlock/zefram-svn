@@ -31,17 +31,17 @@ abstract class Zefram_Form_Utils
             'ViewHelper',
             'Description',
             'Errors',
-            array(
+            array( // field wrapped in <dd>
                 array('data' => 'HtmlTag'),
                 array('tag' => 'dd')
             ),
-            array(
+            array( // label wrapped in <dt>
                 'Label', 
                 array('tag' => 'dt')
             ),
-            array(
-              array('row' => 'HtmlTag'),
-              array('tag' => 'dl')
+            array( // row (label and element) wrapped in <dl>
+                array('row' => 'HtmlTag'),
+                array('tag' => 'dl')
             ),
         );    
     }
@@ -50,6 +50,17 @@ abstract class Zefram_Form_Utils
     {
         return array(
             'ViewHelper',
+        );
+    }
+
+    static public function submitDecorators()
+    {
+        return array(
+            'ViewHelper',
+            array(
+                'HtmlTag', 
+                array('tag' => 'div', 'class' => 'submit')
+            ),
         );
     }
 }
