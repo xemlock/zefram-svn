@@ -32,11 +32,20 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
         return $salt . $this->_saltSeparator . $hash;
     }
 
-    public function salt()
+    /**
+     * Generates random string used as salt during mangling process.
+     * If no length is given a random value between 4 and 16 will
+     * be used.
+     */
+    public function salt($length = null)
     {
         $str = '';
         $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $length = mt_rand(4, 16);
+        if (null === $length) {
+            $length = mt_rand(4, 16);
+        } else {
+            $length = (int) $length;
+        }
 
         for ($i = 0, $max = strlen($chars) - 1; $i < $length; ++$i) {
             $str .= $chars[mt_rand(0, $max)];
