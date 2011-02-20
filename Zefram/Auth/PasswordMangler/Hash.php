@@ -23,8 +23,7 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
         return Zend_Crypt::hash($this->_hashName, $salt . $password) == $hash;
     }
 
-    public function mangle()
-    //$password, $salt = null)
+    public function mangle($password, $salt = null)
     {
         if (null === $salt) {
             $salt = $this->salt();
