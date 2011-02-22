@@ -141,7 +141,6 @@ for ctl specific:
 - getForm
 - onSubmit
 - buildXmlResponse
-- getRedirect
 - getController 
 */  
     /**
@@ -167,8 +166,7 @@ for ctl specific:
         if ($request->isPost()) {
             if ($form->isValid($request->getPost())) {
                 try {
-                    $formControl->onSubmit();
-                    $redir = $formControl->getRedirect();
+                    $redir = $formControl->onSubmit();
                     if (!$redir) {
                         // reload page
                         $params = $request->getUserParams();

@@ -21,12 +21,6 @@ abstract class Zefram_Controller_Form_Control implements Zefram_Controller_Form_
         return $this->_controller;
     }
 
-    public function getRedirect()
-    {
-        // reload current page
-        return null;
-    }
-
     public function buildXmlResponse(&$response)
     {
         // nothing to add to response
