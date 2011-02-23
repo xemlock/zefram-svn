@@ -26,6 +26,11 @@ abstract class Zefram_Controller_Form_Control implements Zefram_Controller_Form_
         // nothing to add to response
     }
 
+    public function flashMessage($message)
+    {
+        $this->getController()->getHelper('flashMessenger')->addMessage($message);
+    }
+
     public function run()
     {
         Zefram_Controller_Form::processForm($this);
