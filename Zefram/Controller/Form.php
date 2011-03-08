@@ -98,9 +98,7 @@ for ctl specific:
                         $where->addError($msg);
                     }
                 } catch (Exception $e) {
-                    $error_m = ': ' . $e->getMessage();
-                    echo '<b>' . $error_m . '</b>';
-                    $form->addError(get_class($e) . $error_m);
+                    $form->addError($e->getMessage());
                 }
             }
 
@@ -127,7 +125,7 @@ for ctl specific:
                 $viewRenderer->setNoRender();
                 $view->doctype('XHTML1_STRICT');
                 // return json with form
-                $response = array('code'=>'400', 'message'=>'Validation error'.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
+                $response = array('code'=>'400', 'message'=>'Validation error: '.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
                 $formControl->buildXmlResponse($response);
                 echo Zend_Json::encode($response);
                 return;
