@@ -9,9 +9,11 @@ class Zefram_Controller_Action_Helper_FlashMessenger extends Zend_Controller_Act
 {
     public function addMessage($message)
     {
-        $count = $this->count();
+        $count = isset(self::$_session->{$this->_namespace}) 
+               ? count(self::$_session->{$this->_namespace}) 
+               : 0;
         parent::addMessage($message);
-        if ($count == $this->count()) {
+        if ($count == count(self::$_session->{$this->_namespace})) {
             $messages = self::$_session->{$this->_namespace};
             $messages[] = $message;
             self::$_session->{$this->_namespace} = $messages;
