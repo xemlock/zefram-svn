@@ -8,11 +8,11 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $controller = preg_replace('/Controller$/i', '', get_class($this));
 
         $actionName = $this->_request->getActionName();
-        $action = preg_replace_callback(
+        $action = ucfirst(preg_replace_callback(
             '/-([a-zA-Z0-9]+)/', 
             create_function('$matches', 'return ucfirst($matches[1]);'),
             $actionName
-        );
+        ));
 
         $dir = Zend_Controller_Front::getInstance()->getModuleDirectory() . '/' .
                Zend_Controller_Front::getInstance()->getModuleControllerDirectoryName();
