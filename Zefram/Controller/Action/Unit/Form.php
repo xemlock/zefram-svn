@@ -1,44 +1,39 @@
 <?php
 
-abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Base
+abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Action_Unit_Abstract
 {
-    protected function _processSentData($form, &$context) {}
-    protected function _redirectAfterSave($context) {}
+    protected $_form;
+    protected $_formClass;
 
-    protected function _prepareXmlResponse(&$response) {}
-
-/*
-dostepne:
-- getRequest
-- getViewScript
-- view
-- getHelper->{viewRenderer}
-- render
-for ctl specific:
-- getForm
-- onSubmit
-- buildXmlResponse
-- getController 
-*/
-    protected static $_trans_sid = false;
-
-    public static function enableTransSid($enable = true)
+    public function __construct(Zend_Controller_Action $controller) 
     {
-        self::$_trans_sid = $enable;
+        parent::__construct($controller);
+        $this->_form = $this->initForm();
+    }
+
+    abstract public function onSubmit();
+
+    public function initForm()
+    {
+        return new $this->_formClass;
+    }
+    
+    public function getForm()
+    {
+        return $this->_form;
+    }
+
+    public function buildXmlResponse(&$response)
+    {
+        // nothing to add to response
     }
     
     /**
-     * Logic for form handling in action within a controller.
-     *
-     * @param Zend_Controller_Action implementing Zefram_Controller_Form_Control
+     * Logic for form handling.
      */
-    public static function processForm(Zefram_Controller_Form_Control $formControl) 
+    public function run()
     {
-        $controller = $formControl->getController();
-
-        if (!($controller instanceof Zend_Controller_Action)) {
-            throw new Exception('Form_Control::getController() must return an instance of Zend_Controller_Action');
-        }
+        $controller = $this->getController();
 
         $view = $controller->view;
         $viewRenderer = $controller->getHelper('viewRenderer');
@@ -46,11 +41,11 @@ for ctl specific:
         $request = $controller->getRequest();
         $isAjax  = $request->isXmlHttpRequest();
 
-        $form = $formControl->getForm();
+        $form = $this->getForm();
         if ($request->isPost()) {
             if ($form->isValid($request->getPost())) {
                 try {
-                    $redir = $formControl->onSubmit();
+                    $redir = $this->onSubmit();
                     if (!$redir) {
                         // reload page
                         $params = $request->getUserParams();
@@ -63,10 +58,6 @@ for ctl specific:
                         }
                         $redir = '/' . implode('/', $redir);
                     }
-                    // FIXME troche to zwalidowac
-                    if (self::$_trans_sid) {
-                        $redir .= '/' . session_name() . '/' . session_id();
-                    }
 
                     $layout->disableLayout();
                     $viewRenderer->setNoRender();
@@ -77,10 +68,10 @@ for ctl specific:
                         //$this->_helper->json(array('code'=>'200', 'message'=>'Success'));
                         $redirect = $request->getBaseUrl() . $redir;
                         $response = array('code'=>'200', 'message'=>'Success', 'redirect'=>$redirect);
-                        $formControl->buildXmlResponse($response);
+                        $this->buildXmlResponse($response);
                         echo Zend_Json::encode($response);
                     } else {
-                        $controller->getHelper('redirector')->gotoUrl($redir);
+                        $this->redirect($redir);
                     }
                     return;
 
@@ -124,7 +115,7 @@ for ctl specific:
                 $view->doctype('XHTML1_STRICT');
                 // return json with form
                 $response = array('code'=>'400', 'message'=>'Validation error: '.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
-                $formControl->buildXmlResponse($response);
+                $this->buildXmlResponse($response);
                 echo Zend_Json::encode($response);
                 return;
             }
@@ -150,7 +141,7 @@ for ctl specific:
         // NO INPUT
         if ($isAjax) {
             $response = array('code'=>'200', 'message'=>'OK', 'xml'=>'<xml>' . $content . '</xml>');
-            $formControl->buildXmlResponse($response);
+            $this->buildXmlResponse($response);
             echo Zend_Json::encode($response);
         } else {
             echo $content;
@@ -159,7 +150,6 @@ for ctl specific:
         // no more rendering here
         $viewRenderer->setNoRender();
     }
-
 }
 
 // vim: et sw=4 fdm=marker

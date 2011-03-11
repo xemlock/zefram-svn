@@ -2,7 +2,7 @@
 
 class Zefram_Controller_Action extends Zend_Controller_Action
 {
-    public function runUnit()
+    public function getUnitClass()
     {
         $controllerName = $this->_request->getControllerName();
         $controller = preg_replace('/Controller$/i', '', get_class($this));
@@ -14,24 +14,34 @@ class Zefram_Controller_Action extends Zend_Controller_Action
             $actionName
         ));
 
-        $dir = Zend_Controller_Front::getInstance()->getModuleDirectory() . '/' .
-               Zend_Controller_Front::getInstance()->getModuleControllerDirectoryName();
-        $file = $dir . '/' . $controller . '/' . $action . '.php';
-
-        include_once $file;
-
         $unitClass = $controller . '_' . $action;
         if (!class_exists($unitClass, false)) {
-            throw new Exception(sprintf('Unit action file not found: %s', $file));
-        }
+            $frontController = Zend_Controller_Front::getInstance();
+            $dir = $frontController->getModuleDirectory()
+                 . '/' . $frontController->getModuleControllerDirectoryName();
+            $file = $dir . '/' . $controller . '/' . $action . '.php';
 
-        $args = func_get_args();
-        while (count($args) < 5) {
-            $args[] = null;
+            if (file_exists($file)) {
+                include_once $file;
+            }
+            if (!class_exists($unitClass, false)) {
+                return null;
+            }
         }
-        $unit = new $unitClass($this, $args[0], $args[1], $args[2], $args[3], $args[4]);
-
-        return $unit->run();
+        return $unitClass;
     }
 
+    public function __call($method, $arguments)
+    {
+        if (!strcasecmp(substr($method, -6), 'Action')) {
+            // undefined action, try running unit action
+            $unitClass = $this->getUnitClass();
+            if ($unitClass) {
+                $unit = new $unitClass($this, $arguments);
+                return $unit->run();
+            }        
+        }
+        // fallback to default handling of undefined methods
+        return parent::__call($method, $arguments);
+    }
 }
