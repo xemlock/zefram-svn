@@ -12,7 +12,9 @@ class Zefram_Controller_Action_Helper_FlashMessenger extends Zend_Controller_Act
         $count = isset(self::$_session->{$this->_namespace}) 
                ? count(self::$_session->{$this->_namespace}) 
                : 0;
-        parent::addMessage($message);
+        // line 143 issues the following notice:
+        // Notice: Indirect modification of overloaded property Zend_Session_Namespace::$default has no effect in Zend\Controller\Action\Helper\FlashMessenger.php on line 143
+        @parent::addMessage($message);
         if ($count == count(self::$_session->{$this->_namespace})) {
             $messages = self::$_session->{$this->_namespace};
             $messages[] = $message;

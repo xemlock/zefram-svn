@@ -7,6 +7,7 @@ abstract class Zefram_Controller_Form_Control implements Zefram_Controller_Form_
 
     public function __construct($controller, $form) 
     {
+        trigger_error(__CLASS__ . ' is deprecated', E_USER_NOTICE);
         $this->_controller = $controller;
         $this->_form = $form;
     }

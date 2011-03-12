@@ -2,18 +2,8 @@
 
 class Zefram_Controller_Action extends Zend_Controller_Action
 {
-    public function getUnitClass()
+    public function loadUnitClass($controller, $action)
     {
-        $controllerName = $this->_request->getControllerName();
-        $controller = preg_replace('/Controller$/i', '', get_class($this));
-
-        $actionName = $this->_request->getActionName();
-        $action = ucfirst(preg_replace_callback(
-            '/-([a-zA-Z0-9]+)/', 
-            create_function('$matches', 'return ucfirst($matches[1]);'),
-            $actionName
-        ));
-
         $unitClass = $controller . '_' . $action;
         if (!class_exists($unitClass, false)) {
             $frontController = Zend_Controller_Front::getInstance();
@@ -28,7 +18,22 @@ class Zefram_Controller_Action extends Zend_Controller_Action
                 return null;
             }
         }
-        return $unitClass;
+        return $unitClass;    
+    }
+
+    public function getUnitClass()
+    {
+        $controllerName = $this->_request->getControllerName();
+        $controller = preg_replace('/Controller$/i', '', get_class($this));
+
+        $actionName = $this->_request->getActionName();
+        $action = ucfirst(preg_replace_callback(
+            '/-([a-zA-Z0-9]+)/', 
+            create_function('$matches', 'return ucfirst($matches[1]);'),
+            $actionName
+        ));
+
+        return $this->loadUnitClass($controller, $action);
     }
 
     public function __call($method, $arguments)

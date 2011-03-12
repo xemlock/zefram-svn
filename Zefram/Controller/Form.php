@@ -1,8 +1,6 @@
 <?php
 
-require_once 'Zefram/Controller/Base.php';
-
-abstract class Zefram_Controller_Form extends Zefram_Controller_Base
+abstract class Zefram_Controller_Form extends Zefram_Controller_Action
 {
     protected function _processSentData($form, &$context) {}
     protected function _redirectAfterSave($context) {}
@@ -36,6 +34,7 @@ for ctl specific:
      */
     public static function processForm(Zefram_Controller_Form_Control $formControl) 
     {
+        trigger_error(__METHOD__ . ' is deprecated', E_USER_NOTICE);
         $controller = $formControl->getController();
 
         if (!($controller instanceof Zend_Controller_Action)) {
