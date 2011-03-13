@@ -3,7 +3,7 @@
 abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Action_Unit_Abstract
 {
     protected $_form;
-    protected $_formClass;
+    protected $_formClass = 'Zend_Form';
 
     public function __construct(Zend_Controller_Action $controller) 
     {

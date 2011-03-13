@@ -10,7 +10,11 @@ abstract class Zefram_Controller_Action_Unit_Abstract
     public function __construct(Zend_Controller_Action $controller) 
     {
         $this->_controller = $controller;
+        $this->init();
     }
+
+    public function init()
+    {}
 
     public function getController()
     {
