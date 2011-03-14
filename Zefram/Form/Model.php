@@ -1,7 +1,5 @@
 <?php
 
-require_once 'Zend/Form.php';
-
 class Zefram_Form_Model extends Zend_Form
 {
     const CREATE = 'CREATE';
