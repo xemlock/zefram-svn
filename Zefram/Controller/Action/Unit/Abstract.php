@@ -43,10 +43,7 @@ abstract class Zefram_Controller_Action_Unit_Abstract
     {
         // is_callable returns true if __call is present.
         $callback = array($this->_controller, $name);
-        if (method_exists($this->_controller, $name) && is_callable($callback)) {
-            return call_user_func_array($callback, $arguments);
-        }
-        throw new Zend_Controller_Action_Exception(sprintf('Method "%s" does not exist and was not trapped in __call()', $name), 500);
+        return call_user_func_array($callback, $arguments);
     }
 
     public function flashMessage($message)

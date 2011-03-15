@@ -3,21 +3,26 @@
 abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Action_Unit_Abstract
 {
     protected $_form;
-    protected $_formClass = 'Zend_Form';
+    protected $_buildXmlResponse;
 
-    public function __construct(Zend_Controller_Action $controller) 
+    public function __construct(Zend_Controller_Action $controller, Array $options = array()) 
     {
+        if (isset($options['form'])) {
+            $this->_form = $options['form'];
+            unset($options['form']);
+        }
+        if (isset($options['buildXmlResponse'])) {
+            if (!is_callable($options['buildXmlResponse'])) {
+                throw new Exception(sprintf('%s is not a valid callback', implode('::', (array) $options['buildXmlResponse'])));
+            }
+            $this->_buildXmlResponse = $options['buildXmlResponse'];
+            unset($options['buildXmlResponse']);
+        }
         parent::__construct($controller);
-        $this->_form = $this->initForm();
     }
 
     abstract public function onSubmit();
 
-    public function initForm()
-    {
-        return new $this->_formClass;
-    }
-    
     public function getForm()
     {
         return $this->_form;
@@ -25,9 +30,11 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
 
     public function buildXmlResponse(&$response)
     {
-        // nothing to add to response
+        if ($this->_buildXmlResponse) {
+            $this->_buildXmlResponse($response);
+        }
     }
-    
+
     /**
      * Logic for form handling.
      */

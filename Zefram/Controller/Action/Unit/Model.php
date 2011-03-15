@@ -10,15 +10,17 @@ class Zefram_Controller_Action_Unit_Model extends Zefram_Controller_Action_Unit_
     protected $_formClass = 'Zefram_Form_Model';
     protected $_idParam = 'id';
 
-    public function __construct(Zend_Controller_Action $controller, $options = array())
+    public function __construct(Zend_Controller_Action $controller, Array $options = array())
     {
         if (isset($options['modelName'])) {
             $this->_modelName = $options['modelName'];
+            unset($options['modelName']);
         }
         if (isset($options['mode'])) {
             $this->_mode = $options['mode'];
+            unset($options['mode']);
         }
-        parent::__construct($controller);
+        parent::__construct($controller, $options);
     }
 
     public function initForm()
