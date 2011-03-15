@@ -77,6 +77,7 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
 
                 } catch (Zefram_Controller_Form_Exception $e) {
                     foreach ($e->getMessages() as $field => $errors) {
+                        if (!count($errors)) continue;
                         $where = $form->getElement($field);
                         $msg = '';
                         if (!$where) { 

@@ -13,12 +13,20 @@ class Zefram_Form_Model extends Zend_Form
     protected $_spec;
     protected $_driver;
     protected $_types = array();
+    protected $_id;
 
-    public function __construct($modelName, $mode, $record = null) 
+    public function __construct($modelName, $mode, $id = null) 
     {
+        $this->_driver = Zefram_Db_Driver::get($modelName);
+
+        $this->_id = $id;
+        $record = null;
+        if ($id !== null) {
+            $record = $this->_driver->find($id);
+        }
+
         $this->_formMode = $mode;
         $this->_modelName = $modelName;
-        $this->_driver = Zefram_Db_Driver::get($modelName);
         $this->_record = $record;
         $this->_spec = $this->buildElementsSpec($modelName, $mode, $record);
  
@@ -255,7 +263,7 @@ class Zefram_Form_Model extends Zend_Form
         switch ($mode) {
             case self::UPDATE:
                 if (!$row) {
-                    throw new Exception("Invalid id: $id");
+                    throw new Exception("Invalid id: {$this->_id}");
                 }
 
                 // id field is readonly
