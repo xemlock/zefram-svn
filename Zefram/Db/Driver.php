@@ -20,14 +20,15 @@ abstract class Zefram_Db_Driver
 
     public static function getDefaultConnection()
     {
+        // PHP 5.2.0 reports parse error for $driver::getDefaultConnection()
         $driver = self::$_driver;
-        return $driver::getDefaultConnection();
+        return call_user_func(array($driver, 'getDefaultConnection'));
     }
 
     public static function translateException(Exception $e)
     {
         $driver = self::$_driver;
-        return $driver::translateException($e);
+        return call_user_func(array($driver, 'translateException'), $e);
     }
 
     public static function tableName($modelName) 
