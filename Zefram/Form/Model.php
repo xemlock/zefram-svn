@@ -234,8 +234,11 @@ class Zefram_Form_Model extends Zend_Form
                         array(array('data' => 'HtmlTag'), array('tag' => 'dd')),
                         array('Label', array('tag' => 'dt')),
                         array(array('row' => 'HtmlTag'),array('tag' => 'dl')),
-                    )
-                ),               
+                    ),
+                    'filters' => array(
+                        'StringTrim',
+                    ),
+                ),
             );
             if ($spec['DATA_TYPE'] == 'enum') {
                 $fields[$name]['type'] = 'select';
