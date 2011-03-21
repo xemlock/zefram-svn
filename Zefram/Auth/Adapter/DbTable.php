@@ -6,8 +6,9 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
 
     public function __construct($dbAdapter)
     {
+        // dbAdapter can be Zend_Db or Doctrine_Connection (these two work well!)
+        // Required adapter interface: quote(string), quoteIdentifier(string), fetchAssoc(string)
         if (null === $dbAdapter) {
-            require_once 'Zend/Auth/Adapter/Exception.php';
             throw new Zend_Auth_Adapter_Exception('No database adapter present');
         }
         $this->_db = $dbAdapter;
@@ -62,7 +63,7 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
         // If credentialCallback is set and credentialTreatment is not,
         // do not use default credential treatment (password = ?)
         $sql = sprintf(
-            "SELECT *, (CASE WHEN %s THEN 1 ELSE 0 END) AS %s FROM %s WHERE %s = ?",
+            "SELECT *, (CASE WHEN %s THEN 1 ELSE 0 END) AS %s FROM %s WHERE %s = %s",
             null !== $this->_credentialTreatment 
                     ? $this->_credentialTreatment
                     : (
@@ -72,13 +73,13 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
                       ),
             self::CREDENTIAL_TREATMENT_COLUMN,
             $this->_db->quoteIdentifier($this->_tableName),
-            $this->_db->quoteIdentifier($this->_identityColumn)
+            $this->_db->quoteIdentifier($this->_identityColumn),
+            $this->_db->quote($this->_identity)
         );
         try {
-            $rows = $this->_db->fetchAssoc($sql, $this->_identity);
+            $rows = $this->_db->fetchAssoc($sql);
             return $rows;
         } catch (Exception $e) {
-            require_once 'Zend/Auth/Adapter/Exception.php';
             throw new Zend_Auth_Adapter_Exception('The supplied parameters failed to produce a valid sql statement, '
                                                 . 'please check table and column names for validity.', 0, $e);
          }
@@ -93,7 +94,7 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
             case 0:
                 $this->_resultInfo['code'] = Zend_Auth_Result::FAILURE_IDENTITY_NOT_FOUND;
                 $this->_resultInfo['messages'][] = 'A record with the supplied identity could not be found.';
-                return $this->_result();                
+                return $this->_result();
             default:
                 $this->_resultInfo['code'] = Zend_Auth_Result::FAILURE_IDENTITY_AMBIGUOUS;
                 $this->_resultInfo['messages'][] = 'More than one record matches the supplied identity.';
@@ -109,7 +110,6 @@ class Zefram_Auth_Adapter_DbTable implements Zend_Auth_Adapter_Interface
         unset($row[self::CREDENTIAL_TREATMENT_COLUMN]);       
         if ($this->_credentialCallback) {
             $validationResult = false;
-            require_once 'Zefram/Auth/PasswordMangler.php';
             if ($this->_credentialCallback instanceof Zefram_Auth_PasswordMangler) {
                 $validationResult = $this->_credentialCallback->validate($this->_credential, $row[$this->_credentialColumn], $row);
             } else {
