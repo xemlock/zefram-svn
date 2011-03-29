@@ -123,7 +123,7 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
                 $view->doctype('XHTML1_STRICT');
                 // return json with form
                 $response = array('code'=>'400', 'message'=>'Validation error: '.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
-                $this->buildXmlResponse($response);
+                $this->buildXmlResponse($response);                
                 echo Zend_Json::encode($response);
                 return;
             }

@@ -23,8 +23,9 @@ class Zefram_Controller_Action extends Zend_Controller_Action
 
     public function getUnitClass()
     {
-        $controllerName = $this->_request->getControllerName();
-        $controller = preg_replace('/Controller$/i', '', get_class($this));
+//        $controllerName = $this->_request->getControllerName();
+//        $controller = preg_replace('/Controller$/i', '', get_class($this));
+        $controller = get_class($this);
 
         $actionName = $this->_request->getActionName();
         $action = ucfirst(preg_replace_callback(
@@ -32,6 +33,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
             create_function('$matches', 'return ucfirst($matches[1]);'),
             $actionName
         ));
+        $action .= 'Action';
 
         return $this->loadUnitClass($controller, $action);
     }
