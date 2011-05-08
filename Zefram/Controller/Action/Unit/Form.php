@@ -81,7 +81,9 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
                         $this->redirect($redir);
                     }
                     return;
-
+                } catch (Zefram_Exception_Ignore $e) {
+                    // ignore exception - used to silently pop-out of onSubmit chain
+                    // useful when handling multiple-submit form
                 } catch (Zefram_Controller_Form_Exception $e) {
                     foreach ($e->getMessages() as $field => $errors) {
                         if (!count($errors)) continue;
