@@ -12,10 +12,8 @@ class Zefram_Db_Driver_Zend extends Zefram_DB_Driver_Abstract
 
     public static function getDefaultConnection()
     {
-        require_once 'Zend/Db/Table/Abstract.php';
         $adapter = Zend_Db_Table_Abstract::getDefaultAdapter();
         if (null === $adapter) {
-            require_once 'Zend/Auth/Adapter/Exception.php';
             throw new Exception('No database adapter present');
         }
     }
@@ -23,21 +21,13 @@ class Zefram_Db_Driver_Zend extends Zefram_DB_Driver_Abstract
 
     /**
      * Returns underlying table object specific to used driver.
+     * Alias to {@link Zefram_Db::getTable()}
+     *
      * @returns Zend_Db_Table object
      */
     public function getModel() 
     {
-        if (!isset($this->_model)) {
-            if (strpos($this->_modelName, '_') === false) {
-                // Assume no PEAR-like naming
-                require_once $this->_modelName . '.php';
-            } else {
-                require_once 'Zend/Loader.php';
-                Zend_Loader::loadClass($this->_modelName);
-            }
-            $this->_model = new $this->_modelName;
-        }
-        return $this->_model;
+        return Zefram_Db::getTable($this->_modelName);
     }
 
     public function getSpecs() 

@@ -102,7 +102,7 @@ class Zefram_Form extends Zend_Form
                 array('tag' => 'div', 'class' => 'form')
             ),
             'Form',
-        );      
+        );
     }
 
     public static function label($opts = array())

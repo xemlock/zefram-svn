@@ -1,6 +1,6 @@
 <?php
 
-class Zefram_Form_Model extends Zend_Form
+class Zefram_Form_Model extends Zefram_Form
 {
     const CREATE = 'CREATE';
     const UPDATE = 'UPDATE';
@@ -31,25 +31,6 @@ class Zefram_Form_Model extends Zend_Form
         $this->_spec = $this->buildElementsSpec($modelName, $mode, $record);
  
         parent::__construct(array('elements' => $this->_spec['elements']));
-
-        // show form errors by default
-        $dec = array(
-            new Zend_Form_Decorator_FormErrors(array(
-                'onlyCustomFormErrors' => true,
-                'markupListStart'     => '<div class="form-errors">',
-                'markupListEnd'       => '</div>',
-                'markupListItemStart' => '',
-                'markupListItemEnd'   => '',
-            )),
-            'FormElements',
-            array(array('data' => 'HtmlTag'), array('tag' => 'div', 'class' => 'form')),
-            'Form',
-        );
-        // <markupListStart>
-        //   <markupListItemStart>
-        //   <markupListItemEnd>
-        // <markupListEnd>
-        $this->setDecorators($dec);
     }
 
     public function render() 
@@ -134,6 +115,13 @@ class Zefram_Form_Model extends Zend_Form
     protected function _updateRecord() 
     {
         $formData = $this->getValues();
+        // nullify empty strings
+        foreach ($formData as $key => $value) {
+            if ($value == '') {
+                $formData[$key] = null;
+            }
+        }
+        
         $rows = $this->_spec['parents'];
         // save
         // TODO owinac to w funkcje i zrobic rollback!!!
@@ -229,12 +217,12 @@ class Zefram_Form_Model extends Zend_Form
                 'type' => 'text', // TODO string/varchar -> text, text -> textarea, enum -> select
                 'options' => array(
                     'label' => $name,
-                    'decorators' => array(
+                    /*'decorators' => array(
                         'ViewHelper', 'Description', 'Errors',
                         array(array('data' => 'HtmlTag'), array('tag' => 'dd')),
                         array('Label', array('tag' => 'dt')),
                         array(array('row' => 'HtmlTag'),array('tag' => 'dl')),
-                    ),
+                    ),*/
                     'filters' => array(
                         'StringTrim',
                     ),
@@ -298,7 +286,6 @@ class Zefram_Form_Model extends Zend_Form
                 } else {
                     // prevent overwriting existing record that has the same id
                     // as newly created one
-                    require_once 'Zefram/Controller/Form/NoRecord.php';
                     $fields[$pk]['options']['validators'][] = new Zefram_Controller_Form_NoRecord($row);
                 }
                 break;
