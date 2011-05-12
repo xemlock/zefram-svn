@@ -23,6 +23,11 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
 
     abstract public function onSubmit();
 
+    /**
+     * Populate form with default values.
+     */
+    public function populateForm() {}
+
     public function getForm()
     {
         return $this->_form;
@@ -125,12 +130,14 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
                 $view->doctype('XHTML1_STRICT');
                 // return json with form
                 $response = array('code'=>'400', 'message'=>'Validation error: '.@$error_m, 'xml'=>'<xml>' . $form->__toString() . '</xml>');
-                $this->buildXmlResponse($response);                
+                $this->buildXmlResponse($response);
                 echo Zend_Json::encode($response);
                 return;
             }
+        } else {
+            // form was not submitted, load default values
+            $this->populateForm();
         }
-
 
         if ($isAjax) {
             $view->doctype('XHTML1_STRICT');
