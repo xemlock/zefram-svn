@@ -1,6 +1,6 @@
 <?php
 
-abstract class Zefram_Db_Table extends Zend_Db_Table_Abstract
+class Zefram_Db_Table extends Zend_Db_Table_Abstract
 {
     // does anybody know why these are missing in Zend_Db
     // info() is extremely inconvenient

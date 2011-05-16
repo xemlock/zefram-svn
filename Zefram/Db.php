@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Contraty to class name which suggests similarity to Zend_Db
+ * Contrary to class name which suggests similarity to Zend_Db
  * this class' reason for existence is being a registry for table objects.
  */
 abstract class Zefram_Db
 {
     protected static $_tablePrefix;
-    protected static $_tableRegistry;   
+    protected static $_tableRegistry;
 
     public static function setTablePrefix($prefix)
     {
@@ -24,10 +24,18 @@ abstract class Zefram_Db
 
     public static function getTable($tableName)
     {
-        $tableName = self::$_tablePrefix . $tableName;
-        if (!isset(self::$_tableRegistry[$tableName])) {
-            self::$_tableRegistry[$tableName] = new $tableName;
+        $className = self::$_tablePrefix . $tableName;
+        if (!isset(self::$_tableRegistry[$className])) {
+            if (class_exists($className, true)) {
+                // ok, class found
+                self::$_tableRegistry[$className] = new $className;
+            } else {
+                // no class found, simulate it with basic Db_Table with only
+                // table name set
+                $dbTable = new Zefram_Db_Table(array('name' => $tableName));
+                self::$_tableRegistry[$className] = $dbTable;
+            }
         }
-        return self::$_tableRegistry[$tableName];
+        return self::$_tableRegistry[$className];
     }
 }
