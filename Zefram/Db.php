@@ -22,20 +22,30 @@ abstract class Zefram_Db
         return self::$_tablePrefix;
     }
 
-    public static function getTable($tableName)
+    public static function getTable($className)
     {
-        $className = self::$_tablePrefix . $tableName;
-        if (!isset(self::$_tableRegistry[$className])) {
-            if (class_exists($className, true)) {
+        $fullClassName = self::$_tablePrefix . $className;
+        if (!isset(self::$_tableRegistry[$fullClassName])) {
+            if (class_exists($fullClassName, true)) {
                 // ok, class found
-                self::$_tableRegistry[$className] = new $className;
+                self::$_tableRegistry[$fullClassName] = new $fullClassName;
             } else {
                 // no class found, simulate it with basic Db_Table with only
                 // table name set
+                $tableName = self::classToTable($className);
                 $dbTable = new Zefram_Db_Table(array('name' => $tableName));
-                self::$_tableRegistry[$className] = $dbTable;
+                self::$_tableRegistry[$fullClassName] = $dbTable;
             }
         }
-        return self::$_tableRegistry[$className];
+        return self::$_tableRegistry[$fullClassName];
+    }
+
+    // convert camel-case to underscore separated
+    public static function classToTable($className)
+    {
+        return strtolower(
+            substr($className, 0, 1) . 
+            preg_replace('/([A-Z])/', '_$1', substr($className, 1))
+        );    
     }
 }
