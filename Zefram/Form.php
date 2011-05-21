@@ -76,6 +76,8 @@ class Zefram_Form extends Zend_Form
             }
             if (!isset($options['decorators'])) {
                 $options['decorators'] = self::elementDecorators();
+            } elseif (!is_array($options['decorators'])) {
+                $options['decorators'] = (array) $options['decorators'];
             }
         }
 

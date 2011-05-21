@@ -21,13 +21,9 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         return $unitClass;    
     }
 
-    public function getUnitClass()
+    public function getUnitClass($actionName)
     {
-//        $controllerName = $this->_request->getControllerName();
-//        $controller = preg_replace('/Controller$/i', '', get_class($this));
         $controller = get_class($this);
-
-        $actionName = $this->_request->getActionName();
         $action = ucfirst(preg_replace_callback(
             '/-([a-zA-Z0-9]+)/', 
             create_function('$matches', 'return ucfirst($matches[1]);'),
@@ -42,7 +38,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     {
         if (!strcasecmp(substr($method, -6), 'Action')) {
             // undefined action, try running unit action
-            $unitClass = $this->getUnitClass();
+            $unitClass = $this->getUnitClass(substr($method, 0, -6));
             if ($unitClass) {
                 $unit = new $unitClass($this, $arguments);
                 return $unit->run();
@@ -50,5 +46,10 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         }
         // fallback to default handling of undefined methods
         return parent::__call($method, $arguments);
+    }
+
+    protected function _flashMessage($message)
+    {
+        $this->_helper->flashMessenger->addMessage($message);
     }
 }
