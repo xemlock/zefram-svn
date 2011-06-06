@@ -44,37 +44,7 @@ class Zefram_View_Helper_Url extends Zend_View_Helper_Url
         $callback = array('parent', 'url');
         $args = func_get_args();
         if (isset($args[0]) && !is_array($args[0])) {
-            // string - treat as:
-            //   module/controller/action
-            //   controller/action
-            //   controller
-            // parameters are separated by ?
-            $parts = explode('?', $args[0]);            
-            $path = explode('/', $parts[0]);
-            $module = 'default';
-            $controller = null;
-            $action = 'index';
-            if (count($path) > 2) {
-                list($module, $controller, $action) = $path;
-            } elseif (count($path) > 1) {
-                list($controller, $action) = $path;
-            } else {
-                $controller = $path[0];
-            }
-            $opts = array();
-            if (isset($parts[1])) {
-                $params = explode('/', $parts[1]);
-                for ($i = 0, $n = floor(count($params) / 2) * 2; $i < $n; $i += 2) {
-                    $key = $params[$i];
-                    $value = $params[$i + 1];
-                    $opts[$key] = $value;
-                }
-            }
-            $opts['module']     = $module;
-            $opts['controller'] = $controller;
-            $opts['action']     = $action;
-            $args[0] = $opts;
-
+            $args[0] = Zefram_Url::toArray($args[0]);
             if (count($args) < 2) {
                 // route not given, use default route, not current
                 $args[1] = 'default';

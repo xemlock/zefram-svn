@@ -4,10 +4,25 @@ class Zefram_Acl extends Zend_Acl
 {
     const CURRENT_ROLE = null;
 
+    /**
+     * Returns true if and only if the Role has access to the Resource.
+     *
+     * @param  Zend_Acl_Role_Interface|string                                      $role
+     * @param  Zend_Controller_Request_Abstract|Zend_Acl_Resource_Interface|string $resource
+     * @param  string                                                              $privilege
+     * @uses   Zend_Acl::isAllowed()
+     * @return boolean
+     */
     public function isAllowed($role = null, $resource = null, $privilege = null)
     {
         if (null === $role) {
             $role = $this->getCurrentRole();
+        }
+
+        if ($resource instanceof Zend_Controller_Request_Abstract) {
+            $request   = $resource;
+            $resource  = $request->controller;
+            $privilege = null !== $privilege ? $privilege : $request->action;
         }
 
         return parent::isAllowed($role, $resource, $privilege);
@@ -18,7 +33,7 @@ class Zefram_Acl extends Zend_Acl
      * or current role inherits from the given role.
      *
      * @param string $role
-     * @return bool
+     * @return boolean
      */
     public function is($role)
     {
