@@ -118,12 +118,7 @@ class Zefram_Form extends Zend_Form
     }
 
     public static function elementDecorators($opts = array())
-    {
-        static $getId = null;
-        if (null === $getId) {
-            $getId = create_function('$decorator',
-                                     'return $decorator->getElement()->getId() . "-element";');
-        }
+    {        
         return array_merge(array(
             'ViewHelper',
             array('Description', array(
@@ -137,10 +132,7 @@ class Zefram_Form extends Zend_Form
                 array('tag' => 'dd')
             ),
             self::label(array('tag' => 'dt')), // label wrapped in <dt>
-            array( // row (label and element) wrapped in <dl>
-                array('row' => 'HtmlTag'),
-                array('tag' => 'dl', 'id' => array('callback' => $getId))
-            ),
+            new Zefram_Form_Decorator_DlWrapper,
         ), $opts);
     }
 
