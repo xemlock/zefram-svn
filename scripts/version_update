@@ -1,0 +1,24 @@
+#!/bin/bash
+
+LC_ALL=C
+LANG=C
+null=`svn update -q`
+revision=`svnversion . | awk 'NR==1{gsub(/^[^:]+:/,"",$0);} /^[[:digit:]]+$/{print $1} /^[[:digit:]]+M$/{gsub(/M/,"",$1);print (1+$1)}'`
+minor=`awk 'NR==1{gsub(/[ \t\r\n]/,"",$1);print $1}' version_minor`
+major=`awk 'NR==1{gsub(/[ \t\r\n]/,"",$1);print $1}' version_major`
+verphp=$(dirname `realpath $0`)/../Zefram/Version.php
+
+echo "<?php
+
+/* Class generated automatically. Do not edit. */
+
+abstract class Zefram_Version
+{
+  const VERSION  = \"$major.$minor.$revision\";
+  const MAJOR    = \"$major\";
+  const MINOR    = \"$minor\";
+  const REVISION = \"$revision\";
+}
+" > "$verphp"
+
+echo $major.$minor.$revision
