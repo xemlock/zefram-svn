@@ -40,6 +40,14 @@ class Zefram_Controller_Action extends Zend_Controller_Action
             // undefined action, try running unit action
             $unitClass = $this->getUnitClass(substr($method, 0, -6));
             if ($unitClass) {
+/*
+                $ref = new ReflectionClass($name);
+                if ($ref->hasMethod('__construct')) {
+                    $unit = $ref->newInstanceArgs(array_merge(array($this), $arguments));
+                } else {
+                    $unit = $ref->newInstance($this);
+                }
+*/
                 $unit = new $unitClass($this, $arguments);
                 return $unit->run();
             }        

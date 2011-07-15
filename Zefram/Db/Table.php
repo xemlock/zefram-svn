@@ -4,9 +4,11 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
 {
     // does anybody know why these are missing in Zend_Db
     // info() is extremely inconvenient
-    public function getName()
+    public function getName($quote = false)
     {
-        return $this->_name;
+        return $quote
+             ? $this->getAdapter()->quoteIdentifier($this->_name)
+             : $this->_name;
     }
 
     public function getSchema()
