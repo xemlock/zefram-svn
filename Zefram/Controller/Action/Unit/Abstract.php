@@ -3,57 +3,22 @@
 /**
  * Class for encapsulation of a single action's logic.
  */
-abstract class Zefram_Controller_Action_Unit_Abstract
+abstract class Zefram_Controller_Action_Standalone_Abstract
 {
-    protected $_controller;
-
-    public function __construct(Zend_Controller_Action $controller) 
-    {
-        $this->_controller = $controller;
-        $this->init();
-    }
-
-    public function init()
-    {}
-
-    public function getController()
-    {
-        return $this->_controller;
-    }
-
     // does anybody know why getParam is protected???
     public function getParam($name, $default = null)
     {
-        $value = $this->_controller->getRequest()->getParam($name, $default);
-        if (null === $value || '' === $value) {
-            $value = $default;
-        }
-        return $value;
-    }
-
-    public function getView()
-    {
-        return $this->_controller->view;
-    }
-
-    abstract public function run();
-
-    // call controller methods
-    public function __call($name, $arguments)
-    {
-        // is_callable returns true if __call is present.
-        $callback = array($this->_controller, $name);
-        return call_user_func_array($callback, $arguments);
+        return $this->_getParam($name, $default);
     }
 
     public function flashMessage($message)
     {
-        $this->_controller->getHelper('flashMessenger')->addMessage($message);
+        return $this->_flashMessage($message);
     }
 
     // does anybody know why _redirect is protected???
     public function redirect($url, array $options = array())
     {
-        $this->_controller->getHelper('redirector')->gotoUrl($url, $options);
+      $this->_redirect($url, $options);
     }
 }
