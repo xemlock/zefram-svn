@@ -145,7 +145,7 @@ abstract class Zefram_Controller_Action_Unit_Form extends Zefram_Controller_Acti
         }
 
         $template = $view->getScriptPath($controller->getViewScript());
-        if (!file_exists($template)) {
+        if ((false === $template) || !file_exists($template)) {
             // show form even if template does not exist
             $form->setView($view); // use XHTML elements when needed
             $content = $form->__toString();

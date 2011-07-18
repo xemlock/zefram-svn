@@ -50,7 +50,12 @@ abstract class Zefram_Controller_Action_Standalone_Abstract
         $this->_controller->getHelper('redirector')->gotoUrl($url, $options);
     }
 
-    public function flashMessage($message)
+    protected function _json($data)
+    {
+        $this->_controller->getHelper('json')->sendJson($data);
+    }
+
+    protected function _flashMessage($message)
     {
         $this->_controller->getHelper('flashMessenger')->addMessage($message);
     }

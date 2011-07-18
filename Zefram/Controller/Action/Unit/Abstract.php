@@ -3,7 +3,7 @@
 /**
  * Class for encapsulation of a single action's logic.
  */
-abstract class Zefram_Controller_Action_Standalone_Abstract
+abstract class Zefram_Controller_Action_Unit_Abstract extends Zefram_Controller_Action_Standalone_Abstract
 {
     // does anybody know why getParam is protected???
     public function getParam($name, $default = null)

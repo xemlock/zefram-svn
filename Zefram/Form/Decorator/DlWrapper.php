@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Zefran_Form_Decorator_DlWrapper
+ * Zefram_Form_Decorator_DlWrapper
  *
  * Wraps the content in a <dl> element. Used as a default wrapper for
  * form elements.
