@@ -21,6 +21,8 @@ class Zefram_Form extends Zend_Form
         $options = (array) $options;
         if (!isset($options['decorators'])) {
             $options['decorators'] = self::formDecorators();
+        } elseif (!is_array($options['decorators'])) {
+            $options['decorators'] = (array) $options['decorators'];
         }
         if (!isset($options['elementDecorators'])) {
             $options['elementDecorators'] = self::elementDecorators();
@@ -92,6 +94,7 @@ class Zefram_Form extends Zend_Form
         // <markupListEnd>
         return array(
             new Zend_Form_Decorator_FormErrors(array(
+                'ignoreSubForms'      => true,
                 'onlyCustomFormErrors' => true,
                 'markupListStart'     => '<div class="form-errors">',
                 'markupListEnd'       => '</div>',
