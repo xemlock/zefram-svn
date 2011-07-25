@@ -1,13 +1,11 @@
 <?php
 
-/* WARNING!!! Class interface is subject to change! */
-
 /**
  * Utility class for handling simplified URL specification.
  *
  * @package Zefram_Url
  * @author  xemlock
- * @version 2011-06-06
+ * @version 2011-07-26
  */
 abstract class Zefram_Url
 {
@@ -18,20 +16,20 @@ abstract class Zefram_Url
      * - controller
      * Parameters are separated by ?.
      */
-    public static function toArray($urlString)
+    public static function unserialize($urlString)
     {
         $parts = explode('?', $urlString);            
         $path = explode('/', $parts[0]);
         
-        $module = 'default';
-        $controller = null;
-        $action = 'index';
+        $module     = 'default';
+        $controller = 'index';
+        $action     = 'index';
 
         if (count($path) > 2) {
             list($module, $controller, $action) = $path;
         } elseif (count($path) > 1) {
             list($controller, $action) = $path;
-        } else {
+        } elseif (!empty($path[0])) {
             $controller = $path[0];
         }
 
@@ -52,8 +50,8 @@ abstract class Zefram_Url
     
         return $opts;
     }
-
-    public static function fromRequest(Zend_Controller_Request_Abstract $request)
+    
+    public static function serialize(Zend_Controller_Request_Abstract $request)
     {
         $url = "{$request->module}/{$request->controller}/{$request->action}";
         $params = array();
@@ -66,5 +64,17 @@ abstract class Zefram_Url
         }
         $params = count($params) ? '?' . implode('/', $params) : null;
         return $url . $params;
+    }
+
+    // @deprecated
+    public static function fromRequest(Zend_Controller_Request_Abstract $request)
+    {
+        return self::serialize($request);
+    }
+
+    // @deprecated
+    public static function toArray($urlString)
+    {
+        return self::unserialize($urlString);
     }
 }
