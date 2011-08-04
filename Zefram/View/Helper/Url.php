@@ -27,35 +27,22 @@ class Zefram_View_Helper_Url extends Zend_View_Helper_Url
     }
 
     /**
-     * Warning: when passing path as string and route is not set, 
-     * 'default' route is assumed, not current!
-     * When passing path as array, current route is used (this works
-     * exactly like Zend helper implementation).
+     * Warning: route and reset parameters have different default values than
+     * their Zend's couterparts.
      *
      * @param string|array $urlOptions  Options passed to the assemble method of the Route object.
-     * @param mixed $name               The name of a Route to use. If null it will use the
-     *                                  current Route if urlOptions is array, if urlOptions is string
-     *                                  default Route will be used.
+     * @param mixed $name               The name of a Route to use.
      * @param bool $reset               Whether or not to reset the route defaults with those provided
      * @return string                   Url for the link href attribute.
      */
-    public function url()
+    public function url($urlOptions, $name = 'default', $reset = true)
     {
-        $callback = array('parent', 'url');
-        $args = func_get_args();
-        if (isset($args[0]) && !is_array($args[0])) {
-            $args[0] = Zefram_Url::toArray($args[0]);
-            if (count($args) < 2) {
-                // route not given, use default route, not current
-                $args[1] = 'default';
-            }
+        if (!is_array($urlOptions)) {
+            $urlOptions = Zefram_Url::toArray($urlOptions);            
         }
         if (self::$_trans_sid) {
-            if (!isset($args[0])) {
-                $args[0] = array();
-            }
-            $args[0][session_name()] = session_id();
+            $urlOptions[session_name()] = session_id();
         }
-        return call_user_func_array($callback, $args);
+        return parent::url($urlOptions, $name, $reset);
     }
 }
