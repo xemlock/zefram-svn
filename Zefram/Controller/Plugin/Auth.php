@@ -46,9 +46,10 @@ class Zefram_Controller_Plugin_Auth extends Zend_Controller_Plugin_Abstract
             $action = 'error';
 
         } else if (!$this->_acl->isAllowed($role, $controller, $action)) {
-            if (!$this->_auth->hasIdentity()) {
+            // do not forward if AJAX request, report access denied error
+            if (!$this->_auth->hasIdentity() && !$request->isXmlHttpRequest()) {
                 if ($controller != 'auth' && $controller != 'index') { 
-                    $request->setParam('forward', Zefram_Url::fromRequest($request));
+                    $request->setParam('forward', Zefram_Url::serialize($request));
                 }
                 $module = $this->_noauth['module'];
                 $controller = $this->_noauth['controller'];
