@@ -30,7 +30,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
     const XMLHTTP_RESPONSE_ERRORS = 'FormErrors';
 
     /**
-     * Use partial or full form processing
+     * Use partial instead of full form processing?
      * @var bool
      */
     protected $_processPartial = false;
@@ -53,6 +53,12 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
      * @var Zend_Form
      */
     protected $_form = null;
+
+    /**
+     * Was action accessed through AJAX?
+     * @var bool
+     */
+    protected $_isXmlHttp = false;
 
     /**
      * if second arg is instance of Zend_Form it is used as a form,
@@ -210,9 +216,8 @@ FIXME only toplevel custom errors!!!
     {
         $form = $this->_form;
         $request = $this->getRequest();
-        $controller = $this->getController();
 
-        $isXmlHttp = $this->_xmlHttpOnly || $request->isXmlHttpRequest();
+        $isXmlHttp = $this->_isXmlHttp = $this->_xmlHttpOnly || $request->isXmlHttpRequest();
 
         if (($submitData = $this->_getSubmitData()) !== null) {
             $isProcessed = false;
@@ -234,7 +239,16 @@ FIXME only toplevel custom errors!!!
                     // if accessed through AJAX return proper response
                     if ($isProcessed) {
                         $response = array('status' => 'ok');
-                        if (!empty($result)) {
+                        // if result of _process or _processPartial is an array,
+                        // it is attached to AJAX response. If it contains 'status' key, 
+                        // it will be removed.
+                        // if it is not an array, place it at 'data' key
+                        if (is_array($result)) {
+                            if (isset($result['status'])) {
+                                unset($result['status']);
+                            }
+                            $response = array_merge($response, $result);
+                        } elseif (!empty($result)) {
                             $response['data'] = $result;
                         }
                     } else {
@@ -261,12 +275,18 @@ FIXME only toplevel custom errors!!!
                     }
                     return $this->_json($response);
                 } else {
-                    // redirect
-
+                    if ($isProcessed) {
+                        // if result is a string, assume it is an url to redirect to
+                        if (is_string($result)) {
+                            return $this->_redirect($result);
+                        } else {
+                            // reload page
+                        }
+                    }
                 }
 
             } catch (Exception $e) {
-                if ($isAjax) {
+                if ($isXmlHttp) {
                     return $this->_json(array(
                         'status' => 'error',
                         'type'   => 'exception',
@@ -278,6 +298,8 @@ FIXME only toplevel custom errors!!!
             }
         }
 
+        
+        $controller = $this->getController();
         $view = $this->getView();
         $view->form = $form;
         $template = $view->getScriptPath($controller->getViewScript());
