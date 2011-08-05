@@ -21,7 +21,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
      * Report form processing errors embedded in the form's markup
      * @var string
      */
-    const XMLHTTP_RESPONSE_HTML   = 'FormHTML';
+    const XMLHTTP_RESPONSE_XHTML   = 'FormXHTML';
 
     /**
      * Report form processing errors as an object
@@ -163,14 +163,68 @@ FIXME only toplevel custom errors!!!
         }
             
     */
-    const AJAX_FORM_MARKUP = 1;
-    const AJAX_FORM_ERRORS = 2;
+
+    /**
+     * Method-aware retrieval of submitted form data
+     */
+    protected function _getSubmitData() // {{{
+    {
+        $method = $this->_form->getMethod();
+        $request = $this->getRequest();
+
+        if (!strcasecmp($method, 'POST') && $request->isPost()) {
+            return $request->getPost();
+        }
+        if (!strcasecmp($method, 'GET') && $request->isGet()) {
+            return $request->getGet();
+        }
+        return null;
+    } // }}}
+
+    /**
+     * Redirects the current URL and exits
+     */
+    protected function _reloadRedirect() // {{{
+    {
+        $request       = $this->getRequest();
+        $params        = $request->getUserParams();
+
+        $moduleKey     = $params->getModuleKey();
+        $controllerKey = $params->getControllerKey();
+        $actionKey     = $params->getActionKey();
+
+        $module        = $params[$moduleKey];
+        $controller    = $params[$controllerKey];
+        $action        = $params[$actionKey];
+
+        unset($params[$moduleKey], $params[$controllerKey], $params[$actionKey]);
+
+        $this->getHelper('redirector')->gotoSimple($action, $controller, $module, $params);
+    } // }}}
+
+    /**
+     * Generate XHTML form markup.
+     * XHTML compliance is required in order to avoid complications with processing
+     * AJAX response in browsers. (Actually this maybe not sufficent, but thats is
+     * the part the developer is responsible for).
+     *
+     * @param Zend_Form $form form to be rendered
+     */
+    public static function formXhtml(Zend_Form $form) // {{{
+    {
+        $view = $form->getView();
+        $doctype = $view->getDoctype();
+        $view->doctype('XHTML1_STRICT'); // it's the best we can do, without parsing output to a DOM tree
+        $xhtml = $form->render();
+        $view->doctype($doctype);
+        return $xhtml;
+    } // }}}
 
     /**
      * Zend_Form offers no simple way of retrieving validation error messages
      * when custom form errors are set.
      */
-    protected function _getErrorMessages($form) // {{{
+    public static function formErrors(Zend_Form $form) // {{{
     {
         $messages = array();
         foreach ($form->getElements() as $name => $element) {
@@ -191,24 +245,7 @@ FIXME only toplevel custom errors!!!
         }
         return $messages;
     } // }}}
-
-    /**
-     * Method-aware retrieval of submitted form data
-     */
-    protected function _getSubmitData() // {{{
-    {
-        $method = $this->_form->getMethod();
-        $request = $this->getRequest();
-
-        if (!strcasecmp($method, 'POST') && $request->isPost()) {
-            return $request->getPost();
-        }
-        if (!strcasecmp($method, 'GET') && $request->isGet()) {
-            return $request->getGet();
-        }
-        return null;
-    } // }}}
-
+    
     /**
      * Execute form handling logic
      */
@@ -253,15 +290,12 @@ FIXME only toplevel custom errors!!!
                         }
                     } else {
                         if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
-                            $doctype = $view->getDoctype();
-                            $view->doctype('XHTML1_STRICT');
-                            $form->setView($view);
+                            // render only XHTML compliant form markup
                             $response = array(
                                 'status' => 'error',
-                                'type'   => self::XMLHTTP_RESPONSE_HTML,
-                                'data'   => '<html>' . $form->__toString() . '</html>',
+                                'type'   => self::XMLHTTP_RESPONSE_XHTML,
+                                'data'   => '<FormXhtml>' . self::formXhtml($form) . '</FormXhtml>',
                             );
-                            $view->doctype($doctype);
                         } else {
                             $response = array(
                                 'status' => 'error',
@@ -276,57 +310,62 @@ FIXME only toplevel custom errors!!!
                     return $this->_json($response);
                 } else {
                     if ($isProcessed) {
-                        // if result is a string, assume it is an url to redirect to
-                        if (is_string($result)) {
-                            return $this->_redirect($result);
-                        } else {
-                            // reload page
-                        }
+                        // if result is a string, assume it is an url to redirect to,
+                        // otherwise reload the current URL
+                        return is_string($result)
+                             ? $this->_redirect($result)
+                             : $this->_reloadRedirect();
                     }
+                    // else - errors will be rendered on the form
                 }
+
+            } catch (Zefram_Exception_Ignore $e) {
+                // ignore exception - used to silently pop-out of processing chain
+                // useful when handling multiple-submit form
 
             } catch (Exception $e) {
                 if ($isXmlHttp) {
-                    return $this->_json(array(
-                        'status' => 'error',
-                        'type'   => 'exception',
-                        'data'   => $e->getMessage(),
-                    ));
+                    $response = array(
+                        'status'  => 'error',
+                        'type'    => get_class($e),
+                        'message' => $e->getMessage(),
+                    );
+                    return $this->_json($response);
                 } else {
+                    // add custom error to form
                     $form->addError($e->getMessage());
                 }
             }
         }
 
-        
-        $controller = $this->getController();
+        // if generating page response from view, form is set at 'form' property
         $view = $this->getView();
-        $view->form = $form;
-        $template = $view->getScriptPath($controller->getViewScript());
+        $controller = $this->getController();
+        $template   = $view->getScriptPath($controller->getViewScript());
         if ((false === $template) || !file_exists($template)) {
-            // show form even if template does not exist
-            $form->setView($view); // use XHTML elements when needed
-            $content = $form->__toString();
+            // action template does not exist, render only form
+            // when accessed through AJAX form markup is XHTML compliant,
+            // otherwise is rendered using controller's view
+            $content = $isXmlHttp ? self::formXhtml($form) : $form->render($view);
         } else {
-            // render form using view template
-            $view->form = $form;
+            // use template, here we cannot enforce XHTML compliance
+            // when accessed through AJAX
+            $view->form = $form->setView($view);
             $content = $controller->render();
         }
 
-        if ($isAjax) {
-            // no data sent - it means tha form is to be loaded using AJAX - give form's markup in response
+        $this->getHelper('viewRenderer')->setNoRender();
+
+        if ($isXmlHttp) {
             $response = array(
-                'status' => 'default',
-                'type'   => 'markup',
-                'data'   => '<html>' . $form->__toString() . '</html>'
+                'status' => 'init',
+                'type'   => self::XMLHTTP_RESPONSE_XHTML,
+                'data'   => '<FormXhtml>' . $content . '</FormXhtml>',
             );
             return $this->_json($response);
         } else {
-            echo $content;
+            return $this->getResponse()->appendBody($content);
         }
-
-        // no more rendering here
-        $this->getHelper('viewRenderer')->setNoRender();
     }
 }
 

@@ -50,7 +50,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
             }        
         }
         // fallback to default handling of undefined methods
-        return parent::__call($method, $arguments);
+        parent::__call($method, $arguments);
     }
 
     // additional proxies to helpers

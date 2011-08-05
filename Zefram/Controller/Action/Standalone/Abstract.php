@@ -23,7 +23,7 @@ abstract class Zefram_Controller_Action_Standalone_Abstract
 
     public function getView()
     {
-        return $this->_controller->view;
+        return $this->_controller->initView();
     }
 
     abstract public function run();
