@@ -123,7 +123,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
     /**
      * Process valid form
      *
-     * @param array $values array of form values
+     * @param array $values     array of form values
      */
     protected function _process(array $values) // {{{
     {
@@ -139,30 +139,6 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
     {
         throw new Zefram_Exception(__METHOD__ . '() is not implemented');
     } // }}}
-
-    /*
-    Browser UI:
-        onSuccess:
-            redirect to given url (or reloads page)
-        onFailure:
-            - renderes page with embedded form (ergo does nothing)
-    
-    AJAX:
-        onSuccess:
-            return {status: 'ok'} + additional data
-        onFailure:
-            - form's markup with embedded errors            
-            - hash with form errors
-    protocol:
-        {
-            status: 'ok' | 'error' | 'default', <-- form processing status: successfully handled, with errors, initial state
-            type:   'FormHTML' | 'FormErrors' | class-name, <-- type of content stored in data: markup - form markup wrapped in <html>, errors - json with errors,
-                                                            {form: [], elements: {item: errors}} 
-FIXME only toplevel custom errors!!!
-            [ data:   mixed ]
-        }
-            
-    */
 
     /**
      * Method-aware retrieval of submitted form data
@@ -245,6 +221,60 @@ FIXME only toplevel custom errors!!!
         }
         return $messages;
     } // }}}
+
+    /**
+     * Logic executed after form was submitted and no exceptions were thrown
+     *
+     * @param bool $isProcessed if form was processed and $result value is valid 
+     * @param mixed $result     form processing result
+     */
+    protected function _onSubmitResponse($isProcessed, $result) // {{{
+    {
+        if ($this->_isXmlHttp) {
+            if ($isProcessed) {
+                $xmlHttpResponse = array('status' => 'ok');
+                // if result of _process or _processPartial is an array,
+                // it is attached to AJAX response. If it contains 'status' key, 
+                // it will be removed.
+                // if it is not an array, place it at 'data' key
+                if (is_array($result)) {
+                    if (isset($result['status'])) {
+                        unset($result['status']);
+                    }
+                    $xmlHttpResponse = array_merge($xmlHttpResponse, $result);
+                } elseif (!empty($result)) {
+                    $xmlHttpResponse['data'] = $result;
+                }
+            } else {
+                // render form markup or return form errors depending on config
+                if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
+                    $xmlHttpResponse = array(
+                        'status' => 'error',
+                        'type'   => self::XMLHTTP_RESPONSE_XHTML,
+                        'data'   => '<FormXhtml>' . self::formXhtml($form) . '</FormXhtml>',
+                    );
+                } else {
+                    $xmlHttpResponse = array(
+                        'status' => 'error',
+                        'type'   => self::XMLHTTP_RESPONSE_ERRORS,
+                        'data'   => array(
+                            'form'     => $form->getCustomMessages(),
+                            'elements' => $this->_getErrorMessages($form),
+                        ),
+                    );
+                }
+            }
+            return $this->_json($xmlHttpResponse);
+        }
+
+        if ($isProcessed) {
+            // if result is a string, assume it is an url to redirect to,
+            // otherwise reload the current URL
+            return is_string($result)
+                 ? $this->_redirect($result)
+                 : $this->_reloadRedirect();
+        }
+    } // }}}
     
     /**
      * Execute form handling logic
@@ -257,10 +287,12 @@ FIXME only toplevel custom errors!!!
         $isXmlHttp = $this->_isXmlHttp = $this->_xmlHttpOnly || $request->isXmlHttpRequest();
 
         if (($submitData = $this->_getSubmitData()) !== null) {
-            $isProcessed = false;
             try {
+                $isProcessed = false;
+                $result = null;
+
                 if ($this->_processPartial) {
-                    $validData = $this->_form->getValidValues($submitData);
+                    $validData = $form->getValidValues($submitData);
                     if (count($validData)) {
                         $result = $this->_processPartial($validData);
                         $isProcessed = true;
@@ -271,59 +303,14 @@ FIXME only toplevel custom errors!!!
                         $isProcessed = true;
                     }
                 }
-
-                if ($isXmlHttp) {
-                    // if accessed through AJAX return proper response
-                    if ($isProcessed) {
-                        $response = array('status' => 'ok');
-                        // if result of _process or _processPartial is an array,
-                        // it is attached to AJAX response. If it contains 'status' key, 
-                        // it will be removed.
-                        // if it is not an array, place it at 'data' key
-                        if (is_array($result)) {
-                            if (isset($result['status'])) {
-                                unset($result['status']);
-                            }
-                            $response = array_merge($response, $result);
-                        } elseif (!empty($result)) {
-                            $response['data'] = $result;
-                        }
-                    } else {
-                        if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
-                            // render only XHTML compliant form markup
-                            $response = array(
-                                'status' => 'error',
-                                'type'   => self::XMLHTTP_RESPONSE_XHTML,
-                                'data'   => '<FormXhtml>' . self::formXhtml($form) . '</FormXhtml>',
-                            );
-                        } else {
-                            $response = array(
-                                'status' => 'error',
-                                'type'   => self::XMLHTTP_RESPONSE_ERRORS,
-                                'data'   => array(
-                                    'form'     => $form->getCustomMessages(),
-                                    'elements' => $this->_getErrorMessages($form),
-                                ),
-                            );
-                        }
-                    }
-                    return $this->_json($response);
-                } else {
-                    if ($isProcessed) {
-                        // if result is a string, assume it is an url to redirect to,
-                        // otherwise reload the current URL
-                        return is_string($result)
-                             ? $this->_redirect($result)
-                             : $this->_reloadRedirect();
-                    }
-                    // else - errors will be rendered on the form
-                }
+                return $this->_onSubmitResponse($isProcessed, $result);
 
             } catch (Zefram_Exception_Ignore $e) {
                 // ignore exception - used to silently pop-out of processing chain
                 // useful when handling multiple-submit form
 
             } catch (Exception $e) {
+                // form processing interrupted by exception
                 if ($isXmlHttp) {
                     $response = array(
                         'status'  => 'error',
