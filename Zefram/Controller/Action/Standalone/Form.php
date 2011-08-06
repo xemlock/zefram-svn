@@ -13,15 +13,15 @@
  */
 class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_Standalone_Abstract
 {
-    const RESPONSE_OK      = 'ok';
-    const RESPONSE_ERROR   = 'error';
-    const RESPONSE_DEFAULT = 'default';
+    const STATUS_INIT    = 'init';
+    const STATUS_OK      = 'ok';
+    const STATUS_ERROR   = 'error';
 
     /**
      * Report form processing errors embedded in the form's markup
      * @var string
      */
-    const XMLHTTP_RESPONSE_XHTML   = 'FormXHTML';
+    const XMLHTTP_RESPONSE_MARKUP   = 'FormMarkup';
 
     /**
      * Report form processing errors as an object
@@ -66,58 +66,71 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
      * are passed to it.
      * When overriding constructor in subclesses call it with Zend_Form
      * parameter to avoid additional form creation.
+     * Form can be created in init() method, since it gets called before
+     * form initialization.
      * controller, Zend_Form $form
      * controller, array | Zend_Config $options
      * controller, ... - args ... will be passed to initForm
      */
     public function __construct(Zend_Controller_Action $controller) // {{{
     {
-        if (func_num_args() > 1) {
-            $arg = func_get_arg(1);
-            if ($arg instanceof Zend_Form) {
-                $this->_form = $arg;
-            } else {
-                if ($arg instanceof Zend_Config) {
-                    $arg = $arg->toArray();
-                }
-                if (is_array($arg)) {
-                    // read config values from array
-                    if (isset($arg['form']) && $arg['form'] instanceof Zend_Form) {
-                        $this->_form = $arg['form'];
-                    }
-                    if (isset($arg['processPartial'])) {
-                        $this->_processPartial = (bool) $arg['processPartial'];
-                    }
-                    if (isset($arg['xmlHttpOnly'])) {
-                        $this->_xmlHttpOnly = (bool) $arg['xmlHttpOnly'];
-                    }
-                    if (isset($arg['xmlHttpErrorResponseType'])) {
-                        $this->_xmlHttpErrorResponseType = (string) $arg['xmlHttpErrorResponseType'];
-                    }
-                }
-            }
-        }
-        if (null === $this->_form) {
-            // call initForm with all but first parameters passed to the constructor
-            $args = func_get_args();
-            array_shift($args);
-            $form = call_user_func_array(array($this, 'initForm'), $args);
-            if (!$form instanceof Zend_Form) {
-                throw new Zefram_Exception('initForm() must return an instance of Zend_Form');
-            }
-            $this->_form = $form;
-        }
         parent::__construct($controller);
-    } // }}}
 
-    public function initForm() // {{{
-    {
-        throw new Zefram_Exception(__METHOD__ . '() is not implemented');
+        // do not overwrite $this->_form if it was set in constructor
+        if (!$this->_form instanceof Zend_Form) {
+            $this->_form = null;
+
+            if (func_num_args() > 1) {
+                $arg = func_get_arg(1);
+                if ($arg instanceof Zend_Form) {
+                    $this->_form = $arg;
+                } else {
+                    if ($arg instanceof Zend_Config) {
+                        $arg = $arg->toArray();
+                    }
+                    if (is_array($arg)) {
+                        // read config values from array
+                        if (isset($arg['form']) && $arg['form'] instanceof Zend_Form) {
+                            $this->_form = $arg['form'];
+                        }
+                        if (isset($arg['processPartial'])) {
+                            $this->_processPartial = (bool) $arg['processPartial'];
+                        }
+                        if (isset($arg['xmlHttpOnly'])) {
+                            $this->_xmlHttpOnly = (bool) $arg['xmlHttpOnly'];
+                        }
+                        if (isset($arg['xmlHttpErrorResponseType'])) {
+                            $this->_xmlHttpErrorResponseType = (string) $arg['xmlHttpErrorResponseType'];
+                        }
+                    }
+                }
+            }
+            if (null === $this->_form) {
+                // call initForm with all but first parameters passed to the constructor
+                $args = func_get_args();
+                array_shift($args);
+                $form = call_user_func_array(array($this, 'initForm'), $args);
+                if (!$form instanceof Zend_Form) {
+                    throw new Zefram_Exception('initForm() must return an instance of Zend_Form');
+                }
+                $this->_form = $form;
+            }
+        }
     } // }}}
 
     public function getForm() // {{{
     {
         return $this->_form;
+    } // }}}
+
+    /**
+     * Creates form to be processed
+     *
+     * This method gets called only if no form was supplied to the constructor. 
+     */
+    public function initForm() // {{{
+    {
+        throw new Zefram_Exception(__METHOD__ . '() is not implemented');
     } // }}}
 
     /**
@@ -225,14 +238,18 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
     /**
      * Logic executed after form was submitted and no exceptions were thrown
      *
+     * @param bool $isXmlHttp   whether form was accessed through AJAX
      * @param bool $isProcessed if form was processed and $result value is valid 
      * @param mixed $result     form processing result
      */
-    protected function _onSubmitResponse($isProcessed, $result) // {{{
+    protected function _onSubmitResponse($isXmlHttp, $isProcessed, $result) // {{{
     {
-        if ($this->_isXmlHttp) {
+        // do not rely on $this->_isXmlHttp since it can be changed in _process / _processPartial
+        if ($isXmlHttp) {
             if ($isProcessed) {
-                $xmlHttpResponse = array('status' => 'ok');
+                $xmlHttpResponse = array(
+                    'status' => self::STATUS_OK,
+                );
                 // if result of _process or _processPartial is an array,
                 // it is attached to AJAX response. If it contains 'status' key, 
                 // it will be removed.
@@ -249,15 +266,17 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
                 // render form markup or return form errors depending on config
                 if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
                     $xmlHttpResponse = array(
-                        'status' => 'error',
-                        'type'   => self::XMLHTTP_RESPONSE_XHTML,
-                        'data'   => '<FormXhtml>' . self::formXhtml($form) . '</FormXhtml>',
+                        'status'  => self::STATUS_ERROR,
+                        'type'    => self::XMLHTTP_RESPONSE_MARKUP,
+                        'message' => 'Form validation error',
+                        'data'    => self::formXhtml($form),
                     );
                 } else {
                     $xmlHttpResponse = array(
-                        'status' => 'error',
-                        'type'   => self::XMLHTTP_RESPONSE_ERRORS,
-                        'data'   => array(
+                        'status'  => self::STATUS_ERROR,
+                        'type'    => self::XMLHTTP_RESPONSE_ERRORS,
+                        'message' => 'Form validation error',
+                        'data'    => array(
                             'form'     => $form->getCustomMessages(),
                             'elements' => $this->_getErrorMessages($form),
                         ),
@@ -303,7 +322,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
                         $isProcessed = true;
                     }
                 }
-                return $this->_onSubmitResponse($isProcessed, $result);
+                return $this->_onSubmitResponse($isXmlHttp, $isProcessed, $result);
 
             } catch (Zefram_Exception_Ignore $e) {
                 // ignore exception - used to silently pop-out of processing chain
@@ -313,7 +332,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
                 // form processing interrupted by exception
                 if ($isXmlHttp) {
                     $response = array(
-                        'status'  => 'error',
+                        'status'  => self::STATUS_ERROR,
                         'type'    => get_class($e),
                         'message' => $e->getMessage(),
                     );
@@ -345,9 +364,9 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
 
         if ($isXmlHttp) {
             $response = array(
-                'status' => 'init',
-                'type'   => self::XMLHTTP_RESPONSE_XHTML,
-                'data'   => '<FormXhtml>' . $content . '</FormXhtml>',
+                'status' => self::STATUS_INIT,
+                'type'   => self::XMLHTTP_RESPONSE_MARKUP,
+                'data'   => $content,
             );
             return $this->_json($response);
         } else {
