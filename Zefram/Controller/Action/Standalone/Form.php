@@ -36,6 +36,11 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
     protected $_processPartial = false;
 
     /**
+     * Allow use of AJAX protocol is access through AJAX
+     * @var bool
+     */
+    protected $_xmlHttpAllowed = true;
+    /**
      * Return response suitable for AJAX handling, regardless of whether 
      * action was accessed through AJAX or not
      * @var bool
@@ -138,7 +143,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
      *
      * @param array $values     array of form values
      */
-    protected function _process(array $values) // {{{
+    protected function _processForm(array $values) // {{{
     {
         throw new Zefram_Exception(__METHOD__ . '() is not implemented');
     } // }}}
@@ -148,7 +153,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
      *
      * @param array $partialValues array of valid values
      */
-    protected function _processPartial(array $partialValues) // {{{
+    protected function _processPartialForm(array $partialValues) // {{{
     {
         throw new Zefram_Exception(__METHOD__ . '() is not implemented');
     } // }}}
@@ -239,10 +244,9 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
      * Logic executed after form was submitted and no exceptions were thrown
      *
      * @param bool $isXmlHttp   whether form was accessed through AJAX
-     * @param bool $isProcessed if form was processed and $result value is valid 
      * @param mixed $result     form processing result
      */
-    protected function _onSubmitResponse($isXmlHttp, $isProcessed, $result) // {{{
+    protected function _onSubmitResponse($isXmlHttp, $result) // {{{
     {
         // do not rely on $this->_isXmlHttp since it can be changed in _process / _processPartial
         if ($isXmlHttp) {
@@ -262,37 +266,15 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
                 } elseif (!empty($result)) {
                     $xmlHttpResponse['data'] = $result;
                 }
-            } else {
-                // render form markup or return form errors depending on config
-                if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
-                    $xmlHttpResponse = array(
-                        'status'  => self::STATUS_ERROR,
-                        'type'    => self::XMLHTTP_RESPONSE_MARKUP,
-                        'message' => 'Form validation error',
-                        'data'    => self::formXhtml($form),
-                    );
-                } else {
-                    $xmlHttpResponse = array(
-                        'status'  => self::STATUS_ERROR,
-                        'type'    => self::XMLHTTP_RESPONSE_ERRORS,
-                        'message' => 'Form validation error',
-                        'data'    => array(
-                            'form'     => $form->getCustomMessages(),
-                            'elements' => $this->_getErrorMessages($form),
-                        ),
-                    );
-                }
-            }
+            } 
             return $this->_json($xmlHttpResponse);
         }
 
-        if ($isProcessed) {
-            // if result is a string, assume it is an url to redirect to,
-            // otherwise reload the current URL
-            return is_string($result)
-                 ? $this->_redirect($result)
-                 : $this->_reloadRedirect();
-        }
+        // if result is a string, assume it is an url to redirect to,
+        // otherwise reload the current URL
+        return is_string($result)
+             ? $this->_redirect($result)
+             : $this->_reloadRedirect();
     } // }}}
     
     /**
@@ -303,7 +285,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
         $form = $this->_form;
         $request = $this->getRequest();
 
-        $isXmlHttp = $this->_isXmlHttp = $this->_xmlHttpOnly || $request->isXmlHttpRequest();
+        $isXmlHttp = $this->_isXmlHttp = $this->_xmlHttpAllowed && ($this->_xmlHttpOnly || $request->isXmlHttpRequest());
 
         if (($submitData = $this->_getSubmitData()) !== null) {
             try {
@@ -313,16 +295,40 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
                 if ($this->_processPartial) {
                     $validData = $form->getValidValues($submitData);
                     if (count($validData)) {
-                        $result = $this->_processPartial($validData);
+                        $result = $this->_processPartialForm($validData);
                         $isProcessed = true;
                     }
                 } else {
                     if ($form->isValid($submitData)) {
-                        $result = $this->_process($form->getValues());
+                        $result = $this->_processForm($form->getValues());
                         $isProcessed = true;
                     }
                 }
-                return $this->_onSubmitResponse($isXmlHttp, $isProcessed, $result);
+                if ($isProcessed) {
+                    return $this->_onSubmitResponse($isXmlHttp, $result);
+                } else {
+                    if ($isXmlHttp) {
+                        // render form markup or return form errors depending on config
+                        if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
+                            $xmlHttpResponse = array(
+                                'status'  => self::STATUS_ERROR,
+                                'type'    => self::XMLHTTP_RESPONSE_MARKUP,
+                                'message' => 'Form validation error',
+                                'data'    => self::formXhtml($form),
+                            );
+                        } else {
+                            $xmlHttpResponse = array(
+                                'status'  => self::STATUS_ERROR,
+                                'type'    => self::XMLHTTP_RESPONSE_ERRORS,
+                                'message' => 'Form validation error',
+                                'data'    => array(
+                                    'form'     => $form->getCustomMessages(),
+                                    'elements' => $this->_getErrorMessages($form),
+                                ),
+                            );
+                        }
+                    }
+                }
 
             } catch (Zefram_Exception_Ignore $e) {
                 // ignore exception - used to silently pop-out of processing chain
@@ -346,6 +352,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
 
         // if generating page response from view, form is set at 'form' property
         $view = $this->getView();
+
         $controller = $this->getController();
         $template   = $view->getScriptPath($controller->getViewScript());
         if ((false === $template) || !file_exists($template)) {
