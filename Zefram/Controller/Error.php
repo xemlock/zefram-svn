@@ -4,10 +4,6 @@ class Zefram_Controller_Error extends Zefram_Controller_Action
 {
     public function errorAction()
     {
-        if (!isset($this->view->title)) {
-            $this->view->title = 'An error occurred';
-        }
-
         $errors = $this->_getParam('error_handler');
 
         if (!$errors) {
