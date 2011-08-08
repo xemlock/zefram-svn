@@ -250,23 +250,21 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
     {
         // do not rely on $this->_isXmlHttp since it can be changed in _process / _processPartial
         if ($isXmlHttp) {
-            if ($isProcessed) {
-                $xmlHttpResponse = array(
-                    'status' => self::STATUS_OK,
-                );
-                // if result of _process or _processPartial is an array,
-                // it is attached to AJAX response. If it contains 'status' key, 
-                // it will be removed.
-                // if it is not an array, place it at 'data' key
-                if (is_array($result)) {
-                    if (isset($result['status'])) {
-                        unset($result['status']);
-                    }
-                    $xmlHttpResponse = array_merge($xmlHttpResponse, $result);
-                } elseif (!empty($result)) {
-                    $xmlHttpResponse['data'] = $result;
+            $xmlHttpResponse = array(
+                'status' => self::STATUS_OK,
+            );
+            // if result of _process or _processPartial is an array,
+            // it is attached to AJAX response. If it contains 'status' key, 
+            // it will be removed.
+            // if it is not an array, place it at 'data' key
+            if (is_array($result)) {
+                if (isset($result['status'])) {
+                    unset($result['status']);
                 }
-            } 
+                $xmlHttpResponse = array_merge($xmlHttpResponse, $result);
+            } elseif (!empty($result)) {
+                $xmlHttpResponse['data'] = $result;
+            }
             return $this->_json($xmlHttpResponse);
         }
 
