@@ -53,8 +53,11 @@ class Zefram_Form extends Zend_Form
             } elseif (!is_array($options['filters'])) {
                 $options['filters'] = (array) $options['filters'];
             }
-            array_unshift($options['filters'], 'StringTrim');
-            array_unshift($options['filters'], array('filter' => 'Null', 'options' => 'string'));
+            array_unshift($options['filters'],
+                new Zefram_Filter_Scalar, // not scalars to empty strings
+                'StringTrim',             // trim strings
+                array('filter' => 'Null', 'options' => 'string') // convert empty strings to null
+            );
 
             switch (strtolower($element)) {
                 case 'hidden':
@@ -83,7 +86,17 @@ class Zefram_Form extends Zend_Form
             }
         }
 
-        return parent::addElement($element, $name, $options);
+        parent::addElement($element, $name, $options);
+
+        $element = $this->getElement($name);
+        if ($element->isArray()) {
+            // if element expects an array value, remove filters that 
+            // convert value to string
+            $element->removeFilter('Zefram_Filter_Scalar')
+                    ->removeFilter('StringTrim');
+        }
+
+        return $this;
     }
 
     static public function formDecorators() 
