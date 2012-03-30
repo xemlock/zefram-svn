@@ -88,7 +88,12 @@ class Zefram_Form extends Zend_Form
 
         parent::addElement($element, $name, $options);
 
-        $element = $this->getElement($name);
+        if (!$element instanceof Zend_Form_Element) {
+            $element = $this->getElement($name);
+            if (empty($element)) {
+                throw new Exception('Element not found: ' . $name);
+            }
+        }
         if ($element->isArray()) {
             // if element expects an array value, remove filters that 
             // convert value to string
