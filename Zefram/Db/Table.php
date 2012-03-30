@@ -10,18 +10,22 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      */
     public function fetchAllAsArray($where = null, $order = null, $count = null, $offset = null)
     {
-        $select = $this->select();
+        if (!($where instanceof Zend_Db_Table_Select)) {
+            $select = $this->select();
 
-        if (null !== $where) {
-            $this->_where($select, $where);
-        }
-        
-        if ($order !== null) {
-            $this->_order($select, $order);
-        }
+            if (null !== $where) {
+                $this->_where($select, $where);
+            }
+            
+            if ($order !== null) {
+                $this->_order($select, $order);
+            }
 
-        if ($count !== null || $offset !== null) {
-            $select->limit($count, $offset);
+            if ($count !== null || $offset !== null) {
+                $select->limit($count, $offset);
+            }
+        } else {
+            $select = $where;
         }
 
         return $this->getAdapter()->fetchAll($select, null, Zend_Db::FETCH_ASSOC);
@@ -36,17 +40,21 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      */
     public function fetchRowAsArray($where = null, $order = null, $offset = null)
     {
-        $select = $this->select();
+        if (!($where instanceof Zend_Db_Select)) {
+            $select = $this->select();
 
-        if ($where !== null) {
-            $this->_where($select, $this->_wherePrimary($where));
+            if ($where !== null) {
+                $this->_where($select, $this->_wherePrimary($where));
+            }
+
+            if ($order !== null) {
+                $this->_order($select, $order);
+            }
+
+            $select->limit(1, is_numeric($offset) ? intval($offset) : null);
+        } else {
+            $select = $where;
         }
-
-        if ($order !== null) {
-            $this->_order($select, $order);
-        }
-
-        $select->limit(1, is_numeric($offset) ? intval($offset) : null);
 
         $row = $this->getAdapter()->fetchRow($select, null, Zend_Db::FETCH_ASSOC);
         return empty($row) ? false : $row;
@@ -67,12 +75,25 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
         return $this->_schema;
     }
 
+    /**
+     * Count rows matching $where
+     *
+     * @return int
+     */
+    public function countAll($where)
+    {
+        $select = $this->select();
+        $select->from($this->_name, 'COUNT(*) AS cnt');
+
+        $row = $this->fetchRowAsArray($select);
+        return intval($row['cnt']);
+    }
+
     // numeric $where value is treated as pk = value condition
     // (works just like find but returns single row on success
     // rather than rowset).
     public function fetchRow($where = null, $order = null)
-    {
-        
+    {        
         return parent::fetchRow($this->_wherePrimary($where), $order);
     }
 
