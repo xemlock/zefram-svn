@@ -80,10 +80,14 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      *
      * @return int
      */
-    public function countAll($where)
+    public function countAll($where = null)
     {
         $select = $this->select();
         $select->from($this->_name, 'COUNT(*) AS cnt');
+
+        if (null !== $where) {
+            $this->_where($select, $this->_wherePrimary($where));
+        }
 
         $row = $this->fetchRowAsArray($select);
         return intval($row['cnt']);
