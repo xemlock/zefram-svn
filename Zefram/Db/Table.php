@@ -107,7 +107,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      */
     protected function _wherePrimary($where)
     {
-        if (is_scalar($where) && ($where == intval($where))) {
+        if (is_scalar($where) && ctype_digit((string) $where)) {
             // numeric primary key
             $primary = $this->info(Zend_Db_Table_Abstract::PRIMARY);
             if (count($primary) == 1) {
