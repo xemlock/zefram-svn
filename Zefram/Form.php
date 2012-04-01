@@ -74,10 +74,18 @@ class Zefram_Form extends Zend_Form
                     }
                     break;
 
+                case 'file':
+                    if (!isset($options['decorators'])) {
+                        $options['decorators'] = self::fileDecorators();
+                    }
+                    break;
+
                 case 'textarea':
                     // set textarea dimensions
                     if (!isset($options['cols'])) $options['cols'] = 50;
                     if (!isset($options['rows'])) $options['rows'] = 5;
+                    break;
+
             }
             if (!isset($options['decorators'])) {
                 $options['decorators'] = self::elementDecorators();
@@ -175,9 +183,31 @@ class Zefram_Form extends Zend_Form
             self::label(array('tag' => 'dt', 'disableFor' => true)), // label wrapped in <dt>
             array( // row (label and element) wrapped in <dl>
                 array('row' => 'HtmlTag'),
-                array('tag' => 'dl')
+                array('tag' => 'dl'),
             ),
         ), $opts);
+    }
+
+    public static function fileDecorators()
+    {
+        return array(
+            'File',
+            array('Description', array(
+                'tag' => 'p',
+                'class' => 'hint',
+                'escape' => false,
+            )),
+            'Errors',
+            array( // field wrapped in <dd>
+                array('data' => 'HtmlTag'),
+                array('tag' => 'dd')
+            ),
+            self::label(array('tag' => 'dt', 'disableFor' => true)), // label wrapped in <dt>
+            array( // row (label and element) wrapped in <dl>
+                array('row' => 'HtmlTag'),
+                array('tag' => 'dl'),
+            ),
+        );
     }
 
     static public function hiddenDecorators() 
