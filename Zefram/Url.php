@@ -53,7 +53,7 @@ abstract class Zefram_Url
     
     public static function serialize(Zend_Controller_Request_Abstract $request)
     {
-        $url = "{$request->module}/{$request->controller}/{$request->action}";
+        $url = "{$request->getModuleName()}/{$request->getControllerName()}/{$request->getActionName()}";
         $params = array();
         foreach ($request->getUserParams() as $key => $value) {
             if (in_array($key, array('module', 'controller', 'action'))) {
