@@ -2,6 +2,10 @@
 
 class Zefram_Controller_Plugin_ErrorHandler extends Zend_Controller_Plugin_Abstract
 {
+    protected $_errorModuleName     = null; // error controller resides in each module
+    protected $_errorControllerName = 'error';
+    protected $_errorActionName     = 'error';
+
     const EXCEPTION_NO_CONTROLLER = 'EXCEPTION_NO_CONTROLLER';
     const EXCEPTION_NO_ACTION     = 'EXCEPTION_NO_ACTION';
     const EXCEPTION_NO_ROUTE      = 'EXCEPTION_NO_ROUTE';
@@ -23,8 +27,11 @@ class Zefram_Controller_Plugin_ErrorHandler extends Zend_Controller_Plugin_Abstr
     public function preDispatch(Zend_Controller_Request_Abstract $request)
     {
         if ($this->_error) {
-            $request->setControllerName('error')
-                    ->setActionName('error')
+            if ($this->_errorModuleName) {
+                $request->setModuleName($this->_errorModuleName);
+            }
+            $request->setControllerName($this->_errorControllerName)
+                    ->setActionName($this->_errorActionName)
                     ->setParam('error_handler', $this->_error);
         }
     }
