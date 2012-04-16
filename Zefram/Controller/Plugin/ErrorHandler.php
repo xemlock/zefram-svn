@@ -44,6 +44,7 @@ l(__METHOD__ . ': [' . $request->getModuleName() . ', ' . $request->getControlle
     {
         $response = $this->getResponse();
         if ($response->isException()) {
+       l(__METHOD__);
             if ($this->_error) {
                 // juz mamy blad, wiecej nam nie potrzeba
                 return;

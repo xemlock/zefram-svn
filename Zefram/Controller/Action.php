@@ -7,13 +7,23 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $unitClass = $controller . '_' . $action;
         if (!class_exists($unitClass, false)) {
             $frontController = Zend_Controller_Front::getInstance();
-            $dir = $frontController->getModuleDirectory()
-                 . '/' . $frontController->getModuleControllerDirectoryName();
-            $file = $dir . '/' . $controller . '/' . $action . '.php';
+            $controllerDirectories = $frontController->getControllerDirectory();
 
-            if (file_exists($file)) {
+            $module = $this->_request->getModuleName();
+            if (empty($module)) {
+                $module = $frontController->getDefaultModule();
+            }
+            $dir = $controllerDirectories[$module];
+
+            // remove module prefix from controller name            
+            $controllerName = implode('', array_slice(explode('_', $controller), -1));
+
+            $file = $dir . '/' . $controllerName . '/' . $action . '.php';
+
+            if (is_file($file)) {
                 include_once $file;
             }
+
             if (!class_exists($unitClass, false)) {
                 return null;
             }
@@ -26,7 +36,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $controller = get_class($this);
         $action = ucfirst(preg_replace_callback(
             '/-([a-zA-Z0-9]+)/', 
-            create_function('$matches', 'return ucfirst($matches[1]);'),
+            create_function('$match', 'return ucfirst($match[1]);'),
             $actionName
         ));
         $action .= 'Action';
@@ -35,7 +45,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     }
 
     public function __call($method, $arguments)
-    {
+    {        
         if (!strcasecmp(substr($method, -6), 'Action')) {
             // undefined action, try running unit action
             $unitClass = $this->getUnitClass(substr($method, 0, -6));
