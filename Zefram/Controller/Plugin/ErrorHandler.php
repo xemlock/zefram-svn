@@ -14,6 +14,7 @@ class Zefram_Controller_Plugin_ErrorHandler extends Zend_Controller_Plugin_Abstr
 
     public function routeShutdown(Zend_Controller_Request_Abstract $request)
     {
+l(__METHOD__ . ': [' . $request->getModuleName() . ', ' . $request->getControllerName() . ', ' . $request->getActionName() . ']');
         $this->_handleError($request, 'routeShutdown');
     }
 
@@ -27,12 +28,15 @@ class Zefram_Controller_Plugin_ErrorHandler extends Zend_Controller_Plugin_Abstr
     public function preDispatch(Zend_Controller_Request_Abstract $request)
     {
         if ($this->_error) {
+            l(__METHOD__ . ': ' . $this->_error->exception->getMessage());
+
             if ($this->_errorModuleName) {
                 $request->setModuleName($this->_errorModuleName);
             }
             $request->setControllerName($this->_errorControllerName)
                     ->setActionName($this->_errorActionName)
                     ->setParam('error_handler', $this->_error);
+l(__METHOD__ . ': [' . $request->getModuleName() . ', ' . $request->getControllerName() . ', ' . $request->getActionName() . ']');
         }
     }
 

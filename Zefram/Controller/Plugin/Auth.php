@@ -4,6 +4,9 @@
  */
 class Zefram_Controller_Plugin_Auth extends Zend_Controller_Plugin_Abstract
 {
+    protected $_errorModuleName = null;
+    protected $_errorControllerName = 'error';
+
     protected $_auth;
     protected $_acl;
 
@@ -26,13 +29,16 @@ class Zefram_Controller_Plugin_Auth extends Zend_Controller_Plugin_Abstract
         // nie rzucamy wyjatkow bo w zaleznosci od ustawien (throwExceptions)
         // moze sie okazac, ze dostep do akcji zostanie dany.
 
-        $controller = $request->controller;
-        if ($controller == 'error') {
+        $controller = $request->getControllerName();
+        if ($controller == $this->_errorControllerName) {
+            if ($this->_errorModuleName) {
+                $request->setModuleName($this->_errorModuleName);
+            }
             return;
         }
 
-        $action = $request->action;
-        $module = $request->module;
+        $action = $request->getActionName();
+        $module = $request->getModuleName();
  
         $role = $this->_acl->getCurrentRole();
 

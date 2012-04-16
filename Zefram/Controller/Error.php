@@ -60,6 +60,8 @@ class Zefram_Controller_Error extends Zefram_Controller_Action
         if ($this->getInvokeArg('displayExceptions') == true) {
             $this->view->exception = $errors->exception;
         }
+
+        
     }
 
     public function getLog()
