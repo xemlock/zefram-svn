@@ -44,7 +44,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
             $select = $this->select();
 
             if ($where !== null) {
-                $this->_where($select, $this->_wherePrimary($where));
+                $this->_where($select, $this->_whereId($where));
             }
 
             if ($order !== null) {
@@ -86,7 +86,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
         $select->from($this->_name, 'COUNT(*) AS cnt');
 
         if (null !== $where) {
-            $this->_where($select, $this->_wherePrimary($where));
+            $this->_where($select, $this->_whereId($where));
         }
 
         $row = $this->fetchRowAsArray($select);
@@ -97,15 +97,56 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     // (works just like find but returns single row on success
     // rather than rowset).
     public function fetchRow($where = null, $order = null)
-    {        
-        return parent::fetchRow($this->_wherePrimary($where), $order);
+    {
+        if (is_scalar($where)) {
+            trigger_error(__METHOD__ . ': obsolete call detected. Use fetchById() instead', E_USER_NOTICE);
+        }
+        return parent::fetchRow($this->_whereId($where), $order);
     }
+
+    /**
+     * Storage for rows fetched by {@link find()}.
+     * @var array
+     */
+    protected $_identityMap;
+
+    /**
+     * Finds a record by its identifier.
+     *
+     * @param mixed $id           Database row ID
+     * @return mixed              Zend_Db_Table_Row or false if no result
+     */
+    public function find($id)
+    {
+        $id  = array_values((array) $id);
+        $key = implode(' ', $id);
+
+        if (!isset($this->_identityMap[$key])) {
+            $primary = $this->info(Zend_Db_Table_Abstract::PRIMARY);
+
+            if (count($id) != count($primary)) {
+                throw new Exception('Incomplete primary key');
+            }
+
+            $db    = $this->getAdapter();
+            $where = array();
+
+            foreach (array_values($primary) as $position => $name) {
+                $where[$db->quoteIdentifier($name) . ' = ?'] = $id[$position];
+            }
+
+            $this->_identityMap[$key] = $this->fetchRow($where);
+        }
+
+        return $this->_identityMap[$key];
+    }
+
 
     /**
      * If parameter is scalar and integer it is converted to
      * primary key condition.
      */
-    protected function _wherePrimary($where)
+    protected function _whereId($where)
     {
         if (is_scalar($where) && ctype_digit((string) $where)) {
             // numeric primary key
