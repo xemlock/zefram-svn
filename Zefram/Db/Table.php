@@ -113,26 +113,36 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     /**
      * Finds a record by its identifier.
      *
-     * @param mixed $id           Database row ID
-     * @return mixed              Zend_Db_Table_Row or false if no result
+     * @param mixed $id         Database row ID
+     * @return mixed            Zend_Db_Table_Row or false if no result
+     * @throws Exception        incomplete primary key values given
+     *                          or if column does not belong to primary key
      */
     public function find($id)
     {
-        $id  = array_values((array) $id);
-        $key = implode(' ', $id);
+        $primary = array_values($this->info(Zend_Db_Table_Abstract::PRIMARY));
+
+        if (!is_array($id)) {
+            $id = array($primary[0] => (string) $id);
+        } else {
+            $id = array_map('strval', $id);
+        }
+
+        ksort($id);
+        $key = serialize($id);
 
         if (!isset($this->_identityMap[$key])) {
-            $primary = $this->info(Zend_Db_Table_Abstract::PRIMARY);
-
-            if (count($id) != count($primary)) {
-                throw new Exception('Incomplete primary key');
-            }
-
             $db    = $this->getAdapter();
             $where = array();
 
-            foreach (array_values($primary) as $position => $name) {
-                $where[$db->quoteIdentifier($name) . ' = ?'] = $id[$position];
+            foreach ($primary as $column) {
+                if (isset($id[$column])) {
+                    $where[$db->quoteIdentifier($column) . ' = ?'] = $id[$column];
+                }
+            }
+
+            if (count($where) != count($primary)) {
+                throw new Exception('Incomplete primary key values');
             }
 
             $this->_identityMap[$key] = $this->fetchRow($where);
