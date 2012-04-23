@@ -118,7 +118,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      * @throws Exception        incomplete primary key values given
      *                          or if column does not belong to primary key
      */
-    public function find($id)
+    public function findRow($id)
     {
         $primary = array_values($this->info(Zend_Db_Table_Abstract::PRIMARY));
 
