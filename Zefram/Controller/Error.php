@@ -44,7 +44,7 @@ class Zefram_Controller_Error extends Zefram_Controller_Action
 
         if ($this->_request->isXmlHttpRequest()) {
             // to avoid complications with AJAX response handling set code to 200 OK
-            $this->getResponse()->setHttpResponseCode(200);
+            // $this->getResponse()->setHttpResponseCode(200);
             $response = array(
                 'status'  => 'error',
                 'type'    => get_class($errors->exception),
