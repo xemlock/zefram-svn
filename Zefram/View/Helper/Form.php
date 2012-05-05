@@ -23,7 +23,6 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_FormElement
                 $form->getAttribs(),
                 (array) $attribs
             );
-            $form = $form->getFullyQualifiedName();
         }
 
         // ZF version 1.11.1: no closing tag is rendered if content is false
