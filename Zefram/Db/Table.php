@@ -44,7 +44,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
             $select = $this->select();
 
             if ($where !== null) {
-                $this->_where($select, $this->_whereId($where));
+                $this->_where($select, $where);
             }
 
             if ($order !== null) {
@@ -86,22 +86,11 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
         $select->from($this->_name, 'COUNT(*) AS cnt');
 
         if (null !== $where) {
-            $this->_where($select, $this->_whereId($where));
+            $this->_where($select, $where);
         }
 
         $row = $this->fetchRowAsArray($select);
         return intval($row['cnt']);
-    }
-
-    // numeric $where value is treated as pk = value condition
-    // (works just like find but returns single row on success
-    // rather than rowset).
-    public function fetchRow($where = null, $order = null)
-    {
-        if (is_scalar($where)) {
-            trigger_error(__METHOD__ . ': obsolete call detected. Use fetchById() instead', E_USER_NOTICE);
-        }
-        return parent::fetchRow($this->_whereId($where), $order);
     }
 
     /**
@@ -152,10 +141,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     }
 
 
-    /**
-     * If parameter is scalar and integer it is converted to
-     * primary key condition.
-     */
+    /*
     protected function _whereId($where)
     {
         if (is_scalar($where) && ctype_digit((string) $where)) {
@@ -169,4 +155,5 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
         }
         return $where;
     }
+     */
 }
