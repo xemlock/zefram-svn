@@ -2,14 +2,19 @@
 
 /**
  * Class for encapsulation of a standalone action logic.
+ *
+ * @version 2012-05-10
  */
 abstract class Zefram_Controller_Action_Standalone_Abstract
 {
     protected $_controller;
+    protected $_helper;
+
 
     public function __construct(Zend_Controller_Action $controller) 
     {
         $this->_controller = $controller;
+        $this->_helper = new Zefram_Controller_Action_Standalone_HelperBroker($this);
         $this->init();
     }
 
