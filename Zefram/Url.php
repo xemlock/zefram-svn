@@ -13,7 +13,7 @@ abstract class Zefram_Url
      * Recognized schemes:
      * - module/controller/action
      * - controller/action
-     * - controller
+     * - action
      * Parameters are separated by ?.
      */
     public static function unserialize($urlString)
@@ -30,7 +30,7 @@ abstract class Zefram_Url
         } elseif (count($path) > 1) {
             list($controller, $action) = $path;
         } elseif (!empty($path[0])) {
-            $controller = $path[0];
+            $action = $path[0];
         }
 
         $opts = array('module' => null, 'controller' => null, 'action' => null);
