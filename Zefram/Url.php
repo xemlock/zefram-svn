@@ -55,13 +55,15 @@ abstract class Zefram_Url
     {
         $url = "{$request->getModuleName()}/{$request->getControllerName()}/{$request->getActionName()}";
         $params = array();
-        foreach ($request->getUserParams() as $key => $value) {
+
+        foreach ($request->getParams() as $key => $value) {
             if (in_array($key, array('module', 'controller', 'action'))) {
                 continue;
             }
             $params[] = $key;
             $params[] = $value;
         }
+
         $params = count($params) ? '?' . implode('/', $params) : null;
         return $url . $params;
     }
