@@ -8,13 +8,17 @@
 abstract class Zefram_Controller_Action_Standalone_Abstract
 {
     protected $_controller;
+
     protected $_helper;
 
+    protected $_request;
 
     public function __construct(Zend_Controller_Action $controller) 
     {
         $this->_controller = $controller;
-        $this->_helper = new Zefram_Controller_Action_Standalone_HelperBroker($this);
+        $this->_request    = $controller->getRequest();
+        $this->_helper     = new Zefram_Controller_Action_Standalone_HelperBroker($this);
+
         $this->init();
     }
 
@@ -28,7 +32,7 @@ abstract class Zefram_Controller_Action_Standalone_Abstract
 
     public function getView()
     {
-        return $this->_controller->view;
+        return $this->_controller->initView();
     }
 
     abstract public function run();
