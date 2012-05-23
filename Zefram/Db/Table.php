@@ -94,7 +94,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     }
 
     /**
-     * Storage for rows fetched by {@link find()}.
+     * Storage for rows fetched by {@link findRow()}.
      * @var array
      */
     protected $_identityMap;
@@ -140,6 +140,16 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
         return $this->_identityMap[$key];
     }
 
+    public function findRowAsArray($id)
+    {
+        $row = $this->findRow($id);
+
+        if ($row) {
+            return $row->toArray();
+        }
+
+        return false;
+    }
 
     /*
     protected function _whereId($where)
