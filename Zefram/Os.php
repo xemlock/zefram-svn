@@ -2,6 +2,41 @@
 
 class Zefram_Os 
 {
+    public function normalizePath($path)
+    {
+        $parts = preg_split('/[\\\/][\\\/]*/', $path);
+        $normalized = array();
+
+        while ($parts) {
+            $part = array_shift($parts);
+
+            switch ($part) {
+                case '..':
+                    $atroot = empty($normalized)
+                              || (1 == count($normalized) && ($normalized[0] == '' || substr($normalized[0], -1) == ':'));
+                    if (!$atroot) {
+                        array_pop($normalized);
+                    }
+                    break;
+
+                case '.':
+                    break;
+
+                case '':
+                    if (empty($normalized)) {
+                        array_push($normalized, '');
+                    }
+                    break;
+
+                default:
+                    array_push($normalized, $part);
+                    break;
+            }
+        }
+
+        return implode('/', $normalized);
+    }
+
     public static function pathLookup($filename)
     {
         $dirs = explode(PATH_SEPARATOR, getenv('PATH'));
