@@ -151,6 +151,17 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
         return false;
     }
 
+    /**
+     * Created an instance of a Zend_Db_Table_Select
+     *
+     * @param array|string|Zend_Db_Expr $columns
+     */
+    public function selectColumns($columns)
+    {
+        return $this->select()
+                    ->from($this->_name, $columns, $this->_schema);
+    }
+
     /*
     protected function _whereId($where)
     {
