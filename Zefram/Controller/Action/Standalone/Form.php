@@ -333,6 +333,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
                 // useful when handling multiple-submit form
 
             } catch (Exception $e) {
+throw $e;
                 // form processing interrupted by exception
                 if ($isXmlHttp) {
                     $response = array(
