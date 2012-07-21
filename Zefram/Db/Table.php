@@ -80,7 +80,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      *
      * @return int
      */
-    public function countRows($where = null)
+    public function countAll($where = null)
     {
         $select = $this->select();
         $select->from($this->_name, 'COUNT(*) AS cnt');
