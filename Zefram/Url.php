@@ -60,6 +60,9 @@ abstract class Zefram_Url
             if (in_array($key, array('module', 'controller', 'action'))) {
                 continue;
             }
+            if (!is_scalar($value)) {
+                continue;
+            }
             $params[] = $key;
             $params[] = $value;
         }
