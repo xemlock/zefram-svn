@@ -25,13 +25,13 @@ class Zefram_Config_Ini extends Zend_Config_Ini
 
         parent::__construct($filename, $section, $options);
 
-        // if section name contains dots, move it to the position in 
-        // the tree corresponding to this path, ie.:
+        // if section's name contains dots, move this section to the 
+        // corrseponding position in the tree, e.g.
         //      "a.b.c"
-        // will be converted to
+        // will be expanded to
         //      "a"->"b"->"c"
         foreach ($this->_data as $key => $value) {
-            if ($value instanceof Zend_Config && false !== strpos($key, '.')) {              
+            if ($value instanceof Zend_Config && false !== strpos($key, '.')) {
                 unset($this->_data[$key]);
                 $parts = explode('.', $key);
                 $ptr = $this;
@@ -54,5 +54,3 @@ class Zefram_Config_Ini extends Zend_Config_Ini
         }
     }
 }
-
-// vim: sw=4
