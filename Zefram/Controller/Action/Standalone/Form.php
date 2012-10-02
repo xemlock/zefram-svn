@@ -183,9 +183,9 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
         $request       = $this->getRequest();
         $params        = $request->getUserParams();
 
-        $moduleKey     = $params->getModuleKey();
-        $controllerKey = $params->getControllerKey();
-        $actionKey     = $params->getActionKey();
+        $moduleKey     = $request->getModuleKey();
+        $controllerKey = $request->getControllerKey();
+        $actionKey     = $request->getActionKey();
 
         $module        = $params[$moduleKey];
         $controller    = $params[$controllerKey];
