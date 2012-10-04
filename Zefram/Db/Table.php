@@ -63,16 +63,14 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
 
     // does anybody know why these are missing in Zend_Db
     // info() is somewhat inconvenient
-    public function getName($quote = false)
+    public function getName()
     {
-        return $quote
-             ? $this->getAdapter()->quoteIdentifier($this->_name)
-             : $this->_name;
+        return $this->info(self::NAME);
     }
 
     public function getQuotedName()
     {
-        return $this->getAdapter()->quoteIdentifier($this->_name);
+        return $this->getAdapter()->quoteIdentifier($this->info(self::NAME));
     }
 
     public function getSchema()
@@ -157,14 +155,16 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     }
 
     /**
-     * Created an instance of a Zend_Db_Table_Select
+     * Created an instance of a Zend_Db_Select
      *
      * @param array|string|Zend_Db_Expr $columns
      */
-    public function selectColumns($columns)
+    public function selectColumns($columns = Zend_Db_Select::SQL_WILDCARD)
     {
-        return $this->select()
-                    ->from($this->_name, $columns, $this->_schema);
+        $select = new Zend_Db_Select($this->getAdapter());
+        $select->from($this->info(self::NAME), $columns, $this->info(self::SCHEMA));
+
+        return $select;
     }
 
     /*
