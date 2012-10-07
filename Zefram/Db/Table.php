@@ -10,7 +10,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      */
     public function fetchAllAsArray($where = null, $order = null, $count = null, $offset = null)
     {
-        if (!($where instanceof Zend_Db_Table_Select)) {
+        if (!($where instanceof Zend_Db_Select)) {
             $select = $this->select();
 
             if (null !== $where) {
@@ -161,7 +161,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      */
     public function selectColumns($columns = Zend_Db_Select::SQL_WILDCARD)
     {
-        $select = new Zend_Db_Select($this->getAdapter());
+        $select = new Zefram_Db_Select($this->getAdapter());
         $select->from($this->info(self::NAME), $columns, $this->info(self::SCHEMA));
 
         return $select;
