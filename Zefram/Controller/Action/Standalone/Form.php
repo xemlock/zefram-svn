@@ -268,6 +268,11 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
             return $this->_json($xmlHttpResponse);
         }
 
+        // if false do not redirect
+        if (false === $result) {
+            return;
+        }
+
         // if result is a string, assume it is an url to redirect to,
         // otherwise reload the current URL
         return is_string($result)
