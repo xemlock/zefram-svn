@@ -12,7 +12,6 @@
  */
 class Zefram_Form extends Zend_Form
 {
-
     public function __construct($options = null)
     {
         if ($options instanceof Zend_Config) {
@@ -28,6 +27,53 @@ class Zefram_Form extends Zend_Form
             $options['elementDecorators'] = self::elementDecorators();
         }
         parent::__construct($options);
+    }
+
+    /**
+     * Adds the specified class(es) to the class attribute of this form
+     * instance.
+     *
+     * @param string $className
+     *     One or more class names to be added to the class attribute
+     */
+    public function addClass($className)
+    {
+        $class = implode(' ', array_keys(array_merge(
+            array_flip(preg_split('/\s+/', $this->getAttrib('class'), 0, PREG_SPLIT_NO_EMPTY)),
+            array_flip(preg_split('/\s+/', $className, 0, PREG_SPLIT_NO_EMPTY))
+        )));
+        if (strlen($class)) {
+            $this->setAttrib('class', $class);
+        } else {
+            $this->removeAttrib('class');
+        }
+        return $this;
+    }
+
+    /**
+     * Remove a single class, multiple classes, or all classes from class
+     * attribute of this form instance.
+     *
+     * @param string $className
+     *     OPTIONAL One or more space-separated classes to be removed from
+     *     the class attribute
+     */
+    public function removeClass($className = null)
+    {
+        if (null === $className) {
+            $this->removeAttrib('class');
+        } else {
+            $class = implode(' ', array_keys(array_diff_key(
+                array_flip(preg_split('/\s+/', $this->getAttrib('class'), 0, PREG_SPLIT_NO_EMPTY)),
+                array_flip(preg_split('/\s+/', $className, 0, PREG_SPLIT_NO_EMPTY))
+            )));
+            if (strlen($class)) {
+                $this->setAttrib('class', $class);
+            } else {
+                $this->removeAttrib('class', $class);
+            }
+        }
+        return $this;
     }
 
     /**
