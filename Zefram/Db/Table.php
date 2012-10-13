@@ -4,7 +4,8 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
 {
     /**
      * Fetches all rows, but returns them as arrays instead of objects.
-     * See {@link Zend_Db_Table_Abstract::fetchAll()} for parameter explanation.
+     * See {@link Zend_Db_Table_Abstract::fetchAll()} for parameter
+     * explanation.
      *
      * @return array
      */
@@ -105,10 +106,13 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     /**
      * Finds a record by its identifier.
      *
-     * @param mixed $id         Database row ID
-     * @return mixed            Zend_Db_Table_Row or false if no result
-     * @throws Exception        incomplete primary key values given
-     *                          or if column does not belong to primary key
+     * @param mixed $id
+     *     Database row ID
+     * @return mixed
+     *     Zend_Db_Table_Row or false if no result
+     * @throws Exception
+     *     when incomplete primary key values given or if column does not
+     *     belong to primary key
      */
     public function findRow($id)
     {
@@ -155,14 +159,32 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     }
 
     /**
-     * Created an instance of a Zend_Db_Select
+     * Created an instance of a Zend_Db_Select.
      *
-     * @param array|string|Zend_Db_Expr $columns
+     * selectColumns($column1, $column2, ..., $columnN)
+     * selectColumns(array('correlationName' => array($column1, $column2, ..., $columnN)))
+     *
+     * @param string|array $column
+     *     If string, it is used as a name of a column to select from this
+     *     table. If array, its first key is used as a table correlation name,
+     *     and the values corresponding to this key are used as column names
+     *     to be selected.
+     * @param string $column,... OPTIONAL
+     *     Number of additional columns to select from this table.
+     * @return Zefram_Db_Select
      */
-    public function selectColumns($columns = Zend_Db_Select::SQL_WILDCARD)
+    public function selectColumns($column = Zend_Db_Select::SQL_WILDCARD)
     {
+        if (is_array($column)) {
+            $columns = reset($column);
+            $name = array(key($column) => $this->info(self::NAME));
+        } else {
+            $columns = func_get_args();
+            $name = $this->info(self::NAME);
+        }
+
         $select = new Zefram_Db_Select($this->getAdapter());
-        $select->from($this->info(self::NAME), $columns, $this->info(self::SCHEMA));
+        $select->from($name, $columns, $this->info(self::SCHEMA));
 
         return $select;
     }
