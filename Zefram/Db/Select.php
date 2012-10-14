@@ -27,7 +27,7 @@ class Zefram_Db_Select extends Zend_Db_Select
     public function where($cond, $value = null, $type = null)
     {
         if (is_array($cond)) {
-            foreach ($where as $key => $val) {
+            foreach ($cond as $key => $val) {
                 if (is_int($key)) {
                     // $val is the full condition
                     parent::where($val);
