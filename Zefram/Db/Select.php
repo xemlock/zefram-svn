@@ -2,6 +2,14 @@
 
 class Zefram_Db_Select extends Zend_Db_Select
 {
+    protected $_indexBy;
+
+    public function indexBy($indexBy = null)
+    {
+        $this->_indexBy = $indexBy;
+        return $this;
+    }
+
     public function fetchRow($fetchMode = null)
     {
         return $this->query($fetchMode)->fetch();
@@ -9,7 +17,19 @@ class Zefram_Db_Select extends Zend_Db_Select
 
     public function fetchAll($fetchMode = null)
     {
-        return $this->query($fetchMode)->fetchAll();
+        if (empty($this->_indexBy)) {
+            $rows = $this->query($fetchMode)->fetchAll();
+
+        } else {
+            // index results by column given by _indexBy property
+            $stmt = $this->query($fetchMode);
+            $rows = array();
+            while ($row = $stmt->fetch()) {
+                $rows[$row[$this->_indexBy]] = $row;
+            }
+        }
+
+        return $rows;
     }
 
     /**
