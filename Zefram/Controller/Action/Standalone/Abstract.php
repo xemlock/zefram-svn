@@ -23,9 +23,16 @@ abstract class Zefram_Controller_Action_Standalone_Abstract
 
         $this->view = $controller->view;
 
+        $this->_init();
         $this->init();
     }
 
+    protected function _init()
+    {}
+
+    /**
+     * @deprecated
+     */
     public function init()
     {}
 
