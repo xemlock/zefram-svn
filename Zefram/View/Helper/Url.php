@@ -37,18 +37,16 @@ class Zefram_View_Helper_Url extends Zend_View_Helper_Url
      */
     public function url($urlOptions, $name = 'default', $reset = true)
     {
-        $absolute = false;
         if (!is_array($urlOptions)) {
-            $absolute = substr($urlOptions, 0, 1) == '@';
             $urlOptions = Zefram_Url::toArray($urlOptions);            
         }
+
         if (self::$_trans_sid) {
             $urlOptions[session_name()] = session_id();
         }
+
         $url = parent::url($urlOptions, $name, $reset);
-        if ($absolute) {
-            $url = $this->view->serverUrl($url);
-        }
+
         return $url;
     }
 }
