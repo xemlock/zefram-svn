@@ -50,29 +50,40 @@ class Zefram_Os
         return false;
     }
 
-    public static function isWindows()
+    public static function isWindows() // {{{
     {
-        static $isWindows = null;
-        if (null === $isWindows) {
-            $isWindows = strpos(strtoupper(PHP_OS), "WIN") !== false;
+        static $_isWindows = null;
+        if (null === $_isWindows) {
+            $_isWindows = stripos(PHP_OS, 'WIN') !== false;
         }
-        return $isWindows;
-    }
+        return $_isWindows;
+    } // }}}
 
-    public static function exec($command)
+    public static function exec($exec, $args = null) // {{{
     {
         // From php.net forum:
-        //  In Windows, exec() issues an internal call to "cmd /c your_command".
-        //  This implies that your command must follow the rules imposed by 
-        //  cmd.exe which includes an extra set of quotes around the full 
-        //  command (see: http://ss64.com/nt/cmd.html).
-        //  Current PHP versions take this into account and add the quotes 
-        //  automatically, but old versions didn't. Apparently, the change was 
-        //  made in PHP/5.3.0 yet not backported to 5.2.x because it's 
-        //  a backwards incompatible change.
-        if (self::_isWindows() && version_compare(PHP_VERSION, '5.3.0') < 0) {
-            $cmd = "\"$cmd\"";
+        // In Windows, exec() issues an internal call to "cmd /c your_command".
+        // This implies that your command must follow the rules imposed by 
+        // cmd.exe which includes an extra set of quotes around the full 
+        // command (see: http://ss64.com/nt/cmd.html).
+        // Current PHP versions take this into account and add the quotes 
+        // automatically, but old versions don't. Apparently, the change 
+        // was made in PHP/5.3.0 yet not backported to 5.2.x because it's
+        // a backwards incompatible change.
+        if (self::isWindows()) {
+            $ext = substr(strrchr(basename($exec), '.'), 1);
+            if (0 == strlen($ext)) {
+                $exec .= '.exe';
+            }
+            $exec = escapeshellarg($exec);
+            if (version_compare(PHP_VERSION, '5.3.0') < 0 && !strncmp($exec, '"', 1)) {
+                $command = "\"$exec $args\"";
+            } else {
+                $command = "$exec $args";
+            }
+        } else {
+            $command = "$exec $args";
         }
-        return shell_exec($cmd);
-    }
+        return shell_exec($command);
+    } // }}}
 }
