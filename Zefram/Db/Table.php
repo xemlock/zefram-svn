@@ -161,7 +161,8 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     /**
      * Created an instance of a Zend_Db_Select.
      *
-     * @param string|array $column
+     * @param string|array|bool $column
+     *     If boolean acts like Zend_Db_Table_Select.
      *     If string, it is used as a name of a column to select from this
      *     table. If array, its first key is used as a table correlation name,
      *     and the values corresponding to this key are used as column names
@@ -170,16 +171,21 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      *     Number of additional columns to select from this table.
      * @return Zefram_Db_Select
      */
-    public function selectColumns($columns = Zend_Db_Select::SQL_WILDCARD)
+    public function select($columns = self::SELECT_WITHOUT_FROM_PART)
     {
-        if (is_string($columns)) {
+        $select = new Zefram_Db_Table_Select($this);
+
+        if (self::SELECT_WITHOUT_FROM_PART !== $columns) {
+            // substitute true with SQL wildcard to match all columns
+            if (self::SELECT_WITH_FROM_PART === $columns) {
+                $columns = Zend_Db_Select::SQL_WILDCARD;
+            }
+
+            $name = $this->info(self::NAME);
+
             $columns = (array) $columns;
-        }
-
-        $name = $this->info(self::NAME);
-
-        if (is_array($columns)) {
             $alias = key($columns);
+
             // Array key can either be an integer or a string.
             // http://php.net/manual/en/language.types.array.php
             if (is_string($alias)) {
@@ -189,12 +195,8 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
             }
             // else array(column1, ..., columnN)
 
-        } else {
-            $columns = func_get_args();
+            $select->from($name, $columns, $this->info(self::SCHEMA));            
         }
-
-        $select = new Zefram_Db_Select($this->getAdapter());
-        $select->from($name, $columns, $this->info(self::SCHEMA));
 
         return $select;
     }
