@@ -161,9 +161,6 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
     /**
      * Created an instance of a Zend_Db_Select.
      *
-     * selectColumns($column1, $column2, ..., $columnN)
-     * selectColumns(array('correlationName' => array($column1, $column2, ..., $columnN)))
-     *
      * @param string|array $column
      *     If string, it is used as a name of a column to select from this
      *     table. If array, its first key is used as a table correlation name,
@@ -173,14 +170,27 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
      *     Number of additional columns to select from this table.
      * @return Zefram_Db_Select
      */
-    public function selectColumns($column = Zend_Db_Select::SQL_WILDCARD)
+    public function selectColumns($columns = Zend_Db_Select::SQL_WILDCARD)
     {
-        if (is_array($column)) {
-            $columns = reset($column);
-            $name = array(key($column) => $this->info(self::NAME));
+        if (is_string($columns)) {
+            $columns = (array) $columns;
+        }
+
+        $name = $this->info(self::NAME);
+
+        if (is_array($columns)) {
+            $alias = key($columns);
+            // Array key can either be an integer or a string.
+            // http://php.net/manual/en/language.types.array.php
+            if (is_string($alias)) {
+                // array(alias => array(column1, ..., columnN)
+                $name = array($alias => $name);
+                $columns = reset($columns);
+            }
+            // else array(column1, ..., columnN)
+
         } else {
             $columns = func_get_args();
-            $name = $this->info(self::NAME);
         }
 
         $select = new Zefram_Db_Select($this->getAdapter());
