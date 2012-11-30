@@ -2,6 +2,8 @@
 
 class Zefram_Db_Table extends Zend_Db_Table_Abstract
 {
+    protected $_rowClass = 'Zefram_Db_Table_Row';
+
     /**
      * Fetches all rows, but returns them as arrays instead of objects.
      * See {@link Zend_Db_Table_Abstract::fetchAll()} for parameter
