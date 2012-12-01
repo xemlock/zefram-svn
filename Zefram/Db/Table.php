@@ -135,7 +135,7 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
 
             foreach ($primary as $column) {
                 if (isset($id[$column])) {
-                    $where[$db->quoteIdentifier($column) . ' = ?'] = $id[$column];
+                    $where[] = $db->quoteIdentifier($column) . ' = ' . $db->quote($id[$column]);
                 }
             }
 
@@ -202,20 +202,4 @@ class Zefram_Db_Table extends Zend_Db_Table_Abstract
 
         return $select;
     }
-
-    /*
-    protected function _whereId($where)
-    {
-        if (is_scalar($where) && ctype_digit((string) $where)) {
-            // numeric primary key
-            $primary = $this->info(Zend_Db_Table_Abstract::PRIMARY);
-            if (count($primary) == 1) {
-                // only scalar primary key
-                $primary = reset($primary);
-                $where = array($primary . ' = ?' => intval($where));
-            }
-        }
-        return $where;
-    }
-     */
 }

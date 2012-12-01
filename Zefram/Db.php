@@ -22,9 +22,14 @@ abstract class Zefram_Db
         return self::$_tablePrefix;
     }
 
-    public static function getTable($className)
+    public static function getTable($className, $db = null, $addPrefix = true)
     {
-        $fullClassName = self::$_tablePrefix . $className;
+        if ($addPrefix) {
+            $fullClassName = self::$_tablePrefix . $className;
+        } else {
+            $fullClassName = $className;
+        }
+
         if (!isset(self::$_tableRegistry[$fullClassName])) {
             if (class_exists($fullClassName, true)) {
                 // ok, class found
