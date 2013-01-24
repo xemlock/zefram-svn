@@ -23,4 +23,13 @@ class Zefram_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql implements Z
 
         return str_replace($forbidden, $escaped, $string);
     }
+
+    public function expr($expr, $bind = null)
+    {
+        if (null !== $bind) {
+            $expr = Zefram_Db_Traits::bindParams($this, $expr, $bind);
+        }
+
+        return new Zend_Db_Expr($expr);
+    }
 }
