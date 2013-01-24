@@ -19,5 +19,7 @@ abstract class Zefram_Db_Traits
                 throw new Zend_Db_Exception("Invalid parameter name '$key'");
             }
         }
+
+        return $sql;
     }
 }
