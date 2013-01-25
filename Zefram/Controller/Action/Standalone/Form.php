@@ -170,7 +170,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
             return $request->getPost();
         }
         if (!strcasecmp($method, 'GET') && $request->isGet()) {
-            return $request->getGet();
+            return $request->getQuery();
         }
         return null;
     } // }}}
