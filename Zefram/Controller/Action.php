@@ -64,9 +64,41 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     }
 
     // additional proxies to helpers
-
+    /**
+     * @deprecated
+     */
     protected function _flashMessage($message)
     {
+        return $this->flashMessage($message);
+    }
+
+    public function flashMessage($message)
+    {
         $this->_helper->flashMessenger->addMessage($message);
+        return $this;
+    }
+
+    /**
+     * @throws Zend_Controller_Action_Exception
+     */
+    public function setLayout($layout)
+    {
+        $this->_helper->layout->setLayout($layout);
+        return $this;
+    }
+
+    /**
+     * @throws Zend_Controller_Action_Exception
+     */
+    public function disableLayout()
+    {
+        $this->_helper->layout->disableLayout();
+        return $this;
+    }
+
+    public function disableView()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        return $this;
     }
 }
