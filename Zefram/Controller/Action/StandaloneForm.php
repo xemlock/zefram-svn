@@ -2,13 +2,14 @@
 
 /**
  * Standalone action to handle form related logic.
- * Main reason for existence of this class is to avoid repetitively writing
- * form handling code.
+ * This class provides encapsulation of form-related logic as well as allows
+ * avoiding repetitively writing form handling skeleton code.
  *
+ * @version    2013-02-16
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
- * @copyright  Copyright (c) 2011 Xemlock
+ * @copyright  Copyright (c) 2013 Xemlock
  * @license    MIT License
  */
 class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_Standalone
@@ -17,30 +18,36 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     const STATUS_FAIL    = 'fail';
     const STATUS_ERROR   = 'error';
 
-    const FORM_ERRORS    = 1;
-    const FORM_HTML      = 2;
+    const AJAX_FORM_ERRORS = 1;
+    const AJAX_FORM_HTML   = 2;
 
     /**
-     * JSON response statuses.
+     * AJAX response statuses.
      * @var array
      */
-    protected $_jsonResponseStatuses = array(
+    protected $_ajaxResponseStatuses = array(
         self::STATUS_SUCCESS => self::STATUS_SUCCESS,
         self::STATUS_FAIL    => self::STATUS_FAIL,
         self::STATUS_ERROR   => self::STATUS_ERROR,
     );
 
     /**
-     * Flags describing form-related fields in JSON response.
+     * Flags describing which fields to include in validation fail response.
      * @var int
      */
-    protected $_jsonResponseParts = self::FORM_ERRORS;
+    protected $_ajaxValidationFailResponseParts = self::AJAX_FORM_ERRORS;
 
     /**
-     * Treat every request as an XMLHttpRequest.
+     * Message for validation fail AJAX response.
+     * @var string
+     */
+    protected $_ajaxValidationFailResponseMessage = 'Form validation failed.';
+
+    /**
+     * Treat every request as AJAX.
      * @var bool
      */
-    protected $_forceXmlHttpRequest = false;
+    protected $_forceAjax = false;
 
     /**
      * Allow processing of partially valid form?
@@ -113,7 +120,7 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     } // }}}
 
     /**
-     * Creates form to be processed
+     * Creates form to be processed.
      *
      * This method gets called only if no form was supplied to the constructor. 
      */
@@ -124,6 +131,7 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
 
     /**
      * Process valid form.
+     *
      * This method is marked as protected to disallow direct calls
      * when the form is not valid.
      *
@@ -135,7 +143,7 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
      * @return Zend_Form
      * @throws Zefram_Controller_Action_StandaloneForm_InvalidStateException
      */
-    protected function _getForm()
+    public function getForm()
     {
         if (!$this->_form instanceof Zend_Form) {
             throw new Zefram_Controller_Action_StandaloneForm_InvalidStateException('_form property was not properly initialized.');
@@ -147,11 +155,10 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
      * HTTP request method aware retrieval of submitted form data.
      *
      * @return false|array
-     * @throws Zefram_Controller_Action_StandaloneForm_InvalidStateException
      */
     public function getSentData()
     {
-        $method = strtoupper($this->_getForm()->getMethod());
+        $method = strtoupper($this->getForm()->getMethod());
 
         if ($method == 'POST' && $this->_request->isPost()) {
             return $this->_request->getPost();
@@ -169,11 +176,10 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
      *
      * @param array $data
      * @return bool
-     * @throws Zefram_Controller_Action_StandaloneForm_InvalidStateException
      */
     public function isFormValid(array $data)
     {
-        $form = $this->_getForm();
+        $form = $this->getForm();
 
         if ($this->_processPartialForm) {
             return $form->isValidPartial($data);
@@ -185,187 +191,161 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     /**
      * @return bool
      */
-    public function isXmlHttpRequest()
+    public function isAjax()
     {
-        return $this->_request->isXmlHttpRequest();
+        return $this->_forceAjax || $this->_request->isXmlHttpRequest();
     }
 
     /**
-     * Generate XHTML form markup.
-     * XHTML compliance is required in order to avoid complications with processing
-     * AJAX response in browsers. (Actually this maybe not sufficent, but thats is
-     * the part the developer is responsible for).
+     * Creates success response conforming to JSend format (@see http://labs.omniti.com/labs/jsend).
+     * $message
+     * $message, $data
+     * $data
      *
-     * @param Zend_Form $form form to be rendered
+     * @param string $message
+     * @param array $data
+     * @return array
      */
-    public static function formXhtml(Zend_Form $form) // {{{
+    public function ajaxSuccessResponse($message = null, $data = null)
     {
-        $view = $form->getView();
-        $doctype = $view->getDoctype();
-        $view->doctype('XHTML1_STRICT'); // it's the best we can do, without parsing output to a DOM tree
-        $xhtml = $form->render();
-        $view->doctype($doctype);
-        return $xhtml;
-    } // }}}
+        $response = array(
+            'status' => $this->_ajaxResponseStatuses[self::STATUS_SUCCESS],
+        );
+
+        if (is_string($message)) {
+            $response['message'] = $message;
+            $response['data'] = $data;
+        } else {
+            $response['data'] = $message;
+        }
+
+        return $response;
+    }
 
     /**
-     * Zend_Form offers no simple way of retrieving validation error messages
-     * when custom form errors are set.
+     * Creates fail response conforming to JSend format (@see http://labs.omniti.com/labs/jsend).
+     * $message
+     * $message, $code
+     * $message, $data,
+     * $message, $code, $data
+     *
+     * @param string $message
+     * @param scalar $code
+     * @param array $data
+     * @return array
      */
-    public static function formErrors(Zend_Form $form) // {{{
+    public function ajaxFailResponse($message, $code = null, $data = null)
     {
-        $messages = array();
-        foreach ($form->getElements() as $name => $element) {
-            $eMessages = $element->getMessages();
-            if (!empty($eMessages)) {
-                $messages[$name] = $eMessages;
-            }
+        $response = array(
+            'status' => $this->_ajaxResponseStatuses[self::STATUS_FAIL],
+            'message' => (string) $message,
+        );
+
+        if (is_scalar($code)) {
+            $response['code'] = $code;
+            $response['data'] = $data;
+        } else {
+            $response['data'] = $data;
         }
-        foreach ($form->getSubForms() as $key => $subForm) {
-            $fMessages = $this->_getErrorMessages($subForm);
-            if (!empty($fMessages)) {
-                if ($subForm->isArray()) {
-                    $messages[$key] = $fMessages;
-                } else {
-                    $messages = array_merge($messages, $fMessages);
-                }
-            }
+
+        return $response;
+    }
+
+    /**
+     * Render form.
+     *
+     * @return string
+     */
+    public function renderForm()
+    {
+        $view = $this->view;
+        $form = $this->getForm()->setView($view);
+
+        $controller = $this->getController();
+        $script = $view->getScriptPath($controller->getViewScript());
+
+        if (!is_file($script)) {
+            // if action template does not exist, render form directly
+            $content = $form->render();
+        } else {
+            // if rendering template form is set at 'form' variable
+            $view->form = $form;
+            $content = $view->render($script);
         }
-        return $messages;
-    } // }}}
+
+        return $content;
+    }
 
     /**
      * Execute form handling logic
      */
     public function run()
     {
-        $isXmlHttpRequest = $this->_forceXmlHttpRequest || $this->isXmlHttpRequest();
+        $isAjax = $this->isAjax();
+
         $data = $this->getSentData();
+        $form = $this->getForm();
 
         if (false !== $data) {
-            if ($this->isFormValid($data)) {
+            $valid = $this->isFormValid($data);
+            if ($valid) {
+                // any success response should be issued in processForm() using
+                // jsonSuccessResponse() and passed to json action helper
                 $result = $this->_processForm();
 
-                // return false to avoid redirection/reloading,
-                // any non-string result will reload current page
-                if (is_string($result)) {
-                    return $this->_redirect($result);
-                } else if (false !== $result) {
-                    return $this->_helper->redirector->goToUrlAndExit(
-                        $this->_request->getRequestUri()
-                    );
+                // form was handled successfully, perform redirection if not
+                // explicitly disallowed by returning false in _processForm()
+                if (false !== $result) {
+                    // if a string is returned from _processForm() treat it as
+                    // a redirection url, otherwise use current request uri
+                    if (!is_string($result)) {
+                        $result = $this->_request->getRequestUri();
+                    }
+                    return $this->_helper->redirector->goToUrlAndExit($result);
                 }
+            }
 
-            } else if ($isXmlHttpRequest) {
-                // form is not valid, AJAX was used, return json response
-                $response = array(
-                    'status'  => $this->_jsonResponseStatuses[self::STATUS_FAIL],
-                    'message' => 'Form validation failed', // TODO Translate
-                );
-                if ($this->_jsonResponseParts & self::FORM_ERRORS) {
-                    $response['data']['formErrors'] = array();
-                }
-                if ($this->_jsonResponseParts & self::FORM_HTML) {
-                    $response['data']['formHtml'] = '';
+            if ($isAjax) {
+                if ($valid) {
+                    // form validated successfully, no redirection performed,
+                    // no success message sent in _processForm()
+                    $response = $this->ajaxSuccessResponse();
+                } else {
+                    // the form contains invalid values, if action was accessed
+                    // by AJAX, prepare and send response with information
+                    // about invalid form values
+                    $responseData = null;
+
+                    if ($this->_ajaxValidationFailResponseParts & self::AJAX_FORM_ERRORS) {
+                        $responseData['errors'] = $form->getMessages();
+                    }
+                    if ($this->_ajaxValidationFailResponseParts & self::AJAX_FORM_HTML) {
+                        $responseData['html'] = $this->renderForm();
+                    }
+
+                    // translate error message using form translator (if any)
+                    $message = $this->_ajaxValidationFailResponseMessage;
+                    $translator = $form->getTranslator();
+                    if ($translator) {
+                        $message = $translator->translate($message);
+                    }
+
+                    $response = $this->ajaxFailResponse($message, $responseData);
                 }
                 return $this->_helper->json($response);
             }
         }
 
-        if (($submitData = $this->_getSubmitData()) !== null) {
-            try {
-                $isProcessed = false;
-                $result = null;
-
-                if ($this->_processPartial) {
-                    $validData = $form->getValidValues($submitData);
-                    if (count($validData)) {
-                        $result = $this->_processPartialForm($validData);
-                        $isProcessed = true;
-                    }
-                } else {
-                    if ($form->isValid($submitData)) {
-                        $result = $this->_processForm($form->getValues());
-                        $isProcessed = true;
-                    }
-                }
-                if ($isProcessed) {
-                    return $this->_onSubmitResponse($isXmlHttp, $result);
-                } else {
-                    if ($isXmlHttp) {
-                        // render form markup or return form errors depending on config
-                        if (self::XMLHTTP_RESPONSE_HTML === $this->_xmlHttpErrorResponseType) {
-                            $xmlHttpResponse = array(
-                                'status'  => self::STATUS_ERROR,
-                                'type'    => self::XMLHTTP_RESPONSE_MARKUP,
-                                'message' => 'Form validation error',
-                                'data'    => self::formXhtml($form),
-                            );
-                        } else {
-                            $xmlHttpResponse = array(
-                                'status'  => self::STATUS_ERROR,
-                                'type'    => self::XMLHTTP_RESPONSE_ERRORS,
-                                'message' => 'Form validation error',
-                                'data'    => array(
-                                    'form'     => $form->getCustomMessages(),
-                                    'elements' => $this->_getErrorMessages($form),
-                                ),
-                            );
-                        }
-                    }
-                }
-
-            } catch (Zefram_Exception_Ignore $e) {
-                // ignore exception - used to silently pop-out of processing chain
-                // useful when handling multiple-submit form
-
-            } catch (Exception $e) {
-throw $e;
-                // form processing interrupted by exception
-                if ($isXmlHttp) {
-                    $response = array(
-                        'status'  => self::STATUS_ERROR,
-                        'type'    => get_class($e),
-                        'message' => $e->getMessage(),
-                    );
-                    return $this->_json($response);
-                } else {
-                    // add custom error to form
-                    $form->addError($e->getMessage());
-                }
-            }
+        if ($isAjax) {
+            $response = $this->ajaxSuccessResponse(array(
+                'html' => $this->renderForm(),
+            ));
+            return $this->_helper->json($response);
         }
 
-        // if generating page response from view, form is set at 'form' property
-        $view = $this->getView();
+        // mark page as already rendered, append form rendering to response
+        $this->_helper->viewRenderer->setNoRender();
 
-        $controller = $this->getController();
-        $template   = $view->getScriptPath($controller->getViewScript());
-        if ((false === $template) || !file_exists($template)) {
-            // action template does not exist, render only form
-            // when accessed through AJAX form markup is XHTML compliant,
-            // otherwise is rendered using controller's view
-            $content = $isXmlHttp ? self::formXhtml($form) : $form->render($view);
-        } else {
-            // use template, here we cannot enforce XHTML compliance
-            // when accessed through AJAX
-            $view->form = $form->setView($view);
-            $content = $controller->render();
-        }
-
-        $this->getHelper('viewRenderer')->setNoRender();
-
-        if ($isXmlHttp) {
-            $response = array(
-                'status' => self::STATUS_INIT,
-                'type'   => self::XMLHTTP_RESPONSE_MARKUP,
-                'data'   => $content,
-            );
-            return $this->_json($response);
-        } else {
-            return $this->getResponse()->appendBody($content);
-        }
+        return $this->getResponse()->appendBody($this->renderForm());
     }
 }
-
-// vim: sw=4 et fdm=marker
