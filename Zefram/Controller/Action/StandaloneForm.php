@@ -197,12 +197,9 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     }
 
     /**
-     * Creates success response conforming to JSend format (@see http://labs.omniti.com/labs/jsend).
-     * $message
-     * $message, $data
-     * $data
+     * Creates success response based on JSend format (@link http://labs.omniti.com/labs/jsend).
      *
-     * @param string $message
+     * @param string|array $message if given as an array it replaces the $data parameter
      * @param array $data
      * @return array
      */
@@ -211,44 +208,32 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
         $response = array(
             'status' => $this->_ajaxResponseStatuses[self::STATUS_SUCCESS],
         );
-
         if (is_string($message)) {
             $response['message'] = $message;
             $response['data'] = $data;
-        } else {
+        } else if (is_array($message)) {
+            // if array is passed as message treat it as a $data parameter
             $response['data'] = $message;
+        } else {
+            $response['data'] = $data;
         }
-
         return $response;
     }
 
     /**
-     * Creates fail response conforming to JSend format (@see http://labs.omniti.com/labs/jsend).
-     * $message
-     * $message, $code
-     * $message, $data,
-     * $message, $code, $data
+     * Creates fail response based on JSend format (@link http://labs.omniti.com/labs/jsend).
      *
      * @param string $message
-     * @param scalar $code
      * @param array $data
      * @return array
      */
-    public function ajaxFailResponse($message, $code = null, $data = null)
+    public function ajaxFailResponse($message, $data = null)
     {
-        $response = array(
+        return array(
             'status' => $this->_ajaxResponseStatuses[self::STATUS_FAIL],
             'message' => (string) $message,
+            'data' => $data,
         );
-
-        if (is_scalar($code)) {
-            $response['code'] = $code;
-            $response['data'] = $data;
-        } else {
-            $response['data'] = $data;
-        }
-
-        return $response;
     }
 
     /**
