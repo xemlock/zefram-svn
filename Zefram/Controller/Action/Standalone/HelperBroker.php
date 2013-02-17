@@ -9,7 +9,7 @@ class Zefram_Controller_Action_Standalone_HelperBroker
 {
     protected $_action;
 
-    public function __construct(Zefram_Controller_Action_Standalone_Abstract $action)
+    public function __construct(Zefram_Controller_Action_Standalone $action)
     {
         $this->_action = $action;
     }

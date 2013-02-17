@@ -57,24 +57,10 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     protected $_processPartialForm = false;
 
     /**
-     * Form to process.
+     * Form to process, must be initialized in {@see _init()}.
      * @var Zend_Form
      */
     protected $_form;
-
-    /**
-     * @param Zend_Controller_Action $controller
-     */
-    public function __construct(Zend_Controller_Action $controller) // {{{
-    {
-        parent::__construct($controller);
-        $this->_initForm();
-    } // }}}
-
-    /**
-     * Creates form to be processed.
-     */
-    abstract protected function _initForm();
 
     /**
      * Process valid form.
@@ -149,17 +135,27 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     }
 
     /**
-     * Creates AJAX success response conforming to JSend {@link http://labs.omniti.com/labs/jsend}.
+     * Creates AJAX success response.
      *
-     * @param array $data
+     * Response is compatible with, although not strictly conforming to JSend
+     * spec {@link http://labs.omniti.com/labs/jsend}. The difference between
+     * the spec and this implementation is the presence of the 'message' key,
+     * which is not explicitly allowed (it's not explicitly forbidden either)
+     * in responses with status other than 'error'.
+     *
+     * @param string|null $message
+     * @param array|null $data
      * @return array
      */
-    public function ajaxSuccessResponse($data = null)
+    public function ajaxSuccessResponse($message = null, $data = null)
     {
         $response = array(
             'status' => $this->_ajaxStatuses[self::STATUS_SUCCESS],
-            'data'   => $data,
         );
+        if (null !== $message) {
+            $response['message'] = (string) $message;
+        }
+        $response['data'] = $data;
         return $response;
     }
 
@@ -167,12 +163,13 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      * Creates AJAX fail response.
      *
      * Response is compatible with, although not strictly conforming to JSend
-     * {@link http://labs.omniti.com/labs/jsend}. The difference between spec
-     * and this implementation is the presence of the 'message' key, which is
-     * not explicitly allowed for responses with status other than 'error'.
+     * spec {@link http://labs.omniti.com/labs/jsend}. The difference between
+     * the spec and this implementation is the presence of the 'message' key,
+     * which is not explicitly allowed (it's not explicitly forbidden either)
+     * in responses with status other than 'error'.
      *
      * @param string $message
-     * @param array $data
+     * @param array|null $data
      * @return array
      */
     public function ajaxFailResponse($message, $data = null)
@@ -223,7 +220,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
             $valid = $this->isFormValid($data);
             if ($valid) {
                 // any success response should be sent in processForm() by
-                // calling jsonSuccessResponse() and passing its result to
+                // calling ajaxSuccessResponse() and passing its result to
                 // the json action helper
                 $result = $this->_processForm();
 
@@ -268,7 +265,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
 
         if ($isAjax) {
             // if form is accessed for the first time return its markup
-            $response = $this->ajaxSuccessResponse($this->renderForm());
+            $response = $this->ajaxSuccessResponse(null, $this->renderForm());
             return $this->_helper->json($response);
         }
 
