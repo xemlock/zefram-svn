@@ -3,7 +3,7 @@
 /**
  * Class for encapsulation of a standalone action logic.
  *
- * @version 2012-06-19
+ * @version 2013-02-17
  */
 abstract class Zefram_Controller_Action_Standalone
 {
@@ -24,16 +24,9 @@ abstract class Zefram_Controller_Action_Standalone
         $this->view = $controller->view;
 
         $this->_init();
-        $this->init();
     }
 
     protected function _init()
-    {}
-
-    /**
-     * @deprecated
-     */
-    public function init()
     {}
 
     public function getController()
