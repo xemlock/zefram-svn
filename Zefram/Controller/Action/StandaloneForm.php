@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-02-16
+ * @version    2013-02-17
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -14,16 +14,15 @@
  */
 class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_Standalone
 {
+    const VALIDATION_FAILED = 'validationFailed';
+
     const STATUS_SUCCESS = 'success';
     const STATUS_FAIL    = 'fail';
     const STATUS_ERROR   = 'error';
 
-    const AJAX_FORM_ERRORS = 1;
-    const AJAX_FORM_HTML   = 2;
-
     /**
      * AJAX response statuses.
-     * @var array
+     * @var string[]
      */
     protected $_ajaxResponseStatuses = array(
         self::STATUS_SUCCESS => self::STATUS_SUCCESS,
@@ -32,16 +31,18 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     );
 
     /**
-     * Flags describing which fields to include in validation fail response.
-     * @var int
+     * Messages used in AJAX responses.
+     * @var string[]
      */
-    protected $_ajaxValidationFailResponseParts = self::AJAX_FORM_ERRORS;
+    protected $_ajaxResponseMessages = array(
+        self::VALIDATION_FAILED => 'Form validation failed.',
+    );
 
     /**
-     * Message for validation fail AJAX response.
-     * @var string
+     * Return form markup rather than form errors map on failed validation.
+     * @var bool
      */
-    protected $_ajaxValidationFailResponseMessage = 'Form validation failed.';
+    protected $_ajaxFormHtml = false;
 
     /**
      * Treat every request as AJAX.
@@ -165,7 +166,12 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
         }
 
         if ($method == 'GET' && $this->_request->isGet()) {
-            return $this->_request->getQuery();
+            // consider form as submitted using the GET method only if
+            // the request's query part is not empty
+            $query = $this->_request->getQuery();
+            if (count($query)) {
+                return $query;
+            }
         }
 
         return false;
@@ -197,31 +203,27 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     }
 
     /**
-     * Creates success response based on JSend format (@link http://labs.omniti.com/labs/jsend).
+     * Creates AJAX success response conforming to JSend {@link http://labs.omniti.com/labs/jsend}.
      *
-     * @param string|array $message if given as an array it replaces the $data parameter
      * @param array $data
      * @return array
      */
-    public function ajaxSuccessResponse($message = null, $data = null)
+    public function ajaxSuccessResponse($data = null)
     {
         $response = array(
             'status' => $this->_ajaxResponseStatuses[self::STATUS_SUCCESS],
+            'data'   => $data,
         );
-        if (is_string($message)) {
-            $response['message'] = $message;
-            $response['data'] = $data;
-        } else if (is_array($message)) {
-            // if array is passed as message treat it as a $data parameter
-            $response['data'] = $message;
-        } else {
-            $response['data'] = $data;
-        }
         return $response;
     }
 
     /**
-     * Creates fail response based on JSend format (@link http://labs.omniti.com/labs/jsend).
+     * Creates AJAX fail response.
+     *
+     * Response is compatible with, although not strictly conforming to JSend
+     * {@link http://labs.omniti.com/labs/jsend}. The difference between spec
+     * and this implementation is the presence of the 'message' key, which is
+     * not explicitly allowed for responses with status other than 'error'.
      *
      * @param string $message
      * @param array $data
@@ -230,9 +232,9 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
     public function ajaxFailResponse($message, $data = null)
     {
         return array(
-            'status' => $this->_ajaxResponseStatuses[self::STATUS_FAIL],
+            'status'  => $this->_ajaxResponseStatuses[self::STATUS_FAIL],
             'message' => (string) $message,
-            'data' => $data,
+            'data'    => $data,
         );
     }
 
@@ -274,15 +276,17 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
         if (false !== $data) {
             $valid = $this->isFormValid($data);
             if ($valid) {
-                // any success response should be issued in processForm() using
-                // jsonSuccessResponse() and passed to json action helper
+                // any success response should be sent in processForm() by
+                // calling jsonSuccessResponse() and passing its result to
+                // the json action helper
                 $result = $this->_processForm();
 
                 // form was handled successfully, perform redirection if not
-                // explicitly disallowed by returning false in _processForm()
+                // explicitly cancelled by returning false in _processForm()
                 if (false !== $result) {
-                    // if a string is returned from _processForm() treat it as
-                    // a redirection url, otherwise use current request uri
+                    // if a string is returned from _processForm() function,
+                    // treat it as a redirection url, otherwise use current
+                    // request uri
                     if (!is_string($result)) {
                         $result = $this->_request->getRequestUri();
                     }
@@ -293,38 +297,32 @@ class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller_Action_S
             if ($isAjax) {
                 if ($valid) {
                     // form validated successfully, no redirection performed,
-                    // no success message sent in _processForm()
+                    // no success response was sent in _processForm()
                     $response = $this->ajaxSuccessResponse();
                 } else {
-                    // the form contains invalid values, if action was accessed
-                    // by AJAX, prepare and send response with information
-                    // about invalid form values
-                    $responseData = null;
-
-                    if ($this->_ajaxValidationFailResponseParts & self::AJAX_FORM_ERRORS) {
-                        $responseData['errors'] = $form->getMessages();
-                    }
-                    if ($this->_ajaxValidationFailResponseParts & self::AJAX_FORM_HTML) {
-                        $responseData['html'] = $this->renderForm();
-                    }
+                    // form contains invalid values, send response containing
+                    // human-readable message and either full form markup or
+                    // form errors map
+                    $message = $this->_ajaxResponseMessages[self::VALIDATION_FAILED];
 
                     // translate error message using form translator (if any)
-                    $message = $this->_ajaxValidationFailResponseMessage;
                     $translator = $form->getTranslator();
                     if ($translator) {
                         $message = $translator->translate($message);
                     }
 
-                    $response = $this->ajaxFailResponse($message, $responseData);
+                    $response = $this->ajaxFailResponse(
+                        $message,
+                        $this->_ajaxFormHtml ? $this->renderForm() : $form->getMessages()
+                    );
                 }
                 return $this->_helper->json($response);
             }
         }
 
         if ($isAjax) {
-            $response = $this->ajaxSuccessResponse(array(
-                'html' => $this->renderForm(),
-            ));
+            // if form is accessed for the first time return its markup
+            $response = $this->ajaxSuccessResponse($this->renderForm());
             return $this->_helper->json($response);
         }
 
