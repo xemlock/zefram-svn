@@ -90,15 +90,20 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     /**
      * @throws Zend_Controller_Action_Exception
      */
-    public function disableLayout()
+    public function disableLayout($disable = true)
     {
-        $this->_helper->layout->disableLayout();
+        $layout = $this->_helper->layout;
+        if ($disable) {
+            $layout->disableLayout();
+        } else {
+            $layout->enableLayout();
+        }
         return $this;
     }
 
-    public function disableView()
+    public function disableView($disable = true)
     {
-        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->viewRenderer->setNoRender($disable);
         return $this;
     }
 }
