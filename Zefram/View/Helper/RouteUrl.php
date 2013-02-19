@@ -11,7 +11,7 @@ class Zefram_View_Helper_RouteUrl extends Zend_View_Helper_Abstract
      * @params array $urlOptions
      * @return string
      */
-    public function routeUrl($route, array $urlOptions = array(), $reset = false, $encode = true)
+    public function routeUrl($name, array $urlOptions = array(), $reset = false, $encode = true)
     {
         $router = Zend_Controller_Front::getInstance()->getRouter();
         return $router->assemble($urlOptions, $name, $reset, $encode);
