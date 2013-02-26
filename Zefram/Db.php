@@ -24,8 +24,10 @@ abstract class Zefram_Db
 
     public static function getTable($className, $db = null, $addPrefix = true)
     {
-        if ($addPrefix) {
+        if ($addPrefix && (0 !== strpos($className, self::$_tablePrefix))) {
+            // add prefix only if it's not already included
             $fullClassName = self::$_tablePrefix . $className;
+
         } else {
             $fullClassName = $className;
         }
