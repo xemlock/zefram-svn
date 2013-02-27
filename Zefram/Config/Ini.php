@@ -94,7 +94,7 @@ class Zefram_Config_Ini extends Zend_Config_Ini
         foreach ($config as $key => $item) {
             if ($item === '') {
                 $config->$key = null;
-            } else if ($config instanceof $item) {
+            } else if ($item instanceof Zend_Config) {
                 $this->_nullifyEmpty($item);
             }
         }
