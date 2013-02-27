@@ -1,19 +1,19 @@
 <?php
 
 /**
- * Ini config, with additional support for hierarchical structures 
- * stored using section names.
+ * Ini config, with additional support for hierarchical structures
+ * based on section names.
  *
  * @category   Zefram
  * @package    Zefram_Config
- * @copyright  Copyright (c) 2011 xemlock
- * @version    2011-07-26
+ * @copyright  Copyright (c) 2011-2013 xemlock
+ * @version    2013-02-27
  */
 class Zefram_Config_Ini extends Zend_Config_Ini
 {
     public function __construct($filename, $section = null, $options = false) 
     {
-        // allow config modifications during initialisation
+        // allow config modifications during initialization
         if (is_bool($options)) {
             $allowModifications = $options;
             $options = true;
@@ -23,7 +23,7 @@ class Zefram_Config_Ini extends Zend_Config_Ini
             $options['allowModifications'] = true;
         }
 
-        parent::__construct($filename, $section, $options);
+        parent::__construct($filename, null, $options);
 
         // if section's name contains dots, move this section to the 
         // corrseponding position in the tree, e.g.
@@ -49,8 +49,54 @@ class Zefram_Config_Ini extends Zend_Config_Ini
             }
         }
 
+        // load one or more sections
+        // this must be done after building tree structure, as some required
+        // sections may not necessarily exist earlier
+        if (null !== $section) {
+            // extract selected sections
+            $data = array();
+            foreach ((array) $section as $sectionName) {
+                if (!isset($this->_data[$sectionName])) {
+                    throw new Zend_Config_Exception("Section '$sectionName' cannot be found in $filename");
+                }
+                $data[$sectionName] = $this->_data[$sectionName];
+            }
+
+            // remove all sections from this object
+            // _data and _count properties are available since ZF 1.5
+            $this->_data = array();
+            $this->_count = 0;
+
+            // merge all extracted sections with this object
+            foreach ($data as $key => $item) {
+                $this->merge($item);
+            }
+        }
+
+        // nullify empty strings
+        if (isset($options['nullifyEmpty']) && $options['nullifyEmpty']) {
+            $this->_nullifyEmpty($this);
+        }
+
         if (!$allowModifications) {
             $this->setReadOnly();
+        }
+    }
+
+    /**
+     * Converts empty strings to NULL values.
+     *
+     * @param Zend_Config $config
+     * @throws Zend_Config_Exception    if config is read only
+     */
+    protected function _nullifyEmpty(Zend_Config $config)
+    {
+        foreach ($config as $key => $item) {
+            if ($item === '') {
+                $config->$key = null;
+            } else if ($config instanceof $item) {
+                $this->_nullifyEmpty($item);
+            }
         }
     }
 }
