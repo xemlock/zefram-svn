@@ -2,18 +2,21 @@
 
 /**
  * @author xemlock
- * @version 2013-02-19
+ * @version 2013-03-01
  */
 class Zefram_View_Helper_RouteUrl extends Zend_View_Helper_Abstract
 {
     /**
-     * @params string $route
-     * @params array $urlOptions
+     * Assembles a URL based on a given route.
+     *
+     * @param string $route
+     * @param array $urlOptions
+     * @param array $options
      * @return string
      */
-    public function routeUrl($name, array $urlOptions = array(), $reset = false, $encode = true)
+    public function routeUrl($name, $urlOptions = array(), $options = null)
     {
-        $router = Zend_Controller_Front::getInstance()->getRouter();
-        return $router->assemble($urlOptions, $name, $reset, $encode);
+        $helper = Zend_Controller_Action_HelperBroker::getStaticHelper('routeUrl');
+        return $helper->routeUrl($name, $urlOptions, $options);
     }
 }
