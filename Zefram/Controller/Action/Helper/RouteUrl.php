@@ -2,7 +2,7 @@
 
 /**
  * @author xemlock
- * @version 2013-03-01
+ * @version 2013-03-02
  */
 class Zefram_Controller_Action_Helper_RouteUrl extends Zend_Controller_Action_Helper_Abstract
 {
@@ -16,17 +16,17 @@ class Zefram_Controller_Action_Helper_RouteUrl extends Zend_Controller_Action_He
      */
     public function routeUrl($name, $params = array(), $options = null)
     {
-        $reset  = isset($options['reset'])  ? (bool) $options['reset']  : false;
-        $encode = isset($options['encode']) ? (bool) $options['encode'] : true;
-
-        // URI Template, RFC6570
-        $template = isset($options['template']) ? $options['template'] : false;
+        $reset    = isset($options['reset']) ? (bool) $options['reset'] : false;
+        $encode   = isset($options['encode']) ? (bool) $options['encode'] : true;
+        $template = isset($options['template']) ? (bool) $options['template'] : false;
 
         $router = Zend_Controller_Front::getInstance()->getRouter();
         $url = $router->assemble($params, $name, $reset, $encode);
 
+        // URI Template, string interpolation based on RFC 6570
+        // single-variable expressions only (no operators, no variable lists)
         if ($template) {
-            $url = str_ireplace(array('%7B', '%7D'), array('{', '}'), $url);
+            $url = preg_replace('/%7B([_a-z0-9]+)%7D/i', '{\1}', $url);
         }
 
         return $url;
