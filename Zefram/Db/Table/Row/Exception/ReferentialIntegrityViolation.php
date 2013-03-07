@@ -1,0 +1,4 @@
+<?php
+
+class Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation extends Zefram_Db_Table_Row_Exception
+{}

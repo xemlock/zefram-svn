@@ -69,7 +69,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
                         $where[] = $db->quoteIdentifier($column) . ' = ' . $db->quote($value);
                     }
 
-                    throw new Zefram_Db_Table_Row_ReferentialIntegrityException(sprintf(
+                    throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
                         "Referenced row not found: %s (%s)",
                         $table->getName(), implode(' AND ', $where)
                     ));
