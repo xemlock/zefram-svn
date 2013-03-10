@@ -17,8 +17,9 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Seamlessly fetch parent row by reference rule using {@see Zefram_Db_Table::findRow()}
-     * mechanism. Rule name must start with an uppercase letter.
+     * Seamlessly fetch parent row by reference rule using 
+     * {@see Zefram_Db_Table::findRow()} mechanism. Rule name must start
+     * with an uppercase letter.
      */
     public function __get($key)
     {
@@ -82,5 +83,12 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         }
 
         return parent::__get($key);
+    }
+
+    public function refresh()
+    {
+        parent::refresh();
+
+        $this->_referencedRows = array();
     }
 }
