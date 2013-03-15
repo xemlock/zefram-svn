@@ -5,6 +5,14 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected $_tableClass = 'Zefram_Db_Table';
     protected $_referencedRows = array();
 
+    /**
+     * Gets the Zend_Db_Adapter_Abstract used by the table this row
+     * is bound to.
+     *
+     * @return Zend_Db_Adapter_Abstract
+     * @throws Zend_Db_Table_Row_Exception
+     *     If this row is disconnected.
+     */
     public function getAdapter()
     {
         $table = $this->getTable();
@@ -17,9 +25,20 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Seamlessly fetch parent row by reference rule using 
-     * {@see Zefram_Db_Table::findRow()} mechanism. Rule name must start
-     * with an uppercase letter.
+     * Retrieve row field value.
+     *
+     * If the field name starts with an uppercase and a reference rule with
+     * the same name exists, the row referenced by this rule is fetched from
+     * the database ({@see Zefram_Db_Table::findRow()}) and stored for later
+     * use.
+     *
+     * @param string $key
+     * @throws Zefram_Db_Table_Row_InvalidArgumentException
+     *     Number of columns defined in reference rule does not match the
+     *     number of columns in the primary key of the parent table.
+     * @throws Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation
+     *     No referenced row was found even though columns containing the
+     *     primary key of row in the parent table are marked as NOT NULL.
      */
     public function __get($key)
     {
@@ -85,10 +104,16 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         return parent::__get($key);
     }
 
-    public function refresh()
+    /**
+     * Refreshes properties from the database and clears referenced rows
+     * storage. This method gets called after each successful write to the
+     * database by the {@see Zend_Db_Table_Row_Abstract::save()} method.
+     *
+     * @return void
+     */
+    protected function _refresh()
     {
-        parent::refresh();
-
+        parent::_refresh();
         $this->_referencedRows = array();
     }
 }
