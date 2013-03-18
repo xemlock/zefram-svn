@@ -219,15 +219,15 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         if (false !== $data) {
             $valid = $this->isFormValid($data);
             if ($valid) {
-                // any success response should be sent in processForm() by
-                // calling ajaxSuccessResponse() and passing its result to
-                // the json action helper
-                $result = $this->_processForm();
+                // any success response should be sent in _process() method
+                // by calling ajaxSuccessResponse() and passing its result
+                // to the json action helper
+                $result = $this->_process();
 
                 // form was handled successfully, perform redirection if not
-                // explicitly cancelled by returning false in _processForm()
+                // explicitly cancelled by returning false in _process()
                 if (false !== $result) {
-                    // if a string is returned from _processForm() function,
+                    // if a string is returned from the _process() method,
                     // treat it as a redirection url, otherwise use current
                     // request uri
                     if (!is_string($result)) {
@@ -240,7 +240,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
             if ($isAjax) {
                 if ($valid) {
                     // form validated successfully, no redirection performed,
-                    // no success response was sent in _processForm()
+                    // no success response was sent in _process()
                     $response = $this->ajaxSuccessResponse();
                 } else {
                     // form contains invalid values, send response containing
