@@ -5,7 +5,12 @@ abstract class Zefram_Db_Traits
     public static function bindParams(Zend_Db_Adapter_Abstract $db, $sql, $bind)
     {
         foreach ((array) $bind as $key => $value) {
-            $value = $db->quote($value);
+            // nulls can be passed directly, no need for new Zend_Db_Expr('NULL')
+            if (null === $value) {
+                $value = 'NULL';
+            } else {
+                $value = $db->quote($value);
+            }
 
             if (is_int($key)) {
                 // replace first question mark with this parameter
