@@ -32,4 +32,16 @@ class Zefram_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql implements Z
 
         return new Zend_Db_Expr($expr);
     }
+
+    /**
+     * @return string
+     */
+    public function quote($value, $type = null)
+    {
+        if (null === $value) {
+            return 'NULL';
+        }
+
+        return parent::quote($value, type);
+    }
 }
