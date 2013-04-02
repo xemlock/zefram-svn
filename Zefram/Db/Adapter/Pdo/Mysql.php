@@ -42,6 +42,6 @@ class Zefram_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql implements Z
             return 'NULL';
         }
 
-        return parent::quote($value, type);
+        return parent::quote($value, $type);
     }
 }
