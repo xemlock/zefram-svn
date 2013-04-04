@@ -200,7 +200,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         } else {
             // if rendering template form is set at 'form' variable
             $view->form = $form;
-            $content = $view->render($script);
+            $content = $controller->render();
         }
 
         return $content;
