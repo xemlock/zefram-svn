@@ -79,7 +79,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     public function getForm()
     {
         if (!$this->_form instanceof Zend_Form) {
-            throw new Zefram_Controller_Action_StandaloneForm_InvalidStateException('_form property was not properly initialized.');
+            throw new Zefram_Controller_Action_Standalone_Exception_InvalidState('_form property was not properly initialized.');
         }
         return $this->_form;
     }

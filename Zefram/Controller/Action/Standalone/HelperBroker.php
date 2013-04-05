@@ -19,7 +19,7 @@ class Zefram_Controller_Action_Standalone_HelperBroker
         $helper = $this->_action->getHelper($method);
         if (!method_exists($helper, 'direct')) {
             require_once 'Zend/Controller/Action/Exception.php';
-            throw new Zend_Controller_Action_Exception('Helper "' . $method . '" does not support overloading via direct()');
+            throw new Zend_Controller_Action_Standalone_Exception('Helper "' . $method . '" does not support overloading via direct()');
         }
         return call_user_func_array(array($helper, 'direct'), $args);
     }
