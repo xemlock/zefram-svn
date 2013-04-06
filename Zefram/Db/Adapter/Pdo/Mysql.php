@@ -2,6 +2,14 @@
 
 class Zefram_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql implements Zefram_Db_Adapter_Interface
 {
+    /**
+     * @return Zend_Db_Adapter
+     */
+    public function getAdapter()
+    {
+        return $this;
+    }
+
     public function getTable($name)
     {
         return Zefram_Db::getTable($name, $this);
