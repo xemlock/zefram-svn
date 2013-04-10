@@ -147,9 +147,13 @@ class Zefram_Db_Table extends Zend_Db_Table
      * Mass-fetch records by their identifiers. Records already present in
      * the identity map will not be fetched again.
      *
+     * @param array $ids
+     * @param string $indexBy (Optional)
+     *     Use field with this name to index rows in the resulting array.
+     *     The field used as a row index must be unique.
      * @return array<Zend_Db_Table_Row>
      */
-    public function findRows($ids)
+    public function findRows($ids, $indexBy = null)
     {
         $rows = array();
         $where = array();
@@ -164,7 +168,11 @@ class Zefram_Db_Table extends Zend_Db_Table
             if (array_key_exists($key, $this->_identityMap)) {
                 $row = $this->_identityMap[$key];
                 if ($row) {
-                    $rows[] = $row;
+                    if ($indexBy) {
+                        $rows[$row->{$indexBy}] = $row;
+                    } else {
+                        $rows[] = $row;
+                    }
                 }
             } else {
                 $subWhere = array();
@@ -183,12 +191,16 @@ class Zefram_Db_Table extends Zend_Db_Table
         // fetch required rows and add them to the identity map
         if ($where) {
             $where = implode(' OR ', $where);
-            foreach ($this->fetchRows($where) as $row) {
+            foreach ($this->fetchAll($where) as $row) {
                 $id = $this->_normalizeId($row);
                 $key = serialize($id);
 
-                $this->_identityMap[$id] = $row;
-                $rows[] = $row;
+                $this->_identityMap[$key] = $row;
+                if ($indexBy) {
+                    $rows[$row->{$indexBy}] = $row;
+                } else {
+                    $rows[] = $row;
+                }
             }
         }
 
