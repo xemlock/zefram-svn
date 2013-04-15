@@ -3,10 +3,12 @@
 /**
  * Class for encapsulation of a standalone action logic.
  *
- * @version 2013-02-17
+ * @version 2013-04-15
  */
 abstract class Zefram_Controller_Action_Standalone
 {
+    protected $_controllerClass;
+
     protected $_controller;
 
     protected $_helper;
@@ -17,10 +19,17 @@ abstract class Zefram_Controller_Action_Standalone
 
     public function __construct(Zend_Controller_Action $controller) 
     {
-        $this->_controller = $controller;
-        $this->_request    = $controller->getRequest();
-        $this->_helper     = new Zefram_Controller_Action_Standalone_HelperBroker($this);
+        if (null !== $this->_controllerClass && !$controller instanceof $this->_controllerClass) {
+            throw new Zefram_Controller_Action_Standalone_Exception_InvalidArgument(sprintf(
+                "The specified controller is of class %s, expecting class to be instance of %s",
+                get_class($controller),
+                $this->_controllerClass
+            ));
+        }
 
+        $this->_controller = $controller;
+        $this->_request = $controller->getRequest();
+        $this->_helper = new Zefram_Controller_Action_Standalone_HelperBroker($this);
         $this->view = $controller->view;
 
         $this->_init();

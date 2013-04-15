@@ -116,4 +116,13 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         parent::_refresh();
         $this->_referencedRows = array();
     }
+
+    /**
+     * @param string $tableName
+     * @return Zend_Db_Table_Abstract
+     */
+    protected function _getTableFromString($tableName)
+    {
+        return Zefram_Db::getTable($tableName, $this->getAdapter(), false);
+    }
 }
