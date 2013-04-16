@@ -77,14 +77,22 @@ class Zefram_Db_Table extends Zend_Db_Table
         return $this->_name;
     }
 
-    public function getQuotedName()
-    {
-        return $this->getAdapter()->quoteIdentifier($this->_name);
-    }
-
     public function getSchema()
     {
         return $this->_schema;
+    }
+
+    public function getQualifiedName()
+    {
+        if ($this->_schema) {
+            return $this->_schema . '.' . $this->_name;
+        }
+        return $this->_name;
+    }
+
+    public function getQuotedName()
+    {
+        return $this->getAdapter()->quoteIdentifier($this->_name);
     }
 
     /**
@@ -246,20 +254,6 @@ class Zefram_Db_Table extends Zend_Db_Table
 
         return $normalized;
     }
-
-    /**
-     * Table object can be used as a table parameter in Zend_Db_Select.
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        if ($this->_schema) {
-            return $this->_schema . '.' . $this->_name;
-        }
-        return $this->_name;
-    }
-
 
     /**
      * Created an instance of a Zend_Db_Select.
