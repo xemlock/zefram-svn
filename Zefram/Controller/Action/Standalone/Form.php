@@ -265,7 +265,7 @@ class Zefram_Controller_Action_Standalone_Form extends Zefram_Controller_Action_
             } elseif (!empty($result)) {
                 $xmlHttpResponse['data'] = $result;
             }
-            return $this->_json($xmlHttpResponse);
+            return $this->_helper->json($xmlHttpResponse);
         }
 
         // if false do not redirect
