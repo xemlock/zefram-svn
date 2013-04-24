@@ -63,6 +63,38 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         parent::__call($method, $arguments);
     }
 
+    /**
+     * Get bootstrap resource.
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function getBootstrapResource($name)
+    {
+        $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
+        $resource = $bootstrap->getResource($name);
+
+        if (empty($resource)) {
+            throw new DomainException("Resource not found: " . $name);
+        }
+
+        return $resource;
+    }
+
+    /**
+     * null is not considered a scalar value 
+     * (@see http://php.net/manual/en/function.is-scalar.php)
+     *
+     * @param string $name
+     * @param mixed $default
+     * @param scalar|null
+     */
+    public function getScalarParam($name, $default = null)
+    {
+        $value = parent::getParam($name, $default);
+        return is_scalar($value) ? $value : $default;
+    }
+
     // additional proxies to helpers
     /**
      * @deprecated
@@ -106,4 +138,6 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $this->_helper->viewRenderer->setNoRender($disable);
         return $this;
     }
+
+    
 }
