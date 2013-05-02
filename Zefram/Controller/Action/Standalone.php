@@ -17,10 +17,14 @@ abstract class Zefram_Controller_Action_Standalone
 
     public $view;
 
+    /**
+     * @param Zend_Controller_Action $controller
+     * @throws Zefram_Controller_Action_Exception_InvalidArgument
+     */
     public function __construct(Zend_Controller_Action $controller) 
     {
         if (null !== $this->_controllerClass && !$controller instanceof $this->_controllerClass) {
-            throw new Zefram_Controller_Action_Standalone_Exception_InvalidArgument(sprintf(
+            throw new Zefram_Controller_Action_Exception_InvalidArgument(sprintf(
                 "The specified controller is of class %s, expecting class to be an instance of %s",
                 is_object($controller) ? get_class($controller) : gettype($controller),
                 $this->_controllerClass

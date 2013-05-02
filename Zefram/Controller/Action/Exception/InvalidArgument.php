@@ -1,0 +1,4 @@
+<?php
+
+class Zefram_Controller_Action_Exception_InvalidArgument extends Zefram_Controller_Action_Exception
+{}

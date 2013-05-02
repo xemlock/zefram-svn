@@ -5,7 +5,7 @@ class Zefram_Controller_Action_AjaxResponse extends Zefram_Controller_Action_Aja
     const STATUS_SUCCESS = 'success';
     const STATUS_ERROR   = 'error';
 
-    protected $_success;
+    protected $_status = self::STATUS_SUCCESS;
     protected $_message;
     protected $_data;
 
@@ -54,7 +54,7 @@ class Zefram_Controller_Action_AjaxResponse extends Zefram_Controller_Action_Aja
     public function setError($message, $code = null)
     {
         $this->_status = self::STATUS_ERROR;
-        $this->_message = (string) $error;
+        $this->_message = (string) $message;
         return $this;
     }
 

@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-03-18
+ * @version    2013-05-03
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -65,7 +65,9 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     public function getForm()
     {
         if (!$this->_form instanceof Zend_Form) {
-            throw new Zefram_Controller_Action_Standalone_Exception_InvalidState('_form property was not properly initialized.');
+            throw new Zefram_Controller_Action_Exception_InvalidState(
+                '_form property was not properly initialized.'
+            );
         }
         return $this->_form;
     }
@@ -124,15 +126,15 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      * Retrieves AJAX response.
      *
      * @return Zefram_Controller_Action_AjaxResponse_Abstract
+     * @throws Zefram_Controller_Action_Exception_InvalidArgument
      */
     public function getAjaxResponse()
     {
         $ajaxResponse = $this->_helper->ajaxResponse();
         if (!$ajaxResponse instanceof Zefram_Controller_Action_AjaxResponse_Abstract) {
-            throw new Zefram_Controller_Action_Standalone_Exception_InvalidArgument(sprintf(
-                "AjaxResponse is of class %s, expecting class to be an instance of Zefram_Controller_Action_AjaxResponse_Abstract",
-                is_object($ajaxResponse) ? get_class($ajaxResponse) : gettype($ajaxResponse)
-            ));
+            throw new Zefram_Controller_Action_Exception_InvalidArgument(
+                'AjaxResponse must be an instance of Zefram_Controller_Action_AjaxResponse_Abstract'
+            );
         }
         return $ajaxResponse;
     }
