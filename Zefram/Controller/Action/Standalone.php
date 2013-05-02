@@ -3,7 +3,7 @@
 /**
  * Class for encapsulation of a standalone action logic.
  *
- * @version 2013-04-15
+ * @version 2013-05-02
  */
 abstract class Zefram_Controller_Action_Standalone
 {
@@ -21,8 +21,8 @@ abstract class Zefram_Controller_Action_Standalone
     {
         if (null !== $this->_controllerClass && !$controller instanceof $this->_controllerClass) {
             throw new Zefram_Controller_Action_Standalone_Exception_InvalidArgument(sprintf(
-                "The specified controller is of class %s, expecting class to be instance of %s",
-                get_class($controller),
+                "The specified controller is of class %s, expecting class to be an instance of %s",
+                is_object($controller) ? get_class($controller) : gettype($controller),
                 $this->_controllerClass
             ));
         }

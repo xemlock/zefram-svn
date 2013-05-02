@@ -2,6 +2,10 @@
 
 class Zefram_Controller_Action extends Zend_Controller_Action
 {
+    protected $_ajaxResponseClass = 'Zefram_Controller_Action_AjaxResponse';
+
+    protected $_ajaxResponse;
+
     public function loadUnitClass($controller, $action)
     {
         $unitClass = $controller . '_' . $action;
@@ -93,6 +97,21 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     {
         $value = parent::getParam($name, $default);
         return is_scalar($value) ? $value : $default;
+    }
+
+    public function getAjaxResponse()
+    {
+        if (null === $this->_ajaxResponse) {
+            $ajaxResponseClass = $this->_ajaxResponseClass;
+            $this->setAjaxResponse(new $ajaxResponseClass);
+        }
+        return $this->_ajaxResponse;
+    }
+
+    public function setAjaxResponse(Zefram_Controller_Action_AjaxResponse_Abstract $ajaxResponse)
+    {
+        $this->_ajaxResponse = $ajaxResponse;
+        return $this;
     }
 
     // additional proxies to helpers

@@ -16,20 +16,6 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
 {
     const VALIDATION_FAILED = 'validationFailed';
 
-    const STATUS_SUCCESS = 'success';
-    const STATUS_FAIL    = 'fail';
-    const STATUS_ERROR   = 'error';
-
-    /**
-     * AJAX response statuses.
-     * @var string[]
-     */
-    protected $_ajaxStatuses = array(
-        self::STATUS_SUCCESS => self::STATUS_SUCCESS,
-        self::STATUS_FAIL    => self::STATUS_FAIL,
-        self::STATUS_ERROR   => self::STATUS_ERROR,
-    );
-
     /**
      * Messages used in AJAX responses.
      * @var string[]
@@ -135,54 +121,24 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     }
 
     /**
-     * Creates AJAX success response.
+     * Retrieves AJAX response.
      *
-     * Response is compatible with, although not strictly conforming to JSend
-     * spec {@link http://labs.omniti.com/labs/jsend}. The difference between
-     * the spec and this implementation is the presence of the 'message' key,
-     * which is not explicitly allowed (it's not explicitly forbidden either)
-     * in responses with status other than 'error'.
-     *
-     * @param string|null $message
-     * @param array|null $data
-     * @return array
+     * @return Zefram_Controller_Action_AjaxResponse_Abstract
      */
-    public function ajaxSuccessResponse($message = null, $data = null)
+    public function getAjaxResponse()
     {
-        $response = array(
-            'status' => $this->_ajaxStatuses[self::STATUS_SUCCESS],
-        );
-        if (null !== $message) {
-            $response['message'] = (string) $message;
+        $ajaxResponse = $this->_helper->ajaxResponse();
+        if (!$ajaxResponse instanceof Zefram_Controller_Action_AjaxResponse_Abstract) {
+            throw new Zefram_Controller_Action_Standalone_Exception_InvalidArgument(sprintf(
+                "AjaxResponse is of class %s, expecting class to be an instance of Zefram_Controller_Action_AjaxResponse_Abstract",
+                is_object($ajaxResponse) ? get_class($ajaxResponse) : gettype($ajaxResponse)
+            ));
         }
-        $response['data'] = $data;
-        return $response;
+        return $ajaxResponse;
     }
 
     /**
-     * Creates AJAX fail response.
-     *
-     * Response is compatible with, although not strictly conforming to JSend
-     * spec {@link http://labs.omniti.com/labs/jsend}. The difference between
-     * the spec and this implementation is the presence of the 'message' key,
-     * which is not explicitly allowed (it's not explicitly forbidden either)
-     * in responses with status other than 'error'.
-     *
-     * @param string $message
-     * @param array|null $data
-     * @return array
-     */
-    public function ajaxFailResponse($message, $data = null)
-    {
-        return array(
-            'status'  => $this->_ajaxStatuses[self::STATUS_FAIL],
-            'message' => (string) $message,
-            'data'    => $data,
-        );
-    }
-
-    /**
-     * Render form.
+     * Renders form.
      *
      * @return string
      */
@@ -220,8 +176,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
             $valid = $this->isFormValid($data);
             if ($valid) {
                 // any success response should be sent in _process() method
-                // by calling ajaxSuccessResponse() and passing its result
-                // to the json action helper
+                // by calling ajaxResponse helper
                 $result = $this->_process();
 
                 // form was handled successfully, perform redirection if not
@@ -238,10 +193,12 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
             }
 
             if ($isAjax) {
+                $ajaxResponse = $this->getAjaxResponse();
                 if ($valid) {
                     // form validated successfully, no redirection performed,
                     // no success response was sent in _process()
-                    $response = $this->ajaxSuccessResponse();
+                    $ajaxResponse->setSuccess();
+
                 } else {
                     // form contains invalid values, send response containing
                     // human-readable message and either full form markup or
@@ -254,19 +211,21 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                         $message = $translator->translate($message);
                     }
 
-                    $response = $this->ajaxFailResponse(
-                        $message,
+                    $ajaxResponse->setError($message);
+                    $ajaxResponse->setData(
                         $this->_ajaxFormHtml ? $this->renderForm() : $form->getMessages()
                     );
                 }
-                return $this->_helper->json($response);
+                return $ajaxResponse->sendAndExit();
             }
         }
 
         if ($isAjax) {
             // if form is accessed for the first time return its markup
-            $response = $this->ajaxSuccessResponse(null, $this->renderForm());
-            return $this->_helper->json($response);
+            $ajaxResponse = $this->getAjaxResponse();
+            $ajaxResponse->setSuccess();
+            $ajaxResponse->setData($this->renderForm());
+            return $ajaxResponse->sendAndExit();
         }
 
         // mark page as already rendered, append form rendering to response
