@@ -2,7 +2,7 @@
 
 class Zefram_Os 
 {
-    public function normalizePath($path)
+    public function normalizePath($path) // {{{
     {
         $parts = preg_split('/[\\\/][\\\/]*/', $path);
         $normalized = array();
@@ -35,7 +35,7 @@ class Zefram_Os
         }
 
         return implode('/', $normalized);
-    }
+    } // }}}
 
     public static function pathLookup($filename)
     {
@@ -85,5 +85,12 @@ class Zefram_Os
             $command = "$exec $args";
         }
         return shell_exec($command);
+    } // }}}
+
+    public static function setEnv($key, $value) // {{{
+    {
+        // putenv/getenv and $_ENV are completely distinct environment stores
+        $_ENV[$key] = $value;
+        putenv("$key=$value");
     } // }}}
 }

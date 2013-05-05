@@ -6,6 +6,21 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected $_referencedRows = array();
 
     /**
+     * Does this row has unsaved field modifications?
+     *
+     * @param string $columnName OPTIONAL Is the given column modified?
+     */
+    public function isDirty($columnName = null)
+    {
+        if (null === $columnName) {
+            return 0 < count($this->_modifiedFields);
+        }
+
+        $columnName = $this->_transformColumn($columnName);
+        return isset($this->_modifiedFields[$columnName]);
+    }
+
+    /**
      * Gets the Zend_Db_Adapter_Abstract used by the table this row
      * is bound to.
      *
