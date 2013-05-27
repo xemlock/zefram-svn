@@ -1,8 +1,8 @@
 <?php
 
-class Zefram_Os 
+abstract class Zefram_Os 
 {
-    public function normalizePath($path) // {{{
+    public static function normalizePath($path) // {{{
     {
         $parts = preg_split('/[\\\/][\\\/]*/', $path);
         $normalized = array();
@@ -37,9 +37,12 @@ class Zefram_Os
         return implode('/', $normalized);
     } // }}}
 
-    public static function pathLookup($filename)
+    public static function pathLookup($filename, $path = null)
     {
-        $dirs = explode(PATH_SEPARATOR, getenv('PATH'));
+        if (null === $path) {
+            $path = getenv('PATH');
+        }
+        $dirs = explode(PATH_SEPARATOR, $path);
         array_unshift($dirs, getcwd());
         foreach ($dirs as $dir) {
             $path = $dir . DIRECTORY_SEPARATOR . $filename;
@@ -61,6 +64,10 @@ class Zefram_Os
 
     public static function exec($exec, $args = null) // {{{
     {
+        if (is_array($args)) {
+            // TODO
+        }
+
         // From php.net forum:
         // In Windows, exec() issues an internal call to "cmd /c your_command".
         // This implies that your command must follow the rules imposed by 
@@ -73,7 +80,7 @@ class Zefram_Os
         if (self::isWindows()) {
             $ext = substr(strrchr(basename($exec), '.'), 1);
             if (0 == strlen($ext)) {
-                $exec .= '.exe';
+                $exec .= '.exe'; // is this really necessary?
             }
             $exec = escapeshellarg($exec);
             if (version_compare(PHP_VERSION, '5.3.0') < 0 && !strncmp($exec, '"', 1)) {
@@ -92,5 +99,30 @@ class Zefram_Os
         // putenv/getenv and $_ENV are completely distinct environment stores
         $_ENV[$key] = $value;
         putenv("$key=$value");
+    } // }}}
+
+    /**
+     * @return string|false
+     */
+    public static function getTempDir() // {{{
+    {
+        if (function_exists('sys_get_temp_dir')) { // requires PHP 5.2.1
+            if (($dir = sys_get_temp_dir()) && is_writable($dir)) {
+                return $dir;
+            }
+        }
+
+        foreach (array('TMP', 'TEMP', 'TMPDIR') as $var) {
+            if (($dir = getenv($var)) && is_dir($dir) && is_writable($dir)) {
+                return $dir;
+            }
+        }
+
+        if (($tempfile = tempnam(__FILE__, '')) && is_file($tempfile)) {
+            unlink($tempfile);
+            return dirname($tempfile);
+        }
+
+        return false;
     } // }}}
 }
