@@ -7,6 +7,7 @@
  *
  *   resources.view.class = "Zend_View"
  *   resources.view.scriptPathSpec =
+ *   resources.view.scriptPathNoControllerSpec =
  *   resources.view.suffix =
  *   resources.view.translator =
  *   resources.view.headTitle.title =
@@ -166,6 +167,12 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
     public function setScriptPathSpec($path)
     {
         $this->getViewRenderer()->setViewScriptPathSpec($path);
+        return $this;
+    }
+
+    public function setScriptPathNoControllerSpec($path)
+    {
+        $this->getViewRenderer()->setViewScriptPathNoControllerSpec($path);
         return $this;
     }
 
