@@ -1,17 +1,37 @@
 <?php
 
 /**
- * Resource for settings view options.
+ * Customizable resource for setting view options.
  *
  * Additional configuration options:
  *
  *   resources.view.class = "Zend_View"
+ *   resources.view.scriptPathSpec =
+ *   resources.view.suffix =
  *   resources.view.translator =
- *   resources.view.contentType =
- *   resources.view.assign =
  *   resources.view.headTitle.title =
  *   resources.view.headTitle.separator =
  *   resources.view.headTitle.defaultAttachOrder =
+ *
+ * Options providing Zend_Application_Resource_View functionality: 
+ *
+ *   resources.view.doctype =
+ *   resources.view.charset =
+ *   resources.view.contentType =
+ *
+ * Options handled by the Zend_View_Abstract constructor:
+ *
+ *   resources.view.escape =
+ *   resources.view.encoding =
+ *   resources.view.basePath =
+ *   resources.view.basePathPrefix =
+ *   resources.view.scriptPath =
+ *   resources.view.helperPath =
+ *   resources.view.filterPath =
+ *   resources.view.filter =
+ *   resources.view.strictVars =
+ *   resources.view.lfiProtectionOn =
+ *   resources.view.assign =
  */
 class Zefram_Application_Resource_View extends Zend_Application_Resource_ResourceAbstract
 {
@@ -25,6 +45,16 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
             unset($options['class']);
         }
 
+        // postpone setting of charset until suitable doctype is set
+        if (array_key_exists('charset', $options)) {
+            $charset = $options['charset'];
+            unset($options['charset']);
+
+            if (isset($options['doctype'])) {
+                $options['charset'] = $charset;
+            }
+        }
+
         $viewClass = $this->_class;
         $this->_view = new $viewClass($options);
 
@@ -34,11 +64,14 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
     public function init()
     {
         $view = $this->getView();
-
-        $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
-        $viewRenderer->setView($view);
+        $this->getViewRenderer()->setView($view);
 
         return $view;
+    }
+
+    public function getViewRenderer()
+    {
+        return Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
     }
 
     public function getView()
@@ -54,6 +87,9 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
 
     public function setCharset($charset)
     {
+        if (!$this->_view->doctype()->isHtml5()) {
+            throw new Zend_View_Exception('Meta charset tag requires an HTML5 doctype');
+        }
         $this->_view->headMeta()->setCharset($charset);
         return $this;
     }
@@ -114,16 +150,28 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
                     $bootstrap->bootstrap($translate);
                     $translate = $bootstrap->getResource($translate);
                 } catch (Zend_Application_Bootstrap_Exception $e) {
-                    // invalid resource name or circular resource dependency detected
+                    // invalid resource name or circular dependency detected
                     $translate = null;
                 }
             }
         }
 
-        if ($translate) {
-            $this->_view->setTranslator($translate);
+        if ($translate && ($helper = $this->_view->getHelper('translate'))) {
+            $helper->setTranslator($translate);
         }
 
+        return $this;
+    }
+
+    public function setScriptPathSpec($path)
+    {
+        $this->getViewRenderer()->setViewScriptPathSpec($path);
+        return $this;
+    }
+
+    public function setSuffix($suffix)
+    {
+        $this->getViewRenderer()->setViewSuffix($suffix);
         return $this;
     }
 }
