@@ -98,12 +98,13 @@ class Zefram_Db_Table extends Zend_Db_Table
     /**
      * Count rows matching $where
      *
+     * @param string|array $where
      * @return int
      */
     public function countAll($where = null)
     {
         $select = $this->select();
-        $select->from($this->_name, 'COUNT(*) AS cnt');
+        $select->from($this->_name, 'COUNT(1) AS cnt');
 
         if (null !== $where) {
             $this->_where($select, $where);
@@ -159,6 +160,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * @param string $indexBy (Optional)
      *     Use field with this name to index rows in the resulting array.
      *     The field used as a row index must be unique.
+     * @throws Exception
      * @return array<Zend_Db_Table_Row>
      */
     public function findRows($ids, $indexBy = null)
@@ -227,7 +229,7 @@ class Zefram_Db_Table extends Zend_Db_Table
     }
 
     /**
-     * @param Zend_Db_Table_Row_Abstract|array
+     * @param Zend_Db_Table_Row_Abstract|array $id
      */
     protected function _normalizeId($id)
     {
@@ -266,7 +268,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      *     to be selected.
      * @param string $column,... OPTIONAL
      *     Number of additional columns to select from this table.
-     * @return Zefram_Db_Select
+     * @return Zefram_Db_Table_Select
      */
     public function select($columns = self::SELECT_WITHOUT_FROM_PART)
     {
