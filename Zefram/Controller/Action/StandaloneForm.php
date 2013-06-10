@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-05-03
+ * @version    2013-06-10
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -177,20 +177,33 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         if (false !== $data) {
             $valid = $this->isFormValid($data);
             if ($valid) {
-                // any success response should be sent in _process() method
-                // by calling ajaxResponse helper
-                $result = $this->_process();
+                try {
+                    // any success response should be sent in _process() method
+                    // by calling ajaxResponse helper
+                    $result = $this->_process();
 
-                // form was handled successfully, perform redirection if not
-                // explicitly cancelled by returning false in _process()
-                if (false !== $result) {
-                    // if a string is returned from the _process() method,
-                    // treat it as a redirection url, otherwise use current
-                    // request uri
-                    if (!is_string($result)) {
-                        $result = $this->_request->getRequestUri();
+                    // form was handled successfully, perform redirection if not
+                    // explicitly cancelled by returning false in _process()
+                    if (false !== $result) {
+                        // if a string is returned from the _process() method,
+                        // treat it as a redirection url, otherwise use current
+                        // request uri
+                        if (!is_string($result)) {
+                            $result = $this->_request->getRequestUri();
+                        }
+                        return $this->_helper->redirector->goToUrlAndExit($result);
                     }
-                    return $this->_helper->redirector->goToUrlAndExit($result);
+
+                } catch (Zefram_Controller_Action_Exception_FormValidation $e) {
+                    // treat any thrown validation exception as a last resort
+                    // form validation
+                    $element = $form->getElement($e->getElementName());
+                    if ($element instanceof Zend_Form_Element) {
+                        $element->addErrorMessage($e->getMessage());
+                        $element->markAsError();
+                    }
+
+                    $valid = false;
                 }
             }
 
