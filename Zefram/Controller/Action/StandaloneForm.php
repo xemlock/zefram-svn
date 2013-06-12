@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-06-10
+ * @version    2013-06-12
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -70,6 +70,28 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
             );
         }
         return $this->_form;
+    }
+
+    /**
+     * Retrieve all form element values.
+     *
+     * @param bool $suppressArrayNotation
+     * @return array
+     */
+    public function getFormValues($suppressArrayNotation = false)
+    {
+        return $this->getForm()->getValues($suppressArrayNotation);
+    }
+
+    /**
+     * Retrieve value for a single form element.
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function getFormValue($name)
+    {
+        return $this->getForm()->getValue($name);
     }
 
     /**
