@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @version 2013-04-24
+ * @version 2013-06-13
  */
 class Zefram_View_Helper_Form extends Zend_View_Helper_Form
 {
@@ -24,10 +24,14 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
         return parent::form($name, $attribs, $content);
     }
 
-    public function openTag(Zend_Form $form = null, $attribs = null)
+    /**
+     * @param Zend_Form|array $form
+     * @param array $attribs
+     * @return string
+     */
+    public function openTag($form = null, $attribs = null)
     {
         if ($form instanceof Zend_Form) {
-            $class = $form->getAttrib('class');
             $attribs = array_merge(
                 array(
                     'method'  => $form->getMethod(),
@@ -38,6 +42,13 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
                 $form->getAttribs(),
                 (array) $attribs
             );
+        } else {
+            $attribs = (array) $form;
+
+            // action attribute is required by XHTML 4.01 Strict doctype
+            if (!isset($attribs['action'])) {
+                $attribs['action'] = '';
+            }
         }
 
         if (empty($attribs['id'])) {
@@ -51,6 +62,9 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
         return $xhtml;
     }
 
+    /**
+     * @return string
+     */
     public function closeTag()
     {
         return '</form>';
