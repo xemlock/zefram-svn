@@ -181,11 +181,11 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         $script = $view->getScriptPath($controller->getViewScript());
 
         if (!is_file($script)) {
-            $view->assign($this->_formViewKey, $form);
-            $content = $controller->render();
-        } else {
             // render form directly if view script does not exist
             $content = $form->render();
+        } else {
+            $view->assign($this->_formViewKey, $form);
+            $content = $controller->render();
         }
 
         return $content;
