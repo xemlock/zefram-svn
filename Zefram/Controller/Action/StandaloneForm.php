@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-06-12
+ * @version    2013-06-14
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
