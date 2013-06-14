@@ -49,6 +49,12 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     protected $_form;
 
     /**
+     * Name of the view variable the form will be stored in.
+     * @var string
+     */
+    protected $_formViewKey = 'form';
+
+    /**
      * Process valid form.
      *
      * This method is marked as protected to disallow direct calls
@@ -168,19 +174,18 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      */
     public function renderForm()
     {
-        $view = $this->view;
-        $form = $this->getForm()->setView($view);
-
         $controller = $this->getController();
+        $view = $controller->initView();
+
+        $form = $this->getForm()->setView($view);
         $script = $view->getScriptPath($controller->getViewScript());
 
         if (!is_file($script)) {
-            // if action template does not exist, render form directly
-            $content = $form->render();
-        } else {
-            // if rendering template form is set at 'form' variable
-            $view->form = $form;
+            $view->assign($this->_formViewKey, $form);
             $content = $controller->render();
+        } else {
+            // render form directly if view script does not exist
+            $content = $form->render();
         }
 
         return $content;
@@ -265,7 +270,9 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
             return $ajaxResponse->sendAndExit();
         }
 
-        // mark page as already rendered, append form rendering to response
+        // mark page as already rendered, so that it isn't auto rendered
+        // in viewRenderer::postDispatch(). Append form rendering to
+        // response.
         $this->_helper->viewRenderer->setNoRender();
 
         return $this->getResponse()->appendBody($this->renderForm());
