@@ -1,7 +1,12 @@
 <?php
 
-require_once 'Zend/Crypt.php';
-
+/**
+ * @uses       Zend_Crypt
+ * @uses       Zefram_Math
+ * @category   Zefram
+ * @package    Zefram_Auth
+ * @copyright  Copyright (c) 2013 xemlock
+ */
 class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
 {
     protected $_hashName;
@@ -26,31 +31,14 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
     public function mangle($password, $salt = null)
     {
         if (null === $salt) {
-            $salt = $this->salt();
+            // Generate random string used as salt during mangling process.
+            // Salt length is given a random value between 4 and 16.
+            $salt = Zefram_Math_Rand::getString(
+                mt_rand(4, 16),
+                '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            );
         }
         $hash = Zend_Crypt::hash($this->_hashName, $salt . $password);
         return $salt . $this->_saltSeparator . $hash;
-    }
-
-    /**
-     * Generates random string used as salt during mangling process.
-     * If no length is given a random value between 4 and 16 will
-     * be used.
-     */
-    public function salt($length = null)
-    {
-        $str = '';
-        $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        if (null === $length) {
-            $length = mt_rand(4, 16);
-        } else {
-            $length = (int) $length;
-        }
-
-        for ($i = 0, $max = strlen($chars) - 1; $i < $length; ++$i) {
-            $str .= $chars[mt_rand(0, $max)];
-        }
-
-        return $str;
     }
 }
