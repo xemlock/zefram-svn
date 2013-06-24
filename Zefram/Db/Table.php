@@ -299,4 +299,21 @@ class Zefram_Db_Table extends Zend_Db_Table
 
         return $select;
     }
+
+    /**
+     * Get table instance by class name. This method is essentially a proxy
+     * to {@link Zefram_Db::getTable()} called with this object's database
+     * adapter.
+     *
+     * @param  string $tableClass
+     * @return Zend_Db_Table_Abstract
+     */
+    public function getTable($tableClass = null)
+    {
+        if (null === $tableClass) {
+            return $this;
+        }
+
+        return Zefram_Db::getTable($tableClass, $this->getAdapter());
+    }
 }
