@@ -118,14 +118,14 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     /**
      * @deprecated
      */
-    protected function _flashMessage($message)
+    protected function _flashMessage($message, $namespace = null)
     {
-        return $this->flashMessage($message);
+        return $this->flashMessage($message, $namespace);
     }
 
-    public function flashMessage($message)
+    public function flashMessage($message, $namespace = null)
     {
-        $this->_helper->flashMessenger->addMessage($message);
+        $this->_helper->flashMessenger->addMessage($message, $namespace);
         return $this;
     }
 
