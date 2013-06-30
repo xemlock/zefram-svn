@@ -3,38 +3,43 @@
 /**
  * Class for encapsulation of a standalone action logic.
  *
- * @version 2013-05-02
+ * @version 2013-06-30 / 2013-05-02
  */
 abstract class Zefram_Controller_Action_Standalone
 {
-    protected $_controllerClass;
+    protected $_actionControllerClass;
 
-    protected $_controller;
+    protected $_actionController;
 
     protected $_helper;
 
     protected $_request;
 
+    protected $_response;
+
     public $view;
 
     /**
-     * @param Zend_Controller_Action $controller
+     * @param  Zend_Controller_Action $controller
      * @throws Zefram_Controller_Action_Exception_InvalidArgument
      */
-    public function __construct(Zend_Controller_Action $controller) 
+    public function __construct(Zend_Controller_Action $actionController) 
     {
-        if (null !== $this->_controllerClass && !$controller instanceof $this->_controllerClass) {
+        if (null !== $this->_actionControllerClass && !$actionController instanceof $this->_actionControllerClass) {
             throw new Zefram_Controller_Action_Exception_InvalidArgument(sprintf(
                 "The specified controller is of class %s, expecting class to be an instance of %s",
-                is_object($controller) ? get_class($controller) : gettype($controller),
-                $this->_controllerClass
+                get_class($actionController),
+                $this->_actionControllerClass
             ));
         }
 
-        $this->_controller = $controller;
-        $this->_request = $controller->getRequest();
+        $this->_actionController = $actionController;
+
+        $this->_request = $actionController->getRequest();
+        $this->_response = $actionController->getResponse();
+
         $this->_helper = new Zefram_Controller_Action_Standalone_HelperBroker($this);
-        $this->view = $controller->view;
+        $this->view = $actionController->view;
 
         $this->_init();
     }
@@ -42,23 +47,50 @@ abstract class Zefram_Controller_Action_Standalone
     protected function _init()
     {}
 
+    public function getActionController()
+    {
+        return $this->_actionController;
+    }
+
+    /**
+     * Proxies to {@link getActionController()}.
+     * @deprecated
+     */
     public function getController()
     {
-        return $this->_controller;
+        return $this->getActionController();
     }
 
     public function getView()
     {
-        return $this->_controller->initView();
+        return $this->_actionController->initView();
+    }
+
+    /**
+     * Since this method is used by helper broker, for performance reasons
+     * it is declared here and not discovered using __call magic method.
+     *
+     * @param  $name
+     * @return Zend_Controller_Action_Helper_Abstract
+     */
+    public function getHelper($name)
+    {
+        return $this->_actionController->getHelper($name);
     }
 
     abstract public function run();
 
-    // call controller methods
+    /**
+     * Call action controller method.
+     *
+     * @param  string $name
+     * @param  array $arguments
+     * @return mixed
+     */
     public function __call($name, $arguments)
     {
         // is_callable returns true if __call is present.
-        $callback = array($this->_controller, $name);
+        $callback = array($this->_actionController, $name);
         return call_user_func_array($callback, $arguments);
     }
 
@@ -76,8 +108,8 @@ abstract class Zefram_Controller_Action_Standalone
         $this->_helper->redirector->gotoUrl($url, $options);
     }
 
-    protected function _flashMessage($message)
+    protected function _flashMessage($message, $namespace = null)
     {
-        $this->_helper->flashMessenger->addMessage($message);
+        $this->_helper->flashMessenger->addMessage($message, $namespace);
     }
 }
