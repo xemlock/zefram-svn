@@ -6,6 +6,7 @@
  * @category   Zefram
  * @package    Zefram_Auth
  * @copyright  Copyright (c) 2013 xemlock
+ * @version    2013-07-01
  */
 class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
 {
@@ -20,14 +21,22 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
     public function validate($password, $challenge, $context = null)
     {
         $pos = strpos($challenge, $this->_saltSeparator);
+
         if ($pos === false) {
-            return false;
+            return Zend_Crypt::hash($this->_hashName, $password) == $challenge;
         }
+
         $salt = substr($challenge, 0, $pos);
-        $hash = substr($challenge, $pos + 1);        
+        $hash = substr($challenge, $pos + 1);
+
         return Zend_Crypt::hash($this->_hashName, $salt . $password) == $hash;
     }
 
+    /**
+     * @param  string $password
+     * @param  string $salt
+     * @return string
+     */
     public function mangle($password, $salt = null)
     {
         if (null === $salt) {
@@ -39,6 +48,9 @@ class Zefram_Auth_PasswordMangler_Hash extends Zefram_Auth_PasswordMangler
             );
         }
         $hash = Zend_Crypt::hash($this->_hashName, $salt . $password);
-        return $salt . $this->_saltSeparator . $hash;
+        if (strlen($salt)) {
+            $hash = $salt . $this->_saltSeparator . $hash;
+        }
+        return $hash;
     }
 }
