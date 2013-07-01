@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @version 2013-06-30
+ */
 class Zefram_Controller_Action_Standalone_FormCallback extends Zefram_Controller_Action_StandaloneForm
 {
     /**
@@ -11,20 +14,26 @@ class Zefram_Controller_Action_Standalone_FormCallback extends Zefram_Controller
      * @param  Zend_Controller_Action $actionController
      * @param  Zend_Form $form
      * @param  callable $callback
-     * @param  array $options
+     * @param  object|array $options
      * @throws Zefram_Controller_Action_Exception_InvalidArgument
      */
     public function __construct(Zend_Controller_Action $actionController, Zend_Form $form, $callback, $options = null)
     {
         parent::__construct($actionController);
 
-        if (!is_callable($callback)) {
+        if (is_callable($callback)) {
+            $this->_callback = $callback;
+
+        } elseif (is_object($callback) && method_exists($callback, '__invoke')) {
+            // support __invoke() magic method in PHP 5.2
+            $this->_callback = array($callback, '__invoke');
+
+        } else {
             throw new Zefram_Controller_Action_Exception_InvalidArgument(
                 'Callback parametr must be a valid callable'
             );
         }
 
-        $this->_callback = $callback;
         $this->_form = $form;
 
         if (null !== $options) {
