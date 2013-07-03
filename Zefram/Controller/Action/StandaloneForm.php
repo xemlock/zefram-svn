@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-06-14
+ * @version    2013-07-03
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -63,6 +63,25 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      * @return bool|string
      */
     abstract protected function _process();
+
+    /**
+     * Method called before form validation.
+     *
+     * @param mixed $data       Data sent to validate form against
+     * @return void
+     */
+    protected function _preValidate($data)
+    {}
+
+    /**
+     * Method called after form validation.
+     *
+     * @param bool $isValid     Validation result
+     * @param mixed $data       Data sent to validate form against
+     * @return void
+     */
+    protected function _postValidate($data)
+    {}
 
     /**
      * @return Zend_Form
@@ -193,6 +212,8 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
 
     /**
      * Execute form handling logic
+     *
+     * @return void
      */
     public function run()
     {
@@ -202,8 +223,11 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         $form = $this->getForm();
 
         if (false !== $data) {
-            $valid = $this->isFormValid($data);
-            if ($valid) {
+            $this->_preValidate($data);
+            $isValid = $this->isFormValid($data);
+            $this->_postValidate($isValid, $data);
+
+            if ($isValid) {
                 try {
                     // any success response should be sent in _process() method
                     // by calling ajaxResponse helper
@@ -236,7 +260,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
 
             if ($isAjax) {
                 $ajaxResponse = $this->getAjaxResponse();
-                if ($valid) {
+                if ($isValid) {
                     // form validated successfully, no redirection performed,
                     // no success response was sent in _process()
                     $ajaxResponse->setSuccess();
