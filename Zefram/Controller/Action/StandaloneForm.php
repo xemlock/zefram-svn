@@ -65,6 +65,15 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     abstract protected function _process();
 
     /**
+     * Method called to populate form with default values when no data
+     * is submitted.
+     *
+     * @return void
+     */
+    protected function _populate()
+    {}
+
+    /**
      * Method called before form validation.
      *
      * @param mixed $data       Data sent to validate form against
@@ -78,7 +87,8 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      *
      * @param bool $isValid     Validation result
      * @param mixed $data       Data sent to validate form against
-     * @return void
+     * @return bool|void        If a false value is returned form is considered
+     *                          invalid
      */
     protected function _postValidate($data)
     {}
@@ -225,8 +235,10 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         if (false !== $data) {
             $this->_preValidate($data);
             $isValid = $this->isFormValid($data);
-            $this->_postValidate($isValid, $data);
-
+            if (false === $this->_postValidate($isValid, $data)) {
+                // false returned by _postValidate() invalidates the form
+                $isValid = false;
+            }
             if ($isValid) {
                 try {
                     // any success response should be sent in _process() method
@@ -254,7 +266,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                         $element->markAsError();
                     }
 
-                    $valid = false;
+                    $isValid = false;
                 }
             }
 
@@ -284,6 +296,8 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                 }
                 return $ajaxResponse->sendAndExit();
             }
+        } else {
+            $this->_populate();
         }
 
         if ($isAjax) {
