@@ -37,7 +37,7 @@ abstract class Zefram_Math_Rand
         $output = '';
 
         while (strlen($output) < $length) {
-            $output .= substr($chars, mt_rand(0, $randmax), 1);
+            $output .= substr($chars, self::getInteger(0, $randmax), 1);
         }
 
         return $output;
