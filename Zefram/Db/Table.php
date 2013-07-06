@@ -316,4 +316,34 @@ class Zefram_Db_Table extends Zend_Db_Table
 
         return Zefram_Db::getTable($tableClass, $this->getAdapter());
     }
+
+    /**
+     * Begin transaction on an underlying database adapter.
+     *
+     * @return Zend_Db_Adapter_Abstract
+     */
+    public function beginTransaction()
+    {
+        return $this->getAdapter()->beginTransaction();
+    }
+
+    /**
+     * Commit a transaction.
+     *
+     * @return Zend_Db_Adapter_Abstract
+     */
+    public function commit()
+    {
+        return $this->getAdapter()->commit();
+    }
+
+    /**
+     * Roll back a transaction.
+     *
+     * @return Zend_Db_Adapter_Abstract
+     */
+    public function rollBack()
+    {
+        return $this->getAdapter()->rollBack();
+    }
 }
