@@ -22,8 +22,15 @@ abstract class Zefram_Db
         return self::$_tablePrefix;
     }
 
-    public static function getTable($className, $db = null, $addPrefix = true)
+    public static function getTable($className, Zend_Db_Adapter_Abstract $db = null, $addPrefix = true)
     {
+        if (null === $db) {
+            $db = Zefram_Db_Table::getDefaultAdapter();
+        }
+        if (null === $db) {
+            throw new Exception('No default database adapter found');
+        }
+
         if ($addPrefix && (0 !== strpos($className, self::$_tablePrefix))) {
             // add prefix only if it's not already included
             $fullClassName = self::$_tablePrefix . $className;
@@ -32,19 +39,26 @@ abstract class Zefram_Db
             $fullClassName = $className;
         }
 
-        if (!isset(self::$_tableRegistry[$fullClassName])) {
+        $adapterId = spl_object_hash($db);
+
+        if (!isset(self::$_tableRegistry[$adapterId][$fullClassName])) {
             if (class_exists($fullClassName, true)) {
                 // ok, class found
-                self::$_tableRegistry[$fullClassName] = new $fullClassName;
+                $dbTable = new $fullClassName(array(
+                    'db' => $db,
+                ));
             } else {
                 // no class found, simulate it with basic Db_Table with only
                 // table name set
                 $tableName = self::classToTable($className);
-                $dbTable = new Zefram_Db_Table(array('name' => $tableName));
-                self::$_tableRegistry[$fullClassName] = $dbTable;
+                $dbTable = new Zefram_Db_Table(array(
+                    'db' => $db,
+                    'name' => $tableName,
+                ));
             }
+            self::$_tableRegistry[$adapterId][$fullClassName] = $dbTable;
         }
-        return self::$_tableRegistry[$fullClassName];
+        return self::$_tableRegistry[$adapterId][$fullClassName];
     }
 
     // convert camel-case to underscore separated
