@@ -21,7 +21,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      * @var string[]
      */
     protected $_ajaxMessages = array(
-        self::VALIDATION_FAILED => 'Form validation failed.',
+        self::VALIDATION_FAILED => 'Form validation failed',
     );
 
     /**
@@ -34,7 +34,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      * Treat every request as AJAX.
      * @var bool
      */
-    protected $_forceAjax = false;
+    protected $_ajaxOnly = false;
 
     /**
      * Allow processing of partially valid form?
@@ -52,7 +52,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      * Name of the view variable the form will be stored in.
      * @var string
      */
-    protected $_formViewKey = 'form';
+    protected $_formKey = 'form';
 
     /**
      * Process valid form.
@@ -176,7 +176,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      */
     public function isAjax()
     {
-        return $this->_forceAjax || $this->_request->isXmlHttpRequest();
+        return $this->_ajaxOnly || $this->_request->isXmlHttpRequest();
     }
 
     /**
@@ -207,14 +207,14 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         $view = $controller->initView();
 
         $form = $this->getForm()->setView($view);
-        $script = $view->getScriptPath($controller->getViewScript());
+        $script = $controller->getViewScript();
 
-        if (!is_file($script)) {
+        if (!is_file($view->getScriptPath($script))) {
             // render form directly if view script does not exist
             $content = $form->render();
         } else {
-            $view->assign($this->_formViewKey, $form);
-            $content = $controller->render();
+            $view->assign($this->_formKey, $form);
+            $content = $view->render($script);
         }
 
         return $content;
@@ -289,7 +289,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                         $message = $translator->translate($message);
                     }
 
-                    $ajaxResponse->setError($message);
+                    $ajaxResponse->setWarning($message);
                     $ajaxResponse->setData(
                         $this->_ajaxFormHtml ? $this->renderForm() : $form->getMessages()
                     );

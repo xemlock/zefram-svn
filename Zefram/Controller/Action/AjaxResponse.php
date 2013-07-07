@@ -3,6 +3,7 @@
 class Zefram_Controller_Action_AjaxResponse extends Zefram_Controller_Action_AjaxResponse_Abstract
 {
     const STATUS_SUCCESS = 'success';
+    const STATUS_WARNING = 'warning';
     const STATUS_ERROR   = 'error';
 
     protected $_status = self::STATUS_SUCCESS;
@@ -48,6 +49,13 @@ class Zefram_Controller_Action_AjaxResponse extends Zefram_Controller_Action_Aja
         if ($message) {
             $this->_message = (string) $message;
         }
+        return $this;
+    }
+
+    public function setWarning($message, $code = null)
+    {
+        $this->_status = self::STATUS_WARNING;
+        $this->_message = (string) $message;
         return $this;
     }
 
