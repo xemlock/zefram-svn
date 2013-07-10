@@ -220,6 +220,11 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         return $content;
     }
 
+    public function getFormMessages()
+    {
+        return $this->getForm()->getMessages();
+    }
+
     /**
      * Execute form handling logic
      *
@@ -291,7 +296,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
 
                     $ajaxResponse->setWarning($message);
                     $ajaxResponse->setData(
-                        $this->_ajaxFormHtml ? $this->renderForm() : $form->getMessages()
+                        $this->_ajaxFormHtml ? $this->renderForm() : $this->getFormMessages()
                     );
                 }
                 return $ajaxResponse->sendAndExit();
