@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @version 2013-07-07
+ * @version 2013-07-15
  */
 abstract class Zefram_Controller_Action_AjaxResponse_Abstract
 {
@@ -9,7 +9,7 @@ abstract class Zefram_Controller_Action_AjaxResponse_Abstract
 
     abstract public function setSuccess($message = null);
 
-    abstract public function setWarning($message, $code = null);
+    abstract public function setFail($message, $code = null);
 
     abstract public function setError($message, $code = null);
 

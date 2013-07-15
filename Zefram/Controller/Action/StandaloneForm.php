@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-07-03
+ * @version    2013-07-15
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -220,9 +220,37 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         return $content;
     }
 
+    /**
+     * Retrieve error messages from elements failing validations organized
+     * by elements' fully qualified names.
+     *
+     * @return array
+     */
     public function getFormMessages()
     {
-        return $this->getForm()->getMessages();
+        $messages = array();
+        $forms = array($this->getForm());
+
+        while ($form = array_shift($forms)) {
+            foreach ($form->getElements() as $element) {
+                // Element error messages are grouped by fully qualified names
+                // so that the corresponding DOM elements may be easily found.
+                // Validation error codes are irrelevant for the client-side
+                // and so they are, for easier handling by JavaScript, not
+                // returned.
+                $elementMessages = $element->getMessages();
+                if (count($elementMessages)) {
+                    $name = $element->getFullyQualifiedName();
+                    $messages[$name] = array_values($elementMessages);
+                }
+            }
+
+            foreach ($form->getSubForms() as $subform) {
+                $forms[] = $subform;
+            }
+        }
+
+        return $messages;
     }
 
     /**
@@ -294,7 +322,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                         $message = $translator->translate($message);
                     }
 
-                    $ajaxResponse->setWarning($message);
+                    $ajaxResponse->setFail($message);
                     $ajaxResponse->setData(
                         $this->_ajaxFormHtml ? $this->renderForm() : $this->getFormMessages()
                     );
