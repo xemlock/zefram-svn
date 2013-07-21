@@ -48,7 +48,7 @@ class Zefram_Validate extends Zend_Validate
             $messages = null;
         }
 
-        if (!$validator instanceof Zend_Validate) {
+        if (!$validator instanceof Zend_Validate_Interface) {
             $name = $this->getPluginLoader()->load($validator);
 
             if (empty($options)) {
@@ -88,14 +88,18 @@ class Zefram_Validate extends Zend_Validate
     public function getValidator($name)
     {
         if (isset($this->_validators[$name])) {
-            return $this->_validators[$name];
+            return $this->_validators[$name]['instance'];
         }
         return false;
     }
 
     public function getValidators()
     {
-        return $this->_validators;
+        $validators = array();
+        foreach ($this->_validators as $name => $validator) {
+            $validators[$name] = $validator['instance'];
+        }
+        return $validators;
     }
 
     public function clearValidators()
