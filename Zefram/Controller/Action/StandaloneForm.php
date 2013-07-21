@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-07-15
+ * @version    2013-07-21
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -74,24 +74,21 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     {}
 
     /**
-     * Method called before form validation.
+     * Validate form against given data.
      *
-     * @param mixed $data       Data sent to validate form against
-     * @return void
+     * @param array $data
+     * @return bool
      */
-    protected function _preValidate($data)
-    {}
+    protected function _validate(array $data)
+    {
+        $form = $this->getForm();
 
-    /**
-     * Method called after form validation.
-     *
-     * @param bool $isValid     Validation result
-     * @param mixed $data       Data sent to validate form against
-     * @return bool|void        If a false value is returned form is considered
-     *                          invalid
-     */
-    protected function _postValidate($data)
-    {}
+        if ($this->_processPartialForm) {
+            return $form->isValidPartial($data);
+        }
+
+        return $form->isValid($data);
+    }
 
     /**
      * @return Zend_Form
@@ -152,23 +149,6 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         }
 
         return false;
-    }
-
-    /**
-     * Check if form is valid against given data.
-     *
-     * @param array $data
-     * @return bool
-     */
-    public function isFormValid(array $data)
-    {
-        $form = $this->getForm();
-
-        if ($this->_processPartialForm) {
-            return $form->isValidPartial($data);
-        }
-
-        return $form->isValid($data);
     }
 
     /**
@@ -266,12 +246,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         $form = $this->getForm();
 
         if (false !== $data) {
-            $this->_preValidate($data);
-            $isValid = $this->isFormValid($data);
-            if (false === $this->_postValidate($isValid, $data)) {
-                // false returned by _postValidate() invalidates the form
-                $isValid = false;
-            }
+            $isValid = $this->_validate($data);
             if ($isValid) {
                 try {
                     // any success response should be sent in _process() method
