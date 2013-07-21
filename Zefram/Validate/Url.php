@@ -9,17 +9,23 @@
  */
 class Zefram_Validate_Url extends Zend_Validate_Abstract
 {
-    const INVALID_URL = 'invalidUrl';
+    const INVALID_URL    = 'invalidUrl';
+    const INVALID_SCHEME = 'invalidScheme';
 
     /**
      * List of allowed schemes.
      *
      * @var array
      */
-    protected $_scheme = array('http', 'https');
+    protected $_allowedSchemes = array('http', 'https');
 
     protected $_messageTemplates = array(
-        self::INVALID_URL => "'%value%' is not a valid URL.",
+        self::INVALID_URL    => "'%value%' is not a valid URL",
+        self::INVALID_SCHEME => "URL scheme '%scheme%' is not allowed",
+    );
+
+    protected $_messageVariables = array(
+        'scheme' => '_scheme',
     );
 
     /**
@@ -34,31 +40,31 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
 
             $options = (array) $options;
 
-            if (isset($options['scheme'])) {
-                $this->setScheme($options['scheme']);
+            if (isset($options['allowedSchemes'])) {
+                $this->setAllowedSchemes($options['allowedSchemes']);
             }
         }
     }
 
     /**
-     * @param  string|array $scheme
+     * @param  string|array $schemes
      * @return Zefram_Validate_Url this object
      */
-    public function setScheme($scheme)
+    public function setAllowedSchemes($schemes)
     {
-        if (is_string($scheme) && strpos($scheme, ',') !== false) {
-            $scheme = array_map('trim', explode(',', $scheme));
+        if (is_string($schemes) && strpos($schemes, ',') !== false) {
+            $schemes = array_map('trim', explode(',', $schemes));
         }
-        $this->_scheme = array_map('strtolower', (array) $scheme);
+        $this->_allowedSchemes = array_map('strtolower', (array) $schemes);
         return $this;
     }
 
     /**
      * @return string|array
      */
-    public function getScheme()
+    public function getAllowedSchemes()
     {
-        return $this->_scheme;
+        return $this->_allowedSchemes;
     }
 
     /**
@@ -67,10 +73,27 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
      */
     public function isValid($value)
     {
-        $this->_setValue((string) $value);
+        $value = (string) $value;
+        $this->_setValue($value);
 
-        if (!Zefram_Url::check($value, $this->_scheme)) {
+        try {
+            $uri = Zefram_Url::fromString($value);
+        } catch (Exception $e) {
             $this->_error(self::INVALID_URL);
+            return false;
+        }
+
+        if (!$uri->valid()) {
+            $this->_error(self::INVALID_URL);
+            return false;
+        }
+
+        $this->_scheme = $uri->getScheme();
+
+        if ($this->_allowedSchemes
+            && !in_array($this->_scheme, $this->_allowedSchemes, true)
+        ) {
+            $this->_error(self::INVALID_SCHEME);
             return false;
         }
 

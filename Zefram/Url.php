@@ -34,24 +34,4 @@ abstract class Zefram_Url extends Zend_Uri
         // contructors.
         return new Zend_Uri_Http($scheme, $schemeSpecific);
     }
-
-    /**
-     * @param  string $uri
-     * @param  array $schemes list of schemes to validate against
-     * @return bool
-     */
-    public static function check($uri, array $schemes = null)
-    {
-        try {
-            $uri = self::fromString($uri);
-        } catch (Exception $e) {
-            return false;
-        }
-
-        if ($schemes && !in_array($uri->getScheme(), $schemes, true)) {
-            return false;
-        }
-
-        return $uri->valid();
-    }
 }
