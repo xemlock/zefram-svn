@@ -106,21 +106,32 @@ abstract class Zefram_Os
      */
     public static function getTempDir() // {{{
     {
+        $tmpdir = array();
+
         if (function_exists('sys_get_temp_dir')) { // requires PHP 5.2.1
-            if (($dir = sys_get_temp_dir()) && is_writable($dir)) {
-                return $dir;
-            }
+            $tmpdir[] = sys_get_temp_dir();
         }
 
         foreach (array('TMP', 'TEMP', 'TMPDIR') as $var) {
-            if (($dir = getenv($var)) && is_dir($dir) && is_writable($dir)) {
+            $dir = realpath(getenv($var));
+            if ($dir) {
+                $tmpdir[] = $dir;
+            }
+        }
+
+        $tmpdir[] = '/tmp';
+        $tmpdir[] = '\\temp';
+
+        foreach ($tmpdir as $dir) {
+            if (is_dir($dir) && is_writable($dir)) {
                 return $dir;
             }
         }
 
-        if (($tempfile = tempnam(__FILE__, '')) && is_file($tempfile)) {
+        $tempfile = tempnam(md5(uniqid(rand(), true)), '');
+        if ($tempfile) {
             unlink($tempfile);
-            return dirname($tempfile);
+            return realpath(dirname($tempfile));
         }
 
         return false;
