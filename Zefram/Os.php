@@ -109,20 +109,20 @@ abstract class Zefram_Os
         $tmpdir = array();
 
         if (function_exists('sys_get_temp_dir')) { // requires PHP 5.2.1
-            $tmpdir[] = sys_get_temp_dir();
+            $tmpdir[sys_get_temp_dir()] = true;
         }
 
         foreach (array('TMP', 'TEMP', 'TMPDIR') as $var) {
             $dir = realpath(getenv($var));
             if ($dir) {
-                $tmpdir[] = $dir;
+                $tmpdir[$dir] = true;
             }
         }
 
-        $tmpdir[] = '/tmp';
-        $tmpdir[] = '\\temp';
+        $tmpdir['/tmp'] = true;
+        $tmpdir['\\temp'] = true;
 
-        foreach ($tmpdir as $dir) {
+        foreach (array_keys($tmpdir) as $dir) {
             if (is_dir($dir) && is_writable($dir)) {
                 return $dir;
             }
