@@ -8,30 +8,43 @@
  *   resources.response.headers.NAME.value = VALUE
  *   resources.response.headers.NAME.replace = no
  *   resources.response.httpResponseCode =
+ *
+ * To create response with the default options:
+ *
+ *   resources.response = 1
  */
 class Zefram_Application_Resource_Response extends Zend_Application_Resource_ResourceAbstract
 {
-    protected $_class = 'Zend_Controller_Response_Http';
     protected $_response;
 
-    public function __construct($options = null)
+    public function getResponse()
     {
-        if (isset($options['class'])) {
-            $this->_class = $options['class'];
+        if (null === $this->_response) {
+            $options = $this->getOptions();
+
+            if (empty($options['class'])) {
+                $class = 'Zend_Controller_Response_Http';
+            } else {
+                $class = $options['class'];
+            }
+
+            $this->_response = new $class;
+
+            if (isset($options['headers']) && is_array($options['headers'])) {
+                $this->_setResponseHeaders($options['headers']);
+            }
+
+            if (isset($options['httpResponseCode'])) {
+                $this->_response->setHttpResponseCode($options['httpResponseCode']);
+            }
         }
 
-        $responseClass = $this->_class;
-        $this->_response = new $responseClass;
-
-        parent::__construct($options);
+        return $this->_response;
     }
 
-    /**
-     * @param array $headers
-     */
-    public function setHeaders($headers)
+    protected function _setResponseHeaders(array $headers)
     {
-        foreach ((array) $headers as $name => $value) {
+        foreach ($headers as $name => $value) {
             switch (true) {
                 case is_string($value):
                     $this->_response->setHeader($name, $value);
@@ -46,16 +59,6 @@ class Zefram_Application_Resource_Response extends Zend_Application_Resource_Res
                     throw new Zend_Controller_Response_Exception("Invalid value for header '{$name}'");
             }
         }
-        return $this;
-    }
-
-    /**
-     * @param int $code
-     */
-    public function setHttpResponseCode($code)
-    {
-        $this->_response->setHttpResponseCode($code);
-        return $this;
     }
 
     public function init()
@@ -63,9 +66,11 @@ class Zefram_Application_Resource_Response extends Zend_Application_Resource_Res
         $bootstrap = $this->getBootstrap();
         $bootstrap->bootstrap('FrontController');
 
-        $frontController = $bootstrap->getResource('FrontController');
-        $frontController->setResponse($this->_response);
+        $response = $this->getResponse();
 
-        return $this->_response;
+        $frontController = $bootstrap->getResource('FrontController');
+        $frontController->setResponse($response);
+
+        return $response;
     }
 }
