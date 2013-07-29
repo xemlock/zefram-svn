@@ -14,13 +14,16 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         '…' => '...',
         '©' => '(c)',
 
-        'µ' => 'u',
         'ß' => 'ss',
         'ẞ' => 'SS',
         'þ' => 'th',
         'Þ' => 'Th',
         'Æ' => 'Ae',
         'æ' => 'ae',
+        'Œ' => 'Oe',
+        'œ' => 'oe',
+        'Ð' => 'D',
+        'ð' => 'd',
 
         'Á' => 'A', // acute
         'A̋' => 'A', // dbl acute
@@ -82,22 +85,75 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ċ' => 'c', // dot above
         'c̄' => 'c', // macron
 
-        'Ď' => 'D', 'Ð' => 'D',
-        'ď' => 'd', 'ð' => 'd',
-        'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ē' => 'E', 'Ë' => 'E', 'Ě' => 'E', 'Ė' => 'E',
-        'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ē' => 'e', 'ë' => 'e', 'ě' => 'e', 'ė' => 'e',
-        'Ę' => 'E',
-        'ę' => 'e',
+        'Ď' => 'D', // caron/hacek
+        'Ḑ' => 'D', // cedilla
+        'Ḓ' => 'D', // circumflex
+        'Ḋ' => 'D', // dot above
+        'Ḍ' => 'D', // dot below
+        'Ḏ' => 'D', // macron
+
+        'ď' => 'd', // caron/hacek
+        'ḑ' => 'd', // cedilla
+        'ḓ' => 'd', // circumflex
+        'ḋ' => 'd', // dot above
+        'ḍ' => 'd', // dot below
+        'ḏ' => 'd', // macron
+
+        'É' => 'E', // acute
+        'E̋' => 'E', // dbl acute 
+        'È' => 'E', // grave
+        'Ȅ' => 'E', // dbl grave
+        'Ĕ' => 'E', // breve
+        'Ȇ' => 'E', // inv breve
+        'Ě' => 'E', // caron/hacek
+        'Ȩ' => 'E', // cedilla
+        'Ê' => 'E', // circumflex
+        'Ḙ' => 'E', // curcumflex (below)
+        'Ë' => 'E', // umlaut
+        'Ė' => 'E', // dot above
+        'Ẹ' => 'E', // dot below
+        'Ē' => 'E', // macron
+        'Ę' => 'E', // ogonek
+        'E̊' => 'E', // ring above
+        'Ẽ' => 'E', // tilde
+        'Ḛ' => 'E', // tilde (below)
+
+        'é' => 'e', // acute
+        'e̋' => 'e', // dbl acute 
+        'è' => 'e', // grave
+        'ȅ' => 'e', // dbl grave
+        'ĕ' => 'e', // breve
+        'ȇ' => 'e', // inv breve
+        'ě' => 'e', // caron/hacek
+        'ȩ' => 'e', // cedilla
+        'ê' => 'e', // circumflex
+        'ḙ' => 'e', // curcumflex (below)
+        'ë' => 'e', // umlaut
+        'ė' => 'e', // dot above
+        'ẹ' => 'e', // dot below
+        'ē' => 'e', // macron
+        'ę' => 'e', // ogonek
+        'e̊' => 'e', // ring above
+        'ẽ' => 'e', // tilde
+        'ḛ' => 'e', // tilde (below)
+
+        'F̌' => 'F', // caron/hacek
+        'Ḟ' => 'F', // dot above
+
+        'f̌' => 'f', // caron/hacek
+        'ḟ' => 'f', // dot above
+
         'Ğ' => 'G', 'Ĝ' => 'G', 'Ǧ' => 'G', 'Ḡ' => 'G', 'Ġ' => 'g', 'Ǵ' => 'G', 'Ģ' => 'G',
         'ğ' => 'g', 'ĝ' => 'g', 'ǧ' => 'g', 'ḡ' => 'g', 'ġ' => 'g', 'ǵ' => 'g', 'ģ' => 'g',
+
         'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'İ' => 'I', 'Ī' => 'I',
         'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ı' => 'i', 'ī' => 'i',
         'Ł' => 'L',
         'ł' => 'l',
         'Ń' => 'N', 'Ñ' => 'N', 'Ň' => 'N',
         'ń' => 'n', 'ñ' => 'n', 'ň' => 'n',
-        'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O', 'Œ' => 'Oe',
-        'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'œ' => 'oe',
+        'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
+        'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o',
         'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ū' => 'U', 'Ü' => 'U', 'Ů' => 'U',
         'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ū' => 'u', 'ü' => 'u', 'ů' => 'u',
         'Ř' => 'R',
