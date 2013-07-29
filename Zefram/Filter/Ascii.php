@@ -22,13 +22,16 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'æ' => 'ae',
         'Œ' => 'Oe',
         'œ' => 'oe',
+        'Ĳ' => 'IJ',
+        'ĳ' => 'ij',
         'Ð' => 'D',
         'ð' => 'd',
 
+        // A (17)
         'Á' => 'A', // acute
-        'A̋' => 'A', // dbl acute
+        'A̋' => 'A', // double acute
         'À' => 'A', // grave
-        'Ȁ' => 'A', // dbl grave
+        'Ȁ' => 'A', // double grave
         'Ă' => 'A', // breve
         'Ȃ' => 'A', // inv breve
         'Ǎ' => 'A', // caron/hacek
@@ -43,10 +46,11 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ḁ' => 'A', // ring below
         'Ã' => 'A', // tilde
 
+        // a (17)
         'á' => 'a', // acute
-        'a̋' => 'a', // dbl acute
+        'a̋' => 'a', // double acute
         'à' => 'a', // grave
-        'ȁ' => 'a', // dbl grave
+        'ȁ' => 'a', // double grave
         'ă' => 'a', // breve
         'ȃ' => 'a', // inv breve
         'ǎ' => 'a', // caron/hacek
@@ -61,14 +65,17 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḁ' => 'a', // ring below
         'ã' => 'a', // tilde
 
+        // B (3)
         'Ḃ' => 'B', // dot above
         'Ḅ' => 'B', // dot below
         'Ḇ' => 'B', // macron
 
+        // b (3)
         'ḃ' => 'b', // dot above
         'ḅ' => 'b', // dot below
         'ḇ' => 'b', // marcon
 
+        // C (7)
         'Ć' => 'C', // acute
         'Č' => 'C', // caron/hacek
         'Ç' => 'C', // cedilla
@@ -77,6 +84,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ċ' => 'C', // dot above
         'C̄' => 'C', // macron
 
+        // c (7)
         'ć' => 'c', // acute
         'č' => 'c', // caron/hacek
         'ç' => 'c', // cedilla
@@ -85,6 +93,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ċ' => 'c', // dot above
         'c̄' => 'c', // macron
 
+        // D (6)
         'Ď' => 'D', // caron/hacek
         'Ḑ' => 'D', // cedilla
         'Ḓ' => 'D', // circumflex
@@ -92,6 +101,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ḍ' => 'D', // dot below
         'Ḏ' => 'D', // macron
 
+        // d (6)
         'ď' => 'd', // caron/hacek
         'ḑ' => 'd', // cedilla
         'ḓ' => 'd', // circumflex
@@ -99,16 +109,17 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḍ' => 'd', // dot below
         'ḏ' => 'd', // macron
 
+        // E (18)
         'É' => 'E', // acute
-        'E̋' => 'E', // dbl acute 
+        'E̋' => 'E', // double acute
         'È' => 'E', // grave
-        'Ȅ' => 'E', // dbl grave
+        'Ȅ' => 'E', // double grave
         'Ĕ' => 'E', // breve
         'Ȇ' => 'E', // inv breve
         'Ě' => 'E', // caron/hacek
         'Ȩ' => 'E', // cedilla
         'Ê' => 'E', // circumflex
-        'Ḙ' => 'E', // circumflex (below)
+        'Ḙ' => 'E', // circumflex below
         'Ë' => 'E', // umlaut
         'Ė' => 'E', // dot above
         'Ẹ' => 'E', // dot below
@@ -116,18 +127,19 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ę' => 'E', // ogonek
         'E̊' => 'E', // ring above
         'Ẽ' => 'E', // tilde
-        'Ḛ' => 'E', // tilde (below)
+        'Ḛ' => 'E', // tilde below
 
+        // e (18)
         'é' => 'e', // acute
-        'e̋' => 'e', // dbl acute 
+        'e̋' => 'e', // double acute
         'è' => 'e', // grave
-        'ȅ' => 'e', // dbl grave
+        'ȅ' => 'e', // double grave
         'ĕ' => 'e', // breve
         'ȇ' => 'e', // inv breve
         'ě' => 'e', // caron/hacek
         'ȩ' => 'e', // cedilla
         'ê' => 'e', // circumflex
-        'ḙ' => 'e', // circumflex (below)
+        'ḙ' => 'e', // circumflex below
         'ë' => 'e', // umlaut
         'ė' => 'e', // dot above
         'ẹ' => 'e', // dot below
@@ -135,14 +147,17 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ę' => 'e', // ogonek
         'e̊' => 'e', // ring above
         'ẽ' => 'e', // tilde
-        'ḛ' => 'e', // tilde (below)
+        'ḛ' => 'e', // tilde below
 
+        // F (2)
         'F̌' => 'F', // caron/hacek
         'Ḟ' => 'F', // dot above
 
+        // f (2)
         'f̌' => 'f', // caron/hacek
         'ḟ' => 'f', // dot above
 
+        // G (7)
         'Ǵ' => 'G', // acute
         'Ğ' => 'G', // breve
         'Ǧ' => 'G', // caron/hacek
@@ -151,6 +166,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ġ' => 'G', // dot above
         'Ḡ' => 'G', // macron
 
+        // g (7)
         'ǵ' => 'g', // acute
         'ğ' => 'g', // breve
         'ǧ' => 'g', // caron/hacek
@@ -159,6 +175,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ġ' => 'g', // dot above
         'ḡ' => 'g', // macron
 
+        // H (8)
         'Ḫ' => 'H', // breve
         'Ȟ' => 'H', // caron/hacek
         'Ḩ' => 'H', // cedilla
@@ -168,6 +185,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ḥ' => 'H', // dot below
         'H̱' => 'H', // macron
 
+        // h (8)
         'ḫ' => 'h', // breve
         'ȟ' => 'h', // caron/hacek
         'ḩ' => 'h', // cedilla
@@ -177,9 +195,10 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḥ' => 'h', // dot below
         'ẖ' => 'h', // macron
 
+        // I (15)
         'Í' => 'I', // acute
         'Ì' => 'I', // grave
-        'Ȉ' => 'I', // dbl grave
+        'Ȉ' => 'I', // double grave
         'Ĭ' => 'I', // breve
         'Ȋ' => 'I', // inv breve
         'Ǐ' => 'I', // caron/hacek
@@ -191,11 +210,12 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ī' => 'I', // macron
         'Į' => 'I', // ogonek
         'Ĩ' => 'I', // tilde
-        'Ḭ' => 'I', // tilde (below)
+        'Ḭ' => 'I', // tilde below
 
+        // i (14)
         'í' => 'i', // acute
         'ì' => 'i', // grave
-        'ȉ' => 'i', // dbl grave
+        'ȉ' => 'i', // double grave
         'ĭ' => 'i', // breve
         'ȋ' => 'i', // inv breve
         'ǐ' => 'i', // caron/hacek
@@ -206,7 +226,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ī' => 'i', // macron
         'į' => 'i', // ogonek
         'ĩ' => 'i', // tilde
-        'ḭ' => 'i', // tilde (below)
+        'ḭ' => 'i', // tilde below
 
         'Ł' => 'L',
         'ł' => 'l',
