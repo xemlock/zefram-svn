@@ -108,7 +108,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ě' => 'E', // caron/hacek
         'Ȩ' => 'E', // cedilla
         'Ê' => 'E', // circumflex
-        'Ḙ' => 'E', // curcumflex (below)
+        'Ḙ' => 'E', // circumflex (below)
         'Ë' => 'E', // umlaut
         'Ė' => 'E', // dot above
         'Ẹ' => 'E', // dot below
@@ -127,7 +127,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ě' => 'e', // caron/hacek
         'ȩ' => 'e', // cedilla
         'ê' => 'e', // circumflex
-        'ḙ' => 'e', // curcumflex (below)
+        'ḙ' => 'e', // circumflex (below)
         'ë' => 'e', // umlaut
         'ė' => 'e', // dot above
         'ẹ' => 'e', // dot below
@@ -177,8 +177,37 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḥ' => 'h', // dot below
         'ẖ' => 'h', // macron
 
-        'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'İ' => 'I', 'Ī' => 'I',
-        'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ı' => 'i', 'ī' => 'i',
+        'Í' => 'I', // acute
+        'Ì' => 'I', // grave
+        'Ȉ' => 'I', // dbl grave
+        'Ĭ' => 'I', // breve
+        'Ȋ' => 'I', // inv breve
+        'Ǐ' => 'I', // caron/hacek
+        'I̧' => 'I', // cedilla
+        'Î' => 'I', // circumflex
+        'Ï' => 'I', // umlaut
+        'İ' => 'I', // dot above
+        'Ị' => 'I', // dot below
+        'Ī' => 'I', // macron
+        'Į' => 'I', // ogonek
+        'Ĩ' => 'I', // tilde
+        'Ḭ' => 'I', // tilde (below)
+
+        'í' => 'i', // acute
+        'ì' => 'i', // grave
+        'ȉ' => 'i', // dbl grave
+        'ĭ' => 'i', // breve
+        'ȋ' => 'i', // inv breve
+        'ǐ' => 'i', // caron/hacek
+        'i̧' => 'i', // cedilla
+        'î' => 'i', // circumflex
+        'ï' => 'i', // umlaut
+        'ị' => 'i', // dot below
+        'ī' => 'i', // macron
+        'į' => 'i', // ogonek
+        'ĩ' => 'i', // tilde
+        'ḭ' => 'i', // tilde (below)
+
         'Ł' => 'L',
         'ł' => 'l',
         'Ń' => 'N', 'Ñ' => 'N', 'Ň' => 'N',
