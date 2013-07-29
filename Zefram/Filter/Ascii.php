@@ -143,8 +143,39 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'f̌' => 'f', // caron/hacek
         'ḟ' => 'f', // dot above
 
-        'Ğ' => 'G', 'Ĝ' => 'G', 'Ǧ' => 'G', 'Ḡ' => 'G', 'Ġ' => 'g', 'Ǵ' => 'G', 'Ģ' => 'G',
-        'ğ' => 'g', 'ĝ' => 'g', 'ǧ' => 'g', 'ḡ' => 'g', 'ġ' => 'g', 'ǵ' => 'g', 'ģ' => 'g',
+        'Ǵ' => 'G', // acute
+        'Ğ' => 'G', // breve
+        'Ǧ' => 'G', // caron/hacek
+        'Ģ' => 'G', // cedilla
+        'Ĝ' => 'G', // circumflex
+        'Ġ' => 'G', // dot above
+        'Ḡ' => 'G', // macron
+
+        'ǵ' => 'g', // acute
+        'ğ' => 'g', // breve
+        'ǧ' => 'g', // caron/hacek
+        'ģ' => 'g', // cedilla
+        'ĝ' => 'g', // circumflex
+        'ġ' => 'g', // dot above
+        'ḡ' => 'g', // macron
+
+        'Ḫ' => 'H', // breve
+        'Ȟ' => 'H', // caron/hacek
+        'Ḩ' => 'H', // cedilla
+        'Ĥ' => 'H', // circumflex
+        'Ḧ' => 'H', // umlaut
+        'Ḣ' => 'H', // dot above
+        'Ḥ' => 'H', // dot below
+        'H̱' => 'H', // macron
+
+        'ḫ' => 'h', // breve
+        'ȟ' => 'h', // caron/hacek
+        'ḩ' => 'h', // cedilla
+        'ĥ' => 'h', // circumflex
+        'ḧ' => 'h', // umlaut
+        'ḣ' => 'h', // dot above
+        'ḥ' => 'h', // dot below
+        'ẖ' => 'h', // macron
 
         'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'İ' => 'I', 'Ī' => 'I',
         'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ı' => 'i', 'ī' => 'i',
