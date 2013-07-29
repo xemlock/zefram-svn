@@ -19,14 +19,69 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ẞ' => 'SS',
         'þ' => 'th',
         'Þ' => 'Th',
-        'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ā' => 'A', 'Ä' => 'A', 'Å' => 'A', 'Æ' => 'Ae',
-        'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ā' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'ae',
-        'Ą' => 'A',
-        'ą' => 'a',
-        'Č' => 'C', 'Ć' => 'C',
-        'č' => 'c', 'ć' => 'c',
-        'Ç' => 'C',
-        'ç' => 'c',
+        'Æ' => 'Ae',
+        'æ' => 'ae',
+
+        'Á' => 'A', // acute
+        'A̋' => 'A', // dbl acute
+        'À' => 'A', // grave
+        'Ȁ' => 'A', // dbl grave
+        'Ă' => 'A', // breve
+        'Ȃ' => 'A', // inv breve
+        'Ǎ' => 'A', // caron/hacek
+        'A̧' => 'A', // cedilla
+        'Â' => 'A', // circumflex
+        'Ä' => 'A', // umlaut
+        'Ȧ' => 'A', // dot above
+        'Ạ' => 'A', // dot below
+        'Ā' => 'A', // macron
+        'Ą' => 'A', // ogonek
+        'Å' => 'A', // ring above
+        'Ḁ' => 'A', // ring below
+        'Ã' => 'A', // tilde
+
+        'á' => 'a', // acute
+        'a̋' => 'a', // dbl acute
+        'à' => 'a', // grave
+        'ȁ' => 'a', // dbl grave
+        'ă' => 'a', // breve
+        'ȃ' => 'a', // inv breve
+        'ǎ' => 'a', // caron/hacek
+        'a̧' => 'a', // cedilla
+        'â' => 'a', // circumflex
+        'ä' => 'a', // umlaut
+        'ȧ' => 'a', // dot above
+        'ạ' => 'a', // dot below
+        'ā' => 'a', // macron
+        'ą' => 'a', // ogonek
+        'å' => 'a', // ring above
+        'ḁ' => 'a', // ring below
+        'ã' => 'a', // tilde
+
+        'Ḃ' => 'B', // dot above
+        'Ḅ' => 'B', // dot below
+        'Ḇ' => 'B', // macron
+
+        'ḃ' => 'b', // dot above
+        'ḅ' => 'b', // dot below
+        'ḇ' => 'b', // marcon
+
+        'Ć' => 'C', // acute
+        'Č' => 'C', // caron/hacek
+        'Ç' => 'C', // cedilla
+        'Ĉ' => 'C', // circumflex
+        'C̈' => 'c', // umlaut
+        'Ċ' => 'C', // dot above
+        'C̄' => 'C', // macron
+
+        'ć' => 'c', // acute
+        'č' => 'c', // caron/hacek
+        'ç' => 'c', // cedilla
+        'ĉ' => 'c', // circumflex
+        'c̈' => 'c', // umlaut
+        'ċ' => 'c', // dot above
+        'c̄' => 'c', // macron
+
         'Ď' => 'D', 'Ð' => 'D',
         'ď' => 'd', 'ð' => 'd',
         'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ē' => 'E', 'Ë' => 'E', 'Ě' => 'E', 'Ė' => 'E',
