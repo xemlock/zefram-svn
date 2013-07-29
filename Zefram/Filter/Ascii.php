@@ -26,6 +26,9 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ĳ' => 'ij',
         'Ð' => 'D',
         'ð' => 'd',
+        'ĸ' => 'q', // greenlandic letter Kra
+
+        // Ǡ 	ǡ Ậ 	ậ Ặ 	ặ Ệ 	ệ
 
         // A (17)
         'Á' => 'A', // acute
@@ -228,8 +231,49 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ĩ' => 'i', // tilde
         'ḭ' => 'i', // tilde below
 
+        // J (2)
+        'J̌' => 'J', // caron/hacek
+        'Ĵ' => 'J', // circumflex
+
+        // j (2)
+        'ǰ' => 'j', // caron/hacek
+        'ĵ' => 'j', // circumflex
+
+        // K (5)
+        'Ḱ' => 'K', // acute
+        'Ǩ' => 'K', // caron/hacek
+        'Ķ' => 'K', // cedilla
+        'Ḳ' => 'K', // dot below
+        'Ḵ' => 'K', // macron
+
+        // k (5)
+        'ḱ' => 'k', // acute
+        'ǩ' => 'k', // caron
+        'ķ' => 'k', // cedilla
+        'ḳ' => 'k', // dot below
+        'ḵ' => 'k', // macron
+
+        // L (7)
+        'Ĺ' => 'L', // acute
+        'Ľ' => 'L', // caron
+        'Ļ' => 'L', // cedilla
+        'Ḽ' => 'L', // circumflex
+        'Ḷ' => 'L', // dot below
+        'Ḹ' => 'L', // dot below and macron
+        'Ḻ' => 'L', // macron
+
+        // l (7)
+        'ĺ' => 'l', // acute
+        'ľ' => 'l', // caron
+        'ļ' => 'l', // cedilla
+        'ḽ' => 'l', // circumflex
+        'ḷ' => 'l', // dot below
+        'ḹ' => 'l', // dot below and macron
+        'ḻ' => 'l', // macron
+
         'Ł' => 'L',
         'ł' => 'l',
+
         'Ń' => 'N', 'Ñ' => 'N', 'Ň' => 'N',
         'ń' => 'n', 'ñ' => 'n', 'ň' => 'n',
         'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
