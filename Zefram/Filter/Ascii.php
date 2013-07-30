@@ -39,8 +39,6 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ĳ' => 'IJ',
         'ĳ' => 'ij',
 
-        // Ệ     ệ
-
         // A (34)
         'Á' => 'A', // acute
         'A̋' => 'A', // double acute
@@ -157,7 +155,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḍ' => 'd', // dot below
         'ḏ' => 'd', // macron
 
-        // E (21)
+        // E (27)
         'É' => 'E', // acute
         'E̋' => 'E', // double acute
         'È' => 'E', // grave
@@ -169,9 +167,15 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ḝ' => 'E', // cedilla and breve
         'Ê' => 'E', // circumflex
         'Ḙ' => 'E', // circumflex below
+        'Ế' => 'E', // circumflex and acute
+        'Ề' => 'E', // circumflex and grave
+        'Ệ' => 'E', // circumflex and dot below
+        'Ể' => 'E', // circumflex and hook above
+        'Ễ' => 'E', // circumflex and tilde
         'Ë' => 'E', // diaeresis
         'Ė' => 'E', // dot above
         'Ẹ' => 'E', // dot below
+        'Ẻ' => 'E', // hook above
         'Ē' => 'E', // macron
         'Ḗ' => 'E', // macron and acute
         'Ḕ' => 'E', // macron and grave
@@ -180,7 +184,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ẽ' => 'E', // tilde
         'Ḛ' => 'E', // tilde below
 
-        // e (21)
+        // e (27)
         'é' => 'e', // acute
         'e̋' => 'e', // double acute
         'è' => 'e', // grave
@@ -192,9 +196,15 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḝ' => 'e', // cedilla and breve
         'ê' => 'e', // circumflex
         'ḙ' => 'e', // circumflex below
+        'ế' => 'e', // circumflex and acute
+        'ề' => 'e', // circumflex and grave
+        'ệ' => 'e', // circumflex and dot below
+        'ể' => 'e', // circumflex and hook above
+        'ễ' => 'e', // circumflex and tilde
         'ë' => 'e', // diaeresis
         'ė' => 'e', // dot above
         'ẹ' => 'e', // dot below
+        'ẻ' => 'e', // hook above
         'ē' => 'e', // macron
         'ḗ' => 'e', // macron and acute
         'ḕ' => 'e', // macron and grave
@@ -249,7 +259,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḥ' => 'h', // dot below
         'ẖ' => 'h', // macron
 
-        // I (15)
+        // I (16)
         'Í' => 'I', // acute
         'Ì' => 'I', // grave
         'Ȉ' => 'I', // double grave
@@ -261,12 +271,13 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ï' => 'I', // diaeresis
         'İ' => 'I', // dot above
         'Ị' => 'I', // dot below
+        'Ỉ' => 'I', // hook above
         'Ī' => 'I', // macron
         'Į' => 'I', // ogonek
         'Ĩ' => 'I', // tilde
         'Ḭ' => 'I', // tilde below
 
-        // i (14)
+        // i (15)
         'í' => 'i', // acute
         'ì' => 'i', // grave
         'ȉ' => 'i', // double grave
@@ -277,6 +288,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'î' => 'i', // circumflex
         'ï' => 'i', // diaeresis
         'ị' => 'i', // dot below
+        'ỉ' => 'i', // hook above
         'ī' => 'i', // macron
         'į' => 'i', // ogonek
         'ĩ' => 'i', // tilde
