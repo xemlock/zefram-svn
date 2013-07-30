@@ -23,55 +23,83 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ẞ' => 'SS',
         'þ' => 'th',
         'Þ' => 'Th',
-        'Æ' => 'Ae',
-        'Ǽ' => 'Ae',
-        'æ' => 'ae',
-        'ǽ' => 'ae',
-        'Œ' => 'Oe',
-        'œ' => 'oe',
-        'Ĳ' => 'IJ',
-        'ĳ' => 'ij',
         'Ð' => 'D',
         'ð' => 'd',
         'ĸ' => 'q', // greenlandic letter Kra
 
-        // Ǡ    ǡ Ậ     ậ Ặ     ặ Ệ     ệ
+        'Æ' => 'AE',
+        'Ǽ' => 'AE',
+        'Ǣ' => 'AE',
+        'æ' => 'ae',
+        'ǽ' => 'ae',
+        'ǣ' => 'ae',
+        'Œ' => 'OE',
+        'œ' => 'oe',
+        'ᵫ' => 'ue',
+        'Ĳ' => 'IJ',
+        'ĳ' => 'ij',
 
-        // A (17)
+        // Ệ     ệ
+
+        // A (29)
         'Á' => 'A', // acute
         'A̋' => 'A', // double acute
         'À' => 'A', // grave
         'Ȁ' => 'A', // double grave
         'Ă' => 'A', // breve
+        'Ắ' => 'A', // breve and acute
+        'Ằ' => 'A', // breve and grave
+        'Ặ' => 'A', // breve and dot below
+        'Ẳ' => 'A', // breve and hook above
+        'Ẵ' => 'A', // breve and tilde
         'Ȃ' => 'A', // inv breve
         'Ǎ' => 'A', // caron/hacek
         'A̧' => 'A', // cedilla
         'Â' => 'A', // circumflex
+        'Ấ' => 'A', // circumflex and acute
+        'Ầ' => 'A', // circumflex and grave
+        'Ẫ' => 'A', // circumflex and tilde
+        'Ậ' => 'A', // circumflex and dot below
         'Ä' => 'A', // umlaut
+        'Ǟ' => 'A', // umlaut and macron
         'Ȧ' => 'A', // dot above
+        'Ǡ' => 'A', // dot above and macron
         'Ạ' => 'A', // dot below
         'Ā' => 'A', // macron
         'Ą' => 'A', // ogonek
         'Å' => 'A', // ring above
+        'Ǻ' => 'A', // ring above and acute
         'Ḁ' => 'A', // ring below
         'Ã' => 'A', // tilde
 
-        // a (17)
+        // a (29)
         'á' => 'a', // acute
         'a̋' => 'a', // double acute
         'à' => 'a', // grave
         'ȁ' => 'a', // double grave
         'ă' => 'a', // breve
+        'ắ' => 'a', // breve and acute
+        'ằ' => 'a', // breve and grave
+        'ặ' => 'a', // breve and dot below
+        'ẳ' => 'a', // breve and hook above
+        'ẵ' => 'a', // breve and tilde
         'ȃ' => 'a', // inv breve
         'ǎ' => 'a', // caron/hacek
         'a̧' => 'a', // cedilla
         'â' => 'a', // circumflex
+        'ấ' => 'a', // circumflex and acute
+        'ầ' => 'a', // circumflex and grave
+        'ẫ' => 'a', // circumflex and tilde
+        'ậ' => 'a', // circumflex and dot below
         'ä' => 'a', // umlaut
+        'ǟ' => 'a', // umlaut and macron
         'ȧ' => 'a', // dot above
+        'ǡ' => 'a', // dot above and macron
         'ạ' => 'a', // dot below
         'ā' => 'a', // macron
         'ą' => 'a', // ogonek
         'å' => 'a', // ring above
+        'ǻ' => 'a', // ring above and acute
         'ḁ' => 'a', // ring below
         'ã' => 'a', // tilde
 
