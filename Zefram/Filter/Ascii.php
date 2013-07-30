@@ -454,16 +454,69 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ṏ' => 'o', // tilde and diaeresis
         'ȭ' => 'o', // tilde and macron
 
-        'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ū' => 'U', 'Ü' => 'U', 'Ů' => 'U',
-        'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ū' => 'u', 'ü' => 'u', 'ů' => 'u',
-        'Ř' => 'R',
-        'ř' => 'r',
+        // P (3)
+        'Ṕ' => 'P', // acute
+        'P̈' => 'P', // diaeresis
+        'Ṗ' => 'P', // dot above
+
+        // p (3)
+        'ṕ' => 'p', // acute
+        'p̈' => 'p', // diaeresis
+        'ṗ' => 'p', // dot above
+
+        // R (9)
+        'Ŕ' => 'R', // acute
+        'Ȑ' => 'R', // double grave
+        'Ȓ' => 'R', // inv breve
+        'Ř' => 'R', // caron
+        'Ŗ' => 'R', // cedilla
+        'Ṙ' => 'R', // dot above
+        'Ṛ' => 'R', // dot below
+        'Ṝ' => 'R', // dot below and macron
+        'Ṟ' => 'R', // macron below
+
+        // r (9)
+        'ŕ' => 'r', // acute
+        'ȑ' => 'r', // double grave
+        'ȓ' => 'r', // inv breve
+        'ř' => 'r', // caron
+        'ŗ' => 'r', // cedilla
+        'ṙ' => 'r', // dot above
+        'ṛ' => 'r', // dot below
+        'ṝ' => 'r', // dot below and macron
+        'ṟ' => 'r', // macron
+        
+        // S
         'Ś' => 's', 'Š' => 'S',
         'ś' => 's', 'š' => 's',
         'Ş' => 'S',
         'ş' => 's',
-        'Ť' => 'T',
-        'ť' => 't',
+        'Ș' => 'S', // comma
+        'ș' => 's', // comma
+
+        // T (8)
+        'Ť' => 'T', // caron
+        'Ţ' => 'T', // cedilla
+        'Ṱ' => 'T', // circumflex
+        'Ț' => 'T', // comma
+        'T̈' => 'T', // diaeresis
+        'Ṫ' => 'T', // dot above
+        'Ṭ' => 'T', // dot below
+        'Ṯ' => 'T', // macron
+
+        // t (8)
+        'ť' => 't', // caron
+        'ţ' => 't', // cedilla
+        'ṱ' => 't', // circumflex
+        'ț' => 't', // comma
+        'ẗ' => 't', // diaeresis
+        'ṫ' => 't', // dot above
+        'ṭ' => 't', // dot below
+        'ṯ' => 't', // macron
+
+        'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ū' => 'U', 'Ü' => 'U', 'Ů' => 'U',
+        'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ū' => 'u', 'ü' => 'u', 'ů' => 'u',
+
         'Ž' => 'Z',
         'Ý' => 'Y', 'Ÿ' => 'Y', '¥' => 'Y',
         'ý' => 'y', 'ÿ' => 'y',
