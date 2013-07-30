@@ -41,7 +41,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
 
         // Ệ     ệ
 
-        // A (29)
+        // A (34)
         'Á' => 'A', // acute
         'A̋' => 'A', // double acute
         'À' => 'A', // grave
@@ -58,21 +58,26 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Â' => 'A', // circumflex
         'Ấ' => 'A', // circumflex and acute
         'Ầ' => 'A', // circumflex and grave
-        'Ẫ' => 'A', // circumflex and tilde
         'Ậ' => 'A', // circumflex and dot below
-        'Ä' => 'A', // umlaut
-        'Ǟ' => 'A', // umlaut and macron
+        'Ẩ' => 'A', // circumflex and hook above
+        'Ẫ' => 'A', // circumflex and tilde
+        'Ä' => 'A', // diaeresis
+        'Ǟ' => 'A', // diaeresis and macron
         'Ȧ' => 'A', // dot above
         'Ǡ' => 'A', // dot above and macron
         'Ạ' => 'A', // dot below
         'Ā' => 'A', // macron
+        'Ā̊' => 'A', // macron and ring above
+        'Å̱' => 'A', // macron below and ring above
         'Ą' => 'A', // ogonek
         'Å' => 'A', // ring above
         'Ǻ' => 'A', // ring above and acute
+        'Å̂' => 'A', // ring above and circumflex
+        'Ą̊' => 'A', // ring above and ogonek
         'Ḁ' => 'A', // ring below
         'Ã' => 'A', // tilde
 
-        // a (29)
+        // a (34)
         'á' => 'a', // acute
         'a̋' => 'a', // double acute
         'à' => 'a', // grave
@@ -89,17 +94,22 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'â' => 'a', // circumflex
         'ấ' => 'a', // circumflex and acute
         'ầ' => 'a', // circumflex and grave
-        'ẫ' => 'a', // circumflex and tilde
         'ậ' => 'a', // circumflex and dot below
-        'ä' => 'a', // umlaut
-        'ǟ' => 'a', // umlaut and macron
+        'ẩ' => 'a', // circumflex and hook above
+        'ẫ' => 'a', // circumflex and tilde
+        'ä' => 'a', // diaeresis
+        'ǟ' => 'a', // diaeresis and macron
         'ȧ' => 'a', // dot above
         'ǡ' => 'a', // dot above and macron
         'ạ' => 'a', // dot below
         'ā' => 'a', // macron
+        'ā̊' => 'a', // macron and ring above
+        'å̱' => 'a', // macron below and ring above
         'ą' => 'a', // ogonek
         'å' => 'a', // ring above
         'ǻ' => 'a', // ring above and acute
+        'å̂' => 'a', // ring above and circumflex
+        'ą̊' => 'a', // ring above and ogonek
         'ḁ' => 'a', // ring below
         'ã' => 'a', // tilde
 
@@ -111,14 +121,14 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         // b (3)
         'ḃ' => 'b', // dot above
         'ḅ' => 'b', // dot below
-        'ḇ' => 'b', // marcon
+        'ḇ' => 'b', // macron
 
         // C (7)
         'Ć' => 'C', // acute
         'Č' => 'C', // caron/hacek
         'Ç' => 'C', // cedilla
         'Ĉ' => 'C', // circumflex
-        'C̈' => 'c', // umlaut
+        'C̈' => 'c', // diaeresis
         'Ċ' => 'C', // dot above
         'C̄' => 'C', // macron
 
@@ -127,7 +137,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'č' => 'c', // caron/hacek
         'ç' => 'c', // cedilla
         'ĉ' => 'c', // circumflex
-        'c̈' => 'c', // umlaut
+        'c̈' => 'c', // diaeresis
         'ċ' => 'c', // dot above
         'c̄' => 'c', // macron
 
@@ -159,7 +169,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ḝ' => 'E', // cedilla and breve
         'Ê' => 'E', // circumflex
         'Ḙ' => 'E', // circumflex below
-        'Ë' => 'E', // umlaut
+        'Ë' => 'E', // diaeresis
         'Ė' => 'E', // dot above
         'Ẹ' => 'E', // dot below
         'Ē' => 'E', // macron
@@ -182,7 +192,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ḝ' => 'e', // cedilla and breve
         'ê' => 'e', // circumflex
         'ḙ' => 'e', // circumflex below
-        'ë' => 'e', // umlaut
+        'ë' => 'e', // diaeresis
         'ė' => 'e', // dot above
         'ẹ' => 'e', // dot below
         'ē' => 'e', // macron
@@ -224,7 +234,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ȟ' => 'H', // caron/hacek
         'Ḩ' => 'H', // cedilla
         'Ĥ' => 'H', // circumflex
-        'Ḧ' => 'H', // umlaut
+        'Ḧ' => 'H', // diaeresis
         'Ḣ' => 'H', // dot above
         'Ḥ' => 'H', // dot below
         'H̱' => 'H', // macron
@@ -234,7 +244,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ȟ' => 'h', // caron/hacek
         'ḩ' => 'h', // cedilla
         'ĥ' => 'h', // circumflex
-        'ḧ' => 'h', // umlaut
+        'ḧ' => 'h', // diaeresis
         'ḣ' => 'h', // dot above
         'ḥ' => 'h', // dot below
         'ẖ' => 'h', // macron
@@ -248,7 +258,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ǐ' => 'I', // caron/hacek
         'I̧' => 'I', // cedilla
         'Î' => 'I', // circumflex
-        'Ï' => 'I', // umlaut
+        'Ï' => 'I', // diaeresis
         'İ' => 'I', // dot above
         'Ị' => 'I', // dot below
         'Ī' => 'I', // macron
@@ -265,7 +275,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ǐ' => 'i', // caron/hacek
         'i̧' => 'i', // cedilla
         'î' => 'i', // circumflex
-        'ï' => 'i', // umlaut
+        'ï' => 'i', // diaeresis
         'ị' => 'i', // dot below
         'ī' => 'i', // macron
         'į' => 'i', // ogonek
@@ -317,7 +327,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         // M (6)
         'Ḿ' => 'M', // acute
         'M̧' => 'M', // cedilla
-        'M̈' => 'M', // umlaut
+        'M̈' => 'M', // diaeresis
         'Ṁ' => 'M', // dot above
         'Ṃ' => 'M', // dot below
         'M̄' => 'm', // macron
@@ -325,7 +335,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         // m (6)
         'ḿ' => 'm', // acute
         'm̧' => 'm', // cedilla
-        'm̈' => 'm', // umlaut
+        'm̈' => 'm', // diaeresis
         'ṁ' => 'm', // dot above
         'ṃ' => 'm', // dot below
         'm̄' => 'm', // macron
@@ -336,7 +346,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ň' => 'N', // caron/hacek
         'Ņ' => 'N', // cedilla
         'Ṋ' => 'N', // circumflex
-        'N̈' => 'N', // umlaut
+        'N̈' => 'N', // diaeresis
         'Ṅ' => 'N', // dot above
         'Ṇ' => 'N', // dot below
         'N̄' => 'N', // macron
@@ -349,7 +359,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ň' => 'n', // caron/hacek
         'ņ' => 'n', // cedilla
         'ṋ' => 'n', // circumflex
-        'n̈' => 'n', // umlaut
+        'n̈' => 'n', // diaeresis
         'ṅ' => 'n', // dot above
         'ṇ' => 'n', // dot below
         'n̄' => 'n', // macron
@@ -371,8 +381,8 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ổ' => 'O', // circumflex and hook above
         'Ộ' => 'O', // circumflex and dot below
         'Ỗ' => 'O', // circumflex and tilde
-        'Ö' => 'O', // umlaut
-        'Ȫ' => 'O', // umlaut and macron
+        'Ö' => 'O', // diaeresis
+        'Ȫ' => 'O', // diaeresis and macron
         'Ȯ' => 'O', // dot above
         'Ȱ' => 'O', // dot above and macron
         'Ọ' => 'O', // dot below
@@ -391,7 +401,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'Ø' => 'O', // stroke
         'Õ' => 'O', // tilde
         'Ṍ' => 'O', // tilde and acute
-        'Ṏ' => 'O', // tilde and umlaut
+        'Ṏ' => 'O', // tilde and diaeresis
         'Ȭ' => 'O', // tilde and macron
 
         // o (36)
@@ -409,8 +419,8 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ổ' => 'o', // circumflex and hook above
         'ộ' => 'o', // circumflex and dot below
         'ỗ' => 'o', // circumflex and tilde
-        'ö' => 'o', // umlaut
-        'ȫ' => 'o', // umlaut and macron
+        'ö' => 'o', // diaeresis
+        'ȫ' => 'o', // diaeresis and macron
         'ȯ' => 'o', // dot above
         'ȱ' => 'o', // dot above and macron
         'ọ' => 'o', // dot below
@@ -429,7 +439,7 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ø' => 'o', // stroke
         'õ' => 'o', // tilde
         'ṍ' => 'o', // tilde and acute
-        'ṏ' => 'o', // tilde and umlaut
+        'ṏ' => 'o', // tilde and diaeresis
         'ȭ' => 'o', // tilde and macron
 
         'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ū' => 'U', 'Ü' => 'U', 'Ů' => 'U',
