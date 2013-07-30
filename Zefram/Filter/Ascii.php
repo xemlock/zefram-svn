@@ -356,8 +356,82 @@ class Zefram_Filter_Ascii implements Zend_Filter_Interface
         'ṉ' => 'n', // macron below
         'ñ' => 'n', // tilde
 
-        'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
-        'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o',
+        // O (36)
+        'Ó' => 'O', // acute
+        'Ő' => 'O', // double acute
+        'Ò' => 'O', // grave
+        'Ȍ' => 'O', // double grave
+        'Ŏ' => 'O', // breve
+        'Ȏ' => 'O', // inv breve
+        'Ǒ' => 'O', // caron/hacek
+        'O̧' => 'O', // cedilla
+        'Ô' => 'O', // circumflex
+        'Ố' => 'O', // circumflex and acute
+        'Ồ' => 'O', // circumflex and grave
+        'Ổ' => 'O', // circumflex and hook above
+        'Ộ' => 'O', // circumflex and dot below
+        'Ỗ' => 'O', // circumflex and tilde
+        'Ö' => 'O', // umlaut
+        'Ȫ' => 'O', // umlaut and macron
+        'Ȯ' => 'O', // dot above
+        'Ȱ' => 'O', // dot above and macron
+        'Ọ' => 'O', // dot below
+        'Ỏ' => 'O', // hook above
+        'Ơ' => 'O', // horn
+        'Ớ' => 'O', // horn and acute
+        'Ờ' => 'O', // horn and grave
+        'Ợ' => 'O', // horn and dot below
+        'Ở' => 'O', // horn and hook above
+        'Ỡ' => 'O', // horn and tilde
+        'Ō' => 'O', // macron
+        'Ṓ' => 'O', // macron and acute
+        'Ṑ' => 'O', // macron and grave
+        'Ǫ' => 'O', // ogonek
+        'Ǭ' => 'O', // ogonek and macron
+        'Ø' => 'O', // stroke
+        'Õ' => 'O', // tilde
+        'Ṍ' => 'O', // tilde and acute
+        'Ṏ' => 'O', // tilde and umlaut
+        'Ȭ' => 'O', // tilde and macron
+
+        // o (36)
+        'ó' => 'o', // acute
+        'ő' => 'o', // double acute
+        'ò' => 'o', // grave
+        'ȍ' => 'o', // double grave
+        'ŏ' => 'o', // breve
+        'ȏ' => 'o', // inv breve
+        'ǒ' => 'o', // caron/hacek
+        'o̧' => 'o', // cedilla
+        'ô' => 'o', // circumflex
+        'ồ' => 'o', // circumflex and grave
+        'ố' => 'o', // circumflex and acute
+        'ổ' => 'o', // circumflex and hook above
+        'ộ' => 'o', // circumflex and dot below
+        'ỗ' => 'o', // circumflex and tilde
+        'ö' => 'o', // umlaut
+        'ȫ' => 'o', // umlaut and macron
+        'ȯ' => 'o', // dot above
+        'ȱ' => 'o', // dot above and macron
+        'ọ' => 'o', // dot below
+        'ỏ' => 'o', // hook above
+        'ơ' => 'o', // horn
+        'ớ' => 'o', // horn and acute
+        'ờ' => 'o', // horn and grave
+        'ợ' => 'o', // horn and dot below
+        'ở' => 'o', // horn and hook above
+        'ỡ' => 'o', // horn and tilde
+        'ō' => 'o', // macron
+        'ṓ' => 'o', // macron and acute
+        'ṑ' => 'o', // macron and grave
+        'ǫ' => 'o', // ogonek
+        'ǭ' => 'o', // ogonek and macron
+        'ø' => 'o', // stroke
+        'õ' => 'o', // tilde
+        'ṍ' => 'o', // tilde and acute
+        'ṏ' => 'o', // tilde and umlaut
+        'ȭ' => 'o', // tilde and macron
+
         'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ū' => 'U', 'Ü' => 'U', 'Ů' => 'U',
         'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ū' => 'u', 'ü' => 'u', 'ů' => 'u',
         'Ř' => 'R',
