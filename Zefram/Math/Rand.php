@@ -2,7 +2,16 @@
 
 abstract class Zefram_Math_Rand
 {
+    const ALPHA     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const ALNUM     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const DIGITS    = '0123456789';
+    const XDIGITS   = '0123456789ABCDEFabcdef';
+    const BASE64    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const BASE64URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
     /**
+     * @param  int $min
+     * @param  int $max OPTIONAL
      * @return int
      */
     public static function getInteger($min = 0, $max = null)
@@ -22,15 +31,13 @@ abstract class Zefram_Math_Rand
     }
 
     /**
+     * @param  int $length
+     * @param  string $chars OPTIONAL   if character list is not expicitly
+     *                                  given, use URL-safe Base64 alphabet
      * @return string
      */
-    public static function getString($length, $chars = null)
+    public static function getString($length, $chars = self::BASE64URL)
     {
-        if (null === $chars) {
-            // if character list is not expicitly given, use URL-safe Base64
-            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-        }
-
         $randmax = strlen($chars) - 1;
 
         $length = max(0, $length);
