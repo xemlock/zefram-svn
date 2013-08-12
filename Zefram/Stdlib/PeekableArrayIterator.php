@@ -11,6 +11,10 @@ class Zefram_Stdlib_PeekableArrayIterator
     public function __construct(array $array = array())
     {
         $this->_array = $array;
+
+        // reset internal array pointer, otherwise current position will
+        // be copied from the original array!
+        reset($this->_array);
     }
 
     public function current()
@@ -64,6 +68,16 @@ class Zefram_Stdlib_PeekableArrayIterator
     public function offsetUnset($offset)
     {
         unset($this->_array[$offset]);
+    }
+
+    public function __isset($offset)
+    {
+        return $this->offsetExists($offset);
+    }
+
+    public function __unset($offset)
+    {
+        $this->_offsetUnset($offset);
     }
 
     public function peek()
