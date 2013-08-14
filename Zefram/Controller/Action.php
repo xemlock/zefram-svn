@@ -13,6 +13,8 @@ class Zefram_Controller_Action extends Zend_Controller_Action
      */
     public static function loadActionClass($controllerClass, $actionMethod)
     {
+        $actionMethod = ucfirst($actionMethod);
+
         if ($controllerClass instanceof ReflectionClass) {
             $controllerRef = $controllerClass;
             $controllerClass = $controllerRef->getName();
