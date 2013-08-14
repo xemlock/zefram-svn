@@ -6,61 +6,79 @@ class Zefram_Controller_Action extends Zend_Controller_Action
 
     protected $_ajaxResponse;
 
-    public function loadUnitClass($controller, $action)
+    /**
+     * @param string|ReflectionClass $controllerClass
+     * @param string $actionMethod
+     * @return string|false
+     */
+    public static function loadActionClass($controllerClass, $actionMethod)
     {
-        $unitClass = $controller . '_' . $action;
-        if (!class_exists($unitClass, false)) {
-            $frontController = Zend_Controller_Front::getInstance();
-            $controllerDirectories = $frontController->getControllerDirectory();
-
-            $module = $this->_request->getModuleName();
-            if (empty($module)) {
-                $module = $frontController->getDefaultModule();
-            }
-            $dir = $controllerDirectories[$module];
-
-            // remove module prefix from controller name            
-            $controllerName = implode('', array_slice(explode('_', $controller), -1));
-
-            $file = $dir . '/' . $controllerName . '/' . $action . '.php';
-
-            if (is_file($file)) {
-                include_once $file;
-            }
-
-            if (!class_exists($unitClass, false)) {
-                return null;
-            }
+        if ($controllerClass instanceof ReflectionClass) {
+            $controllerRef = $controllerClass;
+            $controllerClass = $controllerRef->getName();
+        } else {
+            $controllerRef = null;
         }
-        return $unitClass;    
+
+        $actionClass = $controllerClass . '_' . $actionMethod;
+
+        if (!class_exists($actionClass, false)) {
+            // file containing action implementation must reside in the
+            // directory having the same name as controller class
+            if (null === $controllerRef) {
+                $controllerRef = new ReflectionClass($controllerClass);
+            }
+
+            $actionDir = $controllerRef->getFileName();
+
+            // strip extension(s) from controller file name to get path
+            // to action directory
+            if (false !== ($pos = strpos($actionDir, '.'))) {
+                $actionDir = substr($actionDir, 0, $pos);
+            }
+
+            $actionFile = $actionDir . '/' . $actionMethod . '.php';
+
+            if (is_file($actionFile) && is_readable($actionFile)) {
+                include_once $actionFile;
+                if (class_exists($actionClass, false)) {
+                    return $actionClass;
+                }
+            }
+
+            return false;
+        }
+
+        return $actionClass;
     }
 
-    public function getUnitClass($actionName)
+    public function getActionClass($actionName)
     {
-        $controller = get_class($this);
-        $action = ucfirst(preg_replace_callback(
+        $controllerClass = get_class($this);
+        $actionMethod = ucfirst(preg_replace_callback(
             '/-([a-zA-Z0-9]+)/', 
             create_function('$match', 'return ucfirst($match[1]);'),
             $actionName
         ));
-        $action .= 'Action';
+        $actionMethod .= 'Action';
 
-        return $this->loadUnitClass($controller, $action);
+        return self::loadActionClass($controllerClass, $actionMethod);
     }
 
     public function __call($method, $arguments)
     {        
         if (!strcasecmp(substr($method, -6), 'Action')) {
-            // undefined action, try running unit action
-            $unitClass = $this->getUnitClass(substr($method, 0, -6));
-            if ($unitClass) {
-                $ref = new ReflectionClass($unitClass);
+            // undefined action, try running standalone action
+            $actionClass = self::loadActionClass(get_class($this), $method);
+            if ($actionClass) {
+                $ref = new ReflectionClass($actionClass);
                 if ($ref->hasMethod('__construct')) {
-                    $unit = $ref->newInstanceArgs(array_merge(array($this), $arguments));
+                    array_unshift($arguments, $this);
+                    $actionObj = $ref->newInstanceArgs($arguments);
                 } else {
-                    $unit = $ref->newInstance($this);
+                    $actionObj = $ref->newInstance($this);
                 }
-                return $unit->run();
+                return $actionObj->run();
             }        
         }
         // fallback to default handling of undefined methods
