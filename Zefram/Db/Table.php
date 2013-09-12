@@ -294,7 +294,7 @@ class Zefram_Db_Table extends Zend_Db_Table
             }
             // else array(column1, ..., columnN)
 
-            $select->from($name, $columns, $this->info(self::SCHEMA));            
+            $select->from($name, $columns, $this->info(self::SCHEMA));
         }
 
         return $select;
@@ -345,5 +345,18 @@ class Zefram_Db_Table extends Zend_Db_Table
     public function rollBack()
     {
         return $this->getAdapter()->rollBack();
+    }
+
+    /**
+     * @param  mixed $id
+     * @return Zefram_Db_Table
+     */
+    public function removeFromIdentityMap($id)
+    {
+        // Unsetting an unexistant key from an existing array does not trigger
+        // an "Undefined variable" notice. See:
+        // http://www.php.net/manual/en/function.unset.php#77310
+        unset($this->_identityMap[serialize($this->_normalizeId($id))]);
+        return $this;
     }
 }
