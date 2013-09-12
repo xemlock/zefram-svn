@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-07-21
+ * @version    2013-09-12
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -261,8 +261,14 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                         // request uri
                         if (!is_string($result)) {
                             $result = $this->_request->getRequestUri();
+                            $prependBase = false;
+                        } else {
+                            $baseUrl = $this->_request->getBaseUrl();
+                            $prependBase = strncmp($result, $baseUrl, strlen($baseUrl));
                         }
-                        return $this->_helper->redirector->goToUrlAndExit($result);
+                        return $this->_helper->redirector->gotoUrl(
+                            $result, array('prependBase' => $prependBase)
+                        );
                     }
 
                 } catch (Zefram_Controller_Action_Exception_FormValidation $e) {
