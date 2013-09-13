@@ -35,7 +35,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
 
             // strip extension(s) from controller file name to get path
             // to action directory
-            if (false !== ($pos = strpos($actionDir, '.'))) {
+            if (false !== ($pos = strrpos($actionDir, '.'))) {
                 $actionDir = substr($actionDir, 0, $pos);
             }
 
