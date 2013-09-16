@@ -3,6 +3,38 @@
 class Zefram_Db_Select extends Zend_Db_Select
 {
     /**
+     * @param  null|string $type
+     *     Type of join
+     * @param  array|string|Zend_Db_Expr|Zend_Db_Table_Abstract $name
+     *     Table name or instance
+     * @param  string $cond
+     *     Join on this condition
+     * @param  array|string $cols
+     *     The columns to select from the joined table
+     * @param  string $schema
+     *     The database name to specify, if any.
+     * @return Zefram_Db_Select
+     *     This object
+     * @throws Zend_Db_Select_Exception
+     */
+    protected function _join($type, $name, $cond, $cols, $schema = null)
+    {
+        if ($name instanceof Zend_Db_Table_Abstract) {
+            $name = array($name);
+        }
+        if (is_array($name)) {
+            foreach ($name as $correlationName => $tableName) {
+                if ($tableName instanceof Zend_Db_Table_Abstract) {
+                    $name[$correlationName] = $tableName->info(Zend_Db_Table_Abstract::NAME);
+                    $schema = $tableName->info(Zend_Db_Table_Abstract::SCHEMA);
+                }
+                break;
+            }
+        }
+        return parent::_join($type, $name, $cond, $cols, $schema);
+    }
+
+    /**
      * Adds a WHERE condition to the query by AND.
      *
      * @param string|array $cond
