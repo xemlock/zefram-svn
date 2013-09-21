@@ -31,7 +31,7 @@ class Zefram_Controller_Action_Helper_Redirector extends Zend_Controller_Action_
             list($name, $urlOptions) = array($urlOptions, $name);
         }
 
-        return parent::gotoRouteAndExit($name, $urlOptions, $reset);
+        return parent::gotoRouteAndExit($urlOptions, $name, $reset);
     }
 
     /**
