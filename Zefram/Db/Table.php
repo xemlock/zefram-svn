@@ -2,6 +2,8 @@
 
 class Zefram_Db_Table extends Zend_Db_Table
 {
+    const FOR_UPDATE = 1;
+
     protected $_rowClass = 'Zefram_Db_Table_Row';
 
     /**
@@ -119,13 +121,15 @@ class Zefram_Db_Table extends Zend_Db_Table
      *
      * @param mixed $id
      *     Database row ID
+     * @param int $flags
+     *     OPTIONAL flags
      * @return mixed
      *     Zend_Db_Table_Row or false if no result
      * @throws Exception
      *     when incomplete primary key values given or if column does not
      *     belong to primary key
      */
-    public function findRow($id)
+    public function findRow($id, $flags = 0)
     {
         $id = $this->_normalizeId($id);
         $key = serialize($id);
@@ -145,8 +149,15 @@ class Zefram_Db_Table extends Zend_Db_Table
                 throw new Exception('Incomplete primary key values');
             }
 
-            $where = implode(' AND ', $where);
-            $this->_identityMap[$key] = $this->fetchRow($where);
+            $select = $this->select();
+            $select->forUpdate($flags & self::FOR_UPDATE);
+            $select->limit(1);
+
+            foreach ($where as $value) {
+                $select->where($value);
+            }
+
+            $this->_identityMap[$key] = $this->fetchRow($select);
         }
 
         return $this->_identityMap[$key];
