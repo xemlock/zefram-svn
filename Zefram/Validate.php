@@ -1,10 +1,13 @@
 <?php
 
 /**
+ * Extension to Zend_Validate allowing validators to be passed the
+ * same way as they are to {@see Zend_Form_Element::addValidator()}.
+ *
  * @uses      Zend_Validate
  * @uses      Zend_Loader
  * @author    xemlock
- * @version   2013-07-21
+ * @version   2013-10-03
  */
 class Zefram_Validate extends Zend_Validate
 {
@@ -14,6 +17,9 @@ class Zefram_Validate extends Zend_Validate
 
     protected $_translator;
 
+    /**
+     * @param array|Zend_Config $options
+     */
     public function __construct($options = null)
     {
         if (null !== $options) {
@@ -21,7 +27,19 @@ class Zefram_Validate extends Zend_Validate
                 $options = $options->toArray();
             }
 
-            foreach ((array) $options as $key => $value) {
+            $options = (array) $options;
+
+            // add prefix paths before loading any validators
+
+            if (isset($options['prefixPath'])) {
+                $this->addPrefixPath($options['prefixPath']);
+            }
+
+            if (isset($options['prefixPaths'])) {
+                $this->addPrefixPaths($options['prefixPaths']);
+            }
+
+            foreach ($options as $key => $value) {
                 $method = 'set' . $key;
                 if (method_exists($this, $method)) {
                     $this->$method($value);
@@ -49,12 +67,12 @@ class Zefram_Validate extends Zend_Validate
         }
 
         if (!$validator instanceof Zend_Validate_Interface) {
-            $name = $this->getPluginLoader()->load($validator);
+            $className = $this->getPluginLoader()->load($validator);
 
             if (empty($options)) {
-                $validator = new $name;
+                $validator = new $className;
             } else {
-                $ref = new ReflectionClass($name);
+                $ref = new ReflectionClass($className);
                 if ($ref->hasMethod('__construct')) {
                     reset($options);
                     if (is_int(key($options))) {
@@ -66,9 +84,6 @@ class Zefram_Validate extends Zend_Validate
                     $validator = $ref->newInstance();
                 }
             }
-
-        } else {
-            $name = get_class($validator);
         }
 
         if ($messages) {
@@ -79,35 +94,39 @@ class Zefram_Validate extends Zend_Validate
             }
         }
 
-        $this->_validators[$name] = array(
+        // do not index validators by class name, as it would prevent multiple
+        // validators of the same class to co-exists
+        $this->_validators[] = array(
             'instance' => $validator,
             'breakChainOnFailure' => (bool) $breakChainOnFailure,
         );
     }
 
-    public function getValidator($name)
-    {
-        if (isset($this->_validators[$name])) {
-            return $this->_validators[$name]['instance'];
-        }
-        return false;
-    }
-
+    /**
+     * @return array
+     */
     public function getValidators()
     {
         $validators = array();
-        foreach ($this->_validators as $name => $validator) {
-            $validators[$name] = $validator['instance'];
+        foreach ($this->_validators as $validator) {
+            $validators[] = $validator['instance'];
         }
         return $validators;
     }
 
+    /**
+     * @return Zefram_Validate
+     */
     public function clearValidators()
     {
         $this->_validators = array();
         return $this;
     }
 
+    /**
+     * @param  array $validators
+     * @return Zefram_Validate
+     */
     public function addValidators(array $validators)
     {
         foreach ($validators as $spec) {
@@ -139,12 +158,20 @@ class Zefram_Validate extends Zend_Validate
         return $this;
     }
 
+    /**
+     * @param  array $validators
+     * @return Zefram_Validate
+     */
     public function setValidators(array $validators)
     {
         $this->clearValidators();
         return $this->addValidators($validators);
     }
 
+    /**
+     * @param  bool $breakChainOnFailure
+     * @return Zefram_Validate
+     */
     public function setBreakChainOnFailure($breakChainOnFailure)
     {
         $this->_breakChainOnFailure = (bool) $breakChainOnFailure;
@@ -167,6 +194,9 @@ class Zefram_Validate extends Zend_Validate
         return $this->_translator;
     }
 
+    /**
+     * @return Zend_Loader_PluginLoader
+     */
     public function getPluginLoader()
     {
         if (null === $this->_pluginLoader) {
@@ -178,12 +208,21 @@ class Zefram_Validate extends Zend_Validate
         return $this->_pluginLoader;
     }
 
+    /**
+     * @param  string $prefix
+     * @param  string $path
+     * @return Zefram_Validate
+     */
     public function addPrefixPath($prefix, $path)
     {
         $this->getPluginLoader()->addPrefixPath($prefix, $path);
         return $this;
     }
 
+    /**
+     * @param  array $spec
+     * @return Zefram_Validate
+     */
     public function addPrefixPaths(array $spec)
     {
         foreach ($spec as $prefix => $path) {
@@ -196,5 +235,16 @@ class Zefram_Validate extends Zend_Validate
             }
         }
         return $this;
+    }
+
+    /**
+     * This allows method chaining after object instantitation.
+     *
+     * @param  array|Zend_Config $options
+     * @return Zefram_Validate
+     */
+    public static function create($options = null)
+    {
+        return new self($options);
     }
 }
