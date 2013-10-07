@@ -12,11 +12,16 @@ class Zefram_View_Helper_FormInput extends Zend_View_Helper_FormElement
         $value = null;
 
         if ($name instanceof Zend_Form_Element) {
-            // When a value is given assume the element is to be rendered as
-            // a checkable input. Compare its value with the given value and
-            // if they are equal, add checked attribute.
+            // If a value is given, assume the element is to be rendered as
+            // a checkable input (checkbox or radio). Compare the element's
+            // value with the given one and if they are equal (both values
+            // must not be NULL) add 'checked' attribute.
+            // Values are compared as strings to avoid implicit conversion
+            // when one of them is a number.
             if (isset($attribs['value'])) {
-                if ($name->getValue() == $attribs['value']) {
+                if (null !== ($value = $name->getValue()) &&
+                    strval($value) === strval($attribs['value'])
+                ) {
                     $attribs['checked'] = 'checked';
                 }
                 $value = $attribs['value'];
