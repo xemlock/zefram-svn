@@ -10,11 +10,13 @@
  *   resources.response.httpResponseCode =
  *   resources.response.cookies.NAME = VALUE
  *   resources.response.cookies.NAME.value = VALUE
- *   resources.response.cookies.NAME.expire = 0
+ *   resources.response.cookies.NAME.expires = 0
  *   resources.response.cookies.NAME.path = /
  *   resources.response.cookies.NAME.domain = NULL
  *   resources.response.cookies.NAME.secure = no
  *   resources.response.cookies.NAME.httpOnly = no
+ *   resources.response.cookies.NAME.maxAge = NULL
+ *   resources.response.cookies.NAME.version = NULL
  *
  * To create response with the default options:
  *
@@ -41,12 +43,12 @@ class Zefram_Application_Resource_Response extends Zend_Application_Resource_Res
                 $this->_setResponseHeaders($options['headers']);
             }
 
-            if (isset($options['httpResponseCode'])) {
-                $this->_response->setHttpResponseCode($options['httpResponseCode']);
+            if (isset($options['cookies']) && is_array($options['cookies'])) {
+                $this->_setResponseCookies($options['cookies']);
             }
 
-            if (isset($options['cookies']) && $this->_response->canSendHeaders(true)) {
-                $this->_setCookies($options['cookies']);
+            if (isset($options['httpResponseCode'])) {
+                $this->_response->setHttpResponseCode($options['httpResponseCode']);
             }
         }
 
@@ -72,57 +74,62 @@ class Zefram_Application_Resource_Response extends Zend_Application_Resource_Res
         }
     }
 
-    protected function _setCookies(array $cookies)
+    protected function _setResponseCookies(array $cookies)
     {
-        foreach ($cookies as $name => $cookie) {
+        foreach ($cookies as $name => $spec) {
             switch (true) {
-                case is_scalar($cookie):
-                    setcookie($name, $cookie, 0, '/');
-                    break;
+                case is_scalar($spec):
+                    $spec = array('value' => $spec);
+                    // intentional no break
 
-                case is_array($cookie) && isset($cookie['value']):
-                    $value = $cookie['value'];
+                case is_array($spec) && isset($spec['value']):
+                    $spec = array_merge(
+                        array(
+                            'name'     => $name,
+                            'value'    => null,
+                            'expires'  => 0,
+                            // use '/' instead of current directory path because
+                            // of urls format used by ZF (i.e. controller/action/key/value)
+                            'path'     => '/',
+                            'domain'   => null,
+                            'secure'   => false,
+                            'httponly' => false,
+                            // max age and version are ignored when using setcookie
+                            'maxage'   => null,
+                            'version'  => null,
+                        ),
+                        array_change_key_case(
+                            $spec,
+                            CASE_LOWER
+                        )
+                    );
 
-                    // by default expire cookie after end of current session
-                    $expire = 0;
-
-                    // use '/' instead of current directory path because of urls
-                    // format used by ZF (i.e. controller/action/key/value)
-                    $path = '/';
-
-                    // use default values of remaining paramaters, see:
-                    // http://php.net/manual/en/function.setcookie.php 
-                    $domain = null;
-                    $secure = false;
-                    $httpOnly = false;
-
-                    foreach ($cookie as $key => $val) {
-                        switch (strtolower($key)) {
-                            case 'expire':
-                                // if 'expire' value is given it is treated as
-                                // an offset in seconds from the current time
-                                $expire = time() + $val;
-                                break;
-
-                            case 'path':
-                                $path = strval($val);
-                                break;
-
-                            case 'domain':
-                                $domain = strval($val);
-                                break;
-
-                            case 'secure':
-                                $secure = (bool) $val;
-                                break;
-
-                            case 'httponly': // PHP 5.2.0
-                                $httpOnly = (bool) $val;
-                                break;
-                        }
+                    // if 'expires' value is not empty, treat it as an offset
+                    // from the current time given in seconds
+                    if ($spec['expires']) {
+                        $spec['expires'] += time();
                     }
 
-                    setcookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
+                    if (Zend_Version::compareVersion('1.12.0') <= 0) {
+                        // http://framework.zend.com/manual/1.12/en/zend.controller.response.html#zend.controller.response.headers.setcookie
+                        $cookie = new Zend_Http_Header_SetCookie();
+
+                        foreach ($spec as $key => $value) {
+                            $method = 'set' . $key;
+                            if (method_exists($cookie, $method) && isset($value)) {
+                                $cookie->$method($value);
+                            }
+                        }
+
+                        $this->_response->setRawHeader($cookie);
+
+                    } elseif ($this->_response->canSendHeaders(true)) {
+                        // http://php.net/manual/en/function.setcookie.php
+                        setcookie(
+                            $spec['name'], $spec['value'], $spec['expires'], $spec['path'],
+                            $spec['domain'], $spec['secure'], $spec['httponly']
+                        );
+                    }
                     break;
 
                 default:
