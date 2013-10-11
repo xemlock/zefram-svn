@@ -15,8 +15,6 @@
  *   resources.response.cookies.NAME.domain = NULL
  *   resources.response.cookies.NAME.secure = no
  *   resources.response.cookies.NAME.httpOnly = no
- *   resources.response.cookies.NAME.maxAge = NULL
- *   resources.response.cookies.NAME.version = NULL
  *
  * To create response with the default options:
  *
@@ -94,9 +92,6 @@ class Zefram_Application_Resource_Response extends Zend_Application_Resource_Res
                             'domain'   => null,
                             'secure'   => false,
                             'httponly' => false,
-                            // max age and version are ignored when using setcookie
-                            'maxage'   => null,
-                            'version'  => null,
                         ),
                         array_change_key_case(
                             $spec,
@@ -110,20 +105,12 @@ class Zefram_Application_Resource_Response extends Zend_Application_Resource_Res
                         $spec['expires'] += time();
                     }
 
-                    if (Zend_Version::compareVersion('1.12.0') <= 0) {
-                        // http://framework.zend.com/manual/1.12/en/zend.controller.response.html#zend.controller.response.headers.setcookie
-                        $cookie = new Zend_Http_Header_SetCookie();
-
-                        foreach ($spec as $key => $value) {
-                            $method = 'set' . $key;
-                            if (method_exists($cookie, $method) && isset($value)) {
-                                $cookie->$method($value);
-                            }
-                        }
-
-                        $this->_response->setRawHeader($cookie);
-
-                    } elseif ($this->_response->canSendHeaders(true)) {
+                    // Don't even think about using Zend_Http_Header_SetCookie
+                    // available since ZF 1.12.0, since it is not designed for
+                    // setting cookies. When a Set-Cookie header is added to the
+                    // response via setRawHeader(), it overwrites any previously
+                    // set cookies.
+                    if ($this->_response->canSendHeaders(true)) {
                         // http://php.net/manual/en/function.setcookie.php
                         setcookie(
                             $spec['name'], $spec['value'], $spec['expires'], $spec['path'],
