@@ -7,7 +7,7 @@
  * @uses      Zend_Validate
  * @uses      Zend_Loader
  * @author    xemlock
- * @version   2013-10-03
+ * @version   2013-10-18
  */
 class Zefram_Validate extends Zend_Validate
 {
@@ -29,32 +29,69 @@ class Zefram_Validate extends Zend_Validate
 
             $options = (array) $options;
 
+            // set loader before loading any validators
+
+            if (isset($options['pluginLoader'])) {
+                $this->setPluginLoader($options['pluginLoader']);
+                unset($options['pluginLoader']);
+            }
+
             // add prefix paths before loading any validators
 
             if (isset($options['prefixPath'])) {
                 $this->addPrefixPath($options['prefixPath']);
+                unset($options['prefixPath']);
             }
 
             if (isset($options['prefixPaths'])) {
                 $this->addPrefixPaths($options['prefixPaths']);
+                unset($options['prefixPaths']);
             }
 
             foreach ($options as $key => $value) {
                 $method = 'set' . $key;
                 if (method_exists($this, $method)) {
                     $this->$method($value);
+                    unset($options[$key]);
                 }
+            }
+
+            // treat any remaining options as validators
+            if ($options) {
+                $this->addValidators($options);
             }
         }
     }
 
     /**
-     * @param string|Zend_Validate_Interface $validator
+     * @param string|array|Zend_Validate_Interface $validator
      * @param bool $breakChainOnFailure
      * @param array $options
      */
     public function addValidator($validator, $breakChainOnFailure = null, array $options = null)
     {
+        if (is_array($validator)) {
+            $validator = array_slice($validator, 0, 3);
+            $count = count($validator);
+
+            switch (true) {
+                case $count >= 3:
+                    $options = (array) array_pop($validator);
+
+                case $count >= 2:
+                    $breakChainOnFailure = array_pop($validator);
+
+                case $count >= 1:
+                    $validator = array_pop($validator);
+                    break;
+
+                default:
+                    throw new Zefram_Validate_InvalidArgumentException(
+                        'Validator specification if given as array, must be non-empty'
+                    );
+            }
+        }
+
         if (null === $breakChainOnFailure) {
             $breakChainOnFailure = $this->_breakChainOnFailure;
         }
@@ -130,30 +167,7 @@ class Zefram_Validate extends Zend_Validate
     public function addValidators(array $validators)
     {
         foreach ($validators as $spec) {
-            if (is_array($spec)) {
-                $breakChainOnFailure = null;
-                $options = array();
-                $count = count($spec);
-
-                switch (true) {
-                    case 0 == $count:
-                        break;
-
-                    case 1 <= $count:
-                        $validator = array_shift($spec);
-
-                    case 2 <= $count:
-                        $breakChainOnFailure = array_shift($spec);
-
-                    case 3 <= $count:
-                        $options = array_shift($spec);
-
-                    default:
-                        $this->addValidator($validator, $breakChainOnFailure, $options);
-                }
-            } else {
-                $this->addValidator($spec);
-            }
+            $this->addValidator($spec);
         }
         return $this;
     }
@@ -195,7 +209,7 @@ class Zefram_Validate extends Zend_Validate
     }
 
     /**
-     * @return Zend_Loader_PluginLoader
+     * @return Zend_Loader_PluginLoader_Interface
      */
     public function getPluginLoader()
     {
@@ -206,6 +220,16 @@ class Zefram_Validate extends Zend_Validate
             ));
         }
         return $this->_pluginLoader;
+    }
+
+    /**
+     * @param  Zend_Loader_PluginLoader_Interface $loader
+     * @return Zefram_Validate
+     */
+    public function setPluginLoader(Zend_Loader_PluginLoader_Interface $loader)
+    {
+        $this->_pluginLoader = $loader;
+        return $this;
     }
 
     /**
