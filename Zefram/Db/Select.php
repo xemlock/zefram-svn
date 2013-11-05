@@ -19,6 +19,8 @@ class Zefram_Db_Select extends Zend_Db_Select
      */
     protected function _join($type, $name, $cond, $cols, $schema = null)
     {
+        // replace all instances of Zend_Db_Table_Abstract with their
+        // names and schemas
         if ($name instanceof Zend_Db_Table_Abstract) {
             $name = array($name);
         }
@@ -29,6 +31,17 @@ class Zefram_Db_Select extends Zend_Db_Select
                     $schema = $tableName->info(Zend_Db_Table_Abstract::SCHEMA);
                 }
                 break;
+            }
+        }
+        // remove columns which are marked as false, replace true values
+        // with column names
+        if (is_array($cols)) {
+            foreach ($cols as $key => $value) {
+                if (false === $value) {
+                    unset($cols[$key]);
+                } elseif (true === $value) {
+                    $cols[$key] = $key;
+                }
             }
         }
         return parent::_join($type, $name, $cond, $cols, $schema);
