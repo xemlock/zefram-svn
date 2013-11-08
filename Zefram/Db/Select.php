@@ -44,7 +44,27 @@ class Zefram_Db_Select extends Zend_Db_Select
                 }
             }
         }
+        // quote identifiers present in JOIN condition, identifiers are
+        // expected to be in the form table.column
+        if (is_string($cond)) {
+            $cond = preg_replace_callback(
+                '/(?P<table>[_a-z][_a-z0-9]*)\.(?P<column>[_a-z][_a-z0-9]*)/i',
+                array($this, '_quoteJoinIdentifier'),
+                $cond
+            );
+        }
         return parent::_join($type, $name, $cond, $cols, $schema);
+    }
+
+    /**
+     * @param array $match
+     * @return string
+     * @internal
+     */
+    public function _quoteJoinIdentifier(array $match)
+    {
+        $db = $this->getAdapter();
+        return $db->quoteIdentifier($match['table']) . '.' . $db->quoteIdentifier($match['column']);
     }
 
     /**
