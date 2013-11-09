@@ -5,11 +5,11 @@ class Zefram_Db_Select extends Zend_Db_Select
     /**
      * @param  null|string $type
      *     Type of join
-     * @param  array|string|Zend_Db_Expr|Zend_Db_Table_Abstract $name
+     * @param  string|array|Zend_Db_Expr|Zend_Db_Table_Abstract $name
      *     Table name or instance
-     * @param  string $cond
+     * @param  string|array $cond
      *     Join on this condition
-     * @param  array|string $cols
+     * @param  string|array $cols
      *     The columns to select from the joined table
      * @param  string $schema
      *     The database name to specify, if any.
@@ -43,6 +43,9 @@ class Zefram_Db_Select extends Zend_Db_Select
                     $cols[$key] = $key;
                 }
             }
+        }
+        if (is_array($cond)) {
+            $cond = implode(' AND ', $cond);
         }
         // quote identifiers present in JOIN condition, identifiers are
         // expected to be in the form table.column
