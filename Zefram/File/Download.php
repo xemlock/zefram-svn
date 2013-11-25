@@ -46,12 +46,27 @@ class Zefram_File_Download
 
         if (!in_array($url->getScheme(), array('http', 'https', 'ftp', 'ftps'), true)) {
             throw new InvalidArgumentException(
-                'Only HTTP(s) and FTP schemes are supported'
+                'Only HTTP(s) and FTP(s) schemes are supported'
             );
         }
 
         $this->_url = $url->getUri();
         $this->_validators = new Zefram_Validate;
+
+        if ($options) {
+            foreach ($options as $key => $value) {
+                if (false !== strpos($key, '_')) {
+                    // convert underscore to camel case - method names are
+                    // case-insensitive, therefore no case conversion is
+                    // necessary, it is just sufficient to remove underscores
+                    $key = str_replace('_', '', $key);
+                }
+                $method = 'set' . $key;
+                if (method_exists($this, $method)) {
+                    $this->$method($key);
+                }
+            }
+        }
     } // }}}
 
     public function setDestination($dir) // {{{
@@ -104,6 +119,9 @@ class Zefram_File_Download
         return $this;
     } // }}}
 
+    /**
+     * @return bool
+     */
     public function isDownloaded() // {{{
     {
         return (bool) $this->_fileInfo;
@@ -115,6 +133,7 @@ class Zefram_File_Download
      * file.
      *
      * @param int $limit
+     * @return Zefram_File_Download
      */
     public function setReadLimit($limit) // {{{
     {
@@ -131,6 +150,10 @@ class Zefram_File_Download
         return $this->_readLimit;
     } // }}}
 
+    /**
+     * @param  string $userAgent
+     * @return Zefram_File_Download
+     */
     public function setUserAgent($userAgent) // {{{
     {
         $this->_userAgent = (string) $userAgent;
@@ -146,8 +169,9 @@ class Zefram_File_Download
      * Yep. This function is public, but should be considered internal, hence
      * the underscore.
      *
-     * @param resource $curl
-     * @param string $data
+     * @param  resource $curl
+     * @param  string $data
+     * @return int
      */
     public function _write($curl, $data) // {{{
     {
@@ -163,6 +187,11 @@ class Zefram_File_Download
         return strlen($data);
     } // }}}
 
+    /**
+     * @param  resource $curl
+     * @param  string $data
+     * @return int
+     */
     public function _header($curl, $data) // {{{
     {
         $regex = "/Content-Disposition:\\s+attachment;\\s+filename=([^\r\n]+)/i";
@@ -172,13 +201,16 @@ class Zefram_File_Download
         return strlen($data);
     } // }}}
 
+    /**
+     * @return null|array
+     */
     public function getFileInfo() // {{{
     {
         return $this->_fileInfo;
     } // }}}
 
     /**
-     * @return bool
+     * @return null|array
      */
     public function download() // {{{
     {
@@ -244,25 +276,25 @@ class Zefram_File_Download
             );
         }
 
-        return $this->_validate();
+        // validate downloaded file
+        $this->_isValid = empty($this->_fileInfo)
+            ? false
+            : $this->_validators->isValid($this->_fileInfo['tmp_name']);
+
+        return $this->_fileInfo;
     } // }}}
 
-    protected function _validate() // {{{
-    {
-        if (empty($this->_fileInfo)) {
-            $valid = false;
-        } else {
-            $valid = $this->_validators->isValid($this->_fileInfo['tmp_name']);
-        }
-        $this->_isValid = $valid;
-        return $valid;
-    } // }}}
-
+    /**
+     * @return bool
+     */
     public function isValid() // {{{
     {
         return $this->_isValid;
     } // }}}
 
+    /**
+     * @return array
+     */
     public function getMessages() // {{{
     {
         return $this->_validators->getMessages();
