@@ -63,7 +63,7 @@ class Zefram_File_Download
                 }
                 $method = 'set' . $key;
                 if (method_exists($this, $method)) {
-                    $this->$method($key);
+                    $this->$method($value);
                 }
             }
         }
