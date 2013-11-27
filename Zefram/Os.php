@@ -4,7 +4,7 @@ abstract class Zefram_Os
 {
     public static function normalizePath($path) // {{{
     {
-        $parts = preg_split('/[\\\/][\\\/]*/', $path);
+        $parts = preg_split('/[\\\\\/][\\\\\/]*/', $path);
         $normalized = array();
 
         while ($parts) {
