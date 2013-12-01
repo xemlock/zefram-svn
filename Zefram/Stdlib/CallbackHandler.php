@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * CallbackHandler with preset arguments that will be passed to registered
+ * callback upon its invocation. This allows a more functional style
+ * programming.
+ *
+ * @package Zefram_Stdlib
+ * @uses    Zend_Stdlib_CallbackHandler
+ * @version 2013-12-01
+ * @author  xemlock
+ */
 class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
 {
     /**
@@ -27,15 +37,15 @@ class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
 
         // extract metadata to be passed to parent constructor
         // Metadata are distinguished from arguments by their key, a string
-        // key indicates a metadatym whereas integer key an argument.
+        // key indicates a metadatum whereas integer key an argument.
         $metadata = array();
 
         if ($args) {
             foreach ($args as $key => $value) {
-                if (is_string($key)) { // metadatum
+                if (is_string($key)) {
+                    // string key indicates a metadatum, move it to $metadata
+                    // array, numerical keys in $data are left intact
                     $metadata[$key] = $value;
-                } else {
-                    // numerical keys are left intact
                     unset($args[$key]);
                 }
             }
