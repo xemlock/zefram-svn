@@ -9,6 +9,7 @@
  *   resources.view.scriptPathSpec =
  *   resources.view.scriptPathNoControllerSpec =
  *   resources.view.suffix =
+ *   resources.view.noRender =
  *   resources.view.translator =
  *   resources.view.headTitle.title =
  *   resources.view.headTitle.separator =
@@ -33,6 +34,10 @@
  *   resources.view.strictVars =
  *   resources.view.lfiProtectionOn =
  *   resources.view.assign =
+ *
+ *
+ * @version 2013-12-05
+ * @author xemlock
  */
 class Zefram_Application_Resource_View extends Zend_Application_Resource_ResourceAbstract
 {
@@ -80,12 +85,25 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
         return $this->_view;
     }
 
+    /**
+     * Set doctype using doctype view helper.
+     *
+     * @param  string $doctype
+     * @return Zefram_Application_Resource_View
+     */
     public function setDoctype($doctype)
     {
         $this->_view->doctype()->setDoctype(strtoupper($doctype));
         return $this;
     }
 
+    /**
+     * Create an HTML5-style meta charset tag using headMeta view helper.
+     *
+     * @param  string $charset
+     * @return Zefram_Application_Resource_View
+     * @throws Zend_View_Exception
+     */
     public function setCharset($charset)
     {
         if (!$this->_view->doctype()->isHtml5()) {
@@ -95,12 +113,24 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
         return $this;
     }
 
+    /**
+     * Set content-type meta tag using headMeta view helper.
+     *
+     * @param  string $contentType
+     * @return Zefram_Application_Resource_View
+     */
     public function setContentType($contentType)
     {
         $this->_view->headMeta()->appendHttpEquiv('Content-Type', $contentType);
         return $this;
     }
 
+    /**
+     * Add http-equiv meta tags using headMeta view helper.
+     *
+     * @param  array $httpEquiv
+     * @return Zefram_Application_Resource_View
+     */
     public function setHttpEquiv($httpEquiv)
     {
         $headMeta = $this->_view->headMeta();
@@ -135,6 +165,12 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
         return $this;
     }
 
+    /**
+     * Set a translation adapter for translate view helper.
+     *
+     * @param  Zend_Translate|Zend_Translate_Adapter|string $translate
+     * @return Zefram_Application_Resource_View
+     */
     public function setTranslator($translate)
     {
         if (is_string($translate)) {
@@ -164,21 +200,51 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
         return $this;
     }
 
+    /**
+     * Set view script path specification.
+     *
+     * @param  string $path
+     * @return Zefram_Application_Resource_View
+     */
     public function setScriptPathSpec($path)
     {
         $this->getViewRenderer()->setViewScriptPathSpec($path);
         return $this;
     }
 
+    /**
+     * Set view script path specification (no controller variant).
+     *
+     * @param  string $path
+     * @return Zefram_Application_Resource_View
+     */
     public function setScriptPathNoControllerSpec($path)
     {
         $this->getViewRenderer()->setViewScriptPathNoControllerSpec($path);
         return $this;
     }
 
+    /**
+     * Set view script suffix.
+     *
+     * @param  string $suffix
+     * @return Zefram_Application_Resource_View
+     */
     public function setSuffix($suffix)
     {
         $this->getViewRenderer()->setViewSuffix($suffix);
+        return $this;
+    }
+
+    /**
+     * Set the auto-render flag.
+     *
+     * @param  bool $flag
+     * @return Zefram_Application_Resource_View
+     */
+    public function setNoRender($flag = true)
+    {
+        $this->getViewRenderer()->setNoRender($flag);
         return $this;
     }
 }
