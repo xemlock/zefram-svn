@@ -12,6 +12,41 @@ class Zefram_Db_Table extends Zend_Db_Table
      */
     protected $_identityMap = array();
 
+    // does anybody know why these are missing in Zend_Db?
+    // info() is somewhat inconvenient
+    public function getName()
+    {
+        return $this->_name;
+    }
+
+    public function getSchema()
+    {
+        return $this->_schema;
+    }
+
+    public function getQualifiedName()
+    {
+        if ($this->_schema) {
+            return $this->_schema . '.' . $this->_name;
+        }
+        return $this->_name;
+    }
+
+    public function getQuotedName()
+    {
+        return $this->getAdapter()->quoteIdentifier($this->_name);
+    }
+
+    /**
+     * Proxy to {@see _getCols()}.
+     *
+     * @return array
+     */
+    public function getCols()
+    {
+        return $this->_getCols();
+    }
+
     /**
      * Fetches all rows, but returns them as arrays instead of objects.
      * See {@link Zend_Db_Table_Abstract::fetchAll()} for parameter
@@ -69,32 +104,6 @@ class Zefram_Db_Table extends Zend_Db_Table
 
         $row = $this->getAdapter()->fetchRow($select, null, Zend_Db::FETCH_ASSOC);
         return empty($row) ? false : $row;
-    }
-
-
-    // does anybody know why these are missing in Zend_Db
-    // info() is somewhat inconvenient
-    public function getName()
-    {
-        return $this->_name;
-    }
-
-    public function getSchema()
-    {
-        return $this->_schema;
-    }
-
-    public function getQualifiedName()
-    {
-        if ($this->_schema) {
-            return $this->_schema . '.' . $this->_name;
-        }
-        return $this->_name;
-    }
-
-    public function getQuotedName()
-    {
-        return $this->getAdapter()->quoteIdentifier($this->_name);
     }
 
     /**
