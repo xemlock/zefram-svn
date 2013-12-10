@@ -7,7 +7,7 @@
  *
  * @package Zefram_Stdlib
  * @uses    Zend_Stdlib_CallbackHandler
- * @version 2013-12-01
+ * @version 2013-12-10
  * @author  xemlock
  */
 class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
@@ -26,6 +26,11 @@ class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
      */
     public function __construct($callback, array $args = array())
     {
+        // copy constructor, use internal callback value
+        if ($callback instanceof Zend_Stdlib_CallbackHandler) {
+            $callback = $callback->getCallback();
+        }
+
         // PHP versions prior to 5.2.2 cannot handle callbacks given
         // as class::method string
         if (version_compare(PHP_VERSION, '5.2.2', '<') &&
@@ -33,6 +38,16 @@ class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
             (false !== strpos($callback, '::'))
         ) {
             $callback = explode('::', $callback, 2);
+        }
+
+        // Since PHP 5.3.0 objects are callable if __invoke() method is
+        // implemented.
+        // Use __invoke method when it is detected and given callback object is
+        // not callable (PHP 5.0.0 - 5.2.x)
+        if (is_object($callback) && !is_callable($callback) &&
+            method_exists($callback, '__invoke')
+        ) {
+            $callback = array($callback, '__invoke');
         }
 
         // extract metadata to be passed to parent constructor
