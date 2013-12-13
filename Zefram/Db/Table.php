@@ -14,14 +14,14 @@ class Zefram_Db_Table extends Zend_Db_Table
 
     // does anybody know why these are missing in Zend_Db?
     // info() is somewhat inconvenient
-    public function getName()
-    {
-        return $this->_name;
-    }
-
     public function getSchema()
     {
         return $this->_schema;
+    }
+
+    public function getName()
+    {
+        return $this->_name;
     }
 
     public function getQualifiedName()
@@ -45,6 +45,27 @@ class Zefram_Db_Table extends Zend_Db_Table
     public function getCols()
     {
         return $this->_getCols();
+    }
+
+    /**
+     * @param  bool $normalized OPTIONAL
+     * @return array
+     */
+    public function getReferenceMap($normalized = false)
+    {
+        if ($normalized) {
+            return $this->_getReferenceMapNormalized();
+        }
+        return $this->_referenceMap;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMetadata()
+    {
+        $this->_setupMetadata();
+        return $this->_metadata;
     }
 
     /**

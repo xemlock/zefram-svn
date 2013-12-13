@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @version 2013-12-13
+ */
 class Zefram_Controller_Action extends Zend_Controller_Action
 {
     protected $_ajaxResponseClass = 'Zefram_Controller_Action_AjaxResponse';
@@ -81,22 +84,33 @@ class Zefram_Controller_Action extends Zend_Controller_Action
                     $actionObj = $ref->newInstance($this);
                 }
                 return $actionObj->run();
-            }        
+            }
         }
         // fallback to default handling of undefined methods
         parent::__call($method, $arguments);
     }
 
+    public function getBootstrap()
+    {
+        $bootstrap = $this->getFrontController()->getParam('bootstrap');
+
+        if (empty($bootstrap)) {
+            throw new DomainException('No Bootstrap is available');
+        }
+
+        return $bootstrap;
+    }
+
     /**
      * Get bootstrap resource.
      *
-     * @param string $name
+     * @param  string $name
      * @return mixed
+     * @throws DomainException
      */
-    public function getBootstrapResource($name)
+    public function getResource($name)
     {
-        $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
-        $resource = $bootstrap->getResource($name);
+        $resource = $this->getBootstrap()->getResource($name);
 
         if (empty($resource)) {
             throw new DomainException("Resource not found: " . $name);
@@ -106,12 +120,24 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     }
 
     /**
+     * Proxy to {@see getResource()}.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    public function getBootstrapResource($name)
+    {
+        return $this->getResource($name);
+    }
+
+    /**
      * null is not considered a scalar value 
      * (@see http://php.net/manual/en/function.is-scalar.php)
      *
-     * @param string $name
-     * @param mixed $default
-     * @param scalar|null
+     * @param  string $name
+     * @param  mixed $default
+     * @param  scalar|null
+     * @return mixed
      */
     public function getScalarParam($name, $default = null)
     {

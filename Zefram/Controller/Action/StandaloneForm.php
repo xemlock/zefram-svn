@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-09-12
+ * @version    2013-12-13 / 2013-09-12
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -43,7 +43,9 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     protected $_processPartialForm = false;
 
     /**
-     * Form to process, must be initialized in {@see _init()}.
+     * Form to process, must be initialized either in {@see _init()}
+     * or {@see _prepare()}.
+     *
      * @var Zend_Form
      */
     protected $_form;
@@ -55,18 +57,17 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     protected $_formKey = 'form';
 
     /**
-     * Process valid form.
+     * Method executed before form validation. This is where the form
+     * should be instantiated.
      *
-     * This method is marked as protected to disallow direct calls
-     * when the form is not valid.
-     *
-     * @return bool|string
+     * @return Zend_Form
      */
-    abstract protected function _process();
+    protected function _prepare()
+    {}
 
     /**
-     * Method called to populate form with default values when no data
-     * is submitted.
+     * Method called to populate existing form with default values,
+     * when no data is submitted.
      *
      * @return void
      */
@@ -76,7 +77,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     /**
      * Validate form against given data.
      *
-     * @param array $data
+     * @param  array $data
      * @return bool
      */
     protected function _validate(array $data)
@@ -91,6 +92,18 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     }
 
     /**
+     * Validated form processing routine.
+     *
+     * This method is marked as protected to disallow direct calls
+     * when the form is invalid.
+     *
+     * @return bool|string
+     */
+    abstract protected function _process();
+
+    /**
+     * Retrieve form instance.
+     *
      * @return Zend_Form
      * @throws Zefram_Controller_Action_StandaloneForm_InvalidStateException
      */
@@ -107,7 +120,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     /**
      * Retrieve all form element values.
      *
-     * @param bool $suppressArrayNotation
+     * @param  bool $suppressArrayNotation
      * @return array
      */
     public function getFormValues($suppressArrayNotation = false)
@@ -118,37 +131,12 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     /**
      * Retrieve value for a single form element.
      *
-     * @param string $name
+     * @param  string $name
      * @return mixed
      */
     public function getFormValue($name)
     {
         return $this->getForm()->getValue($name);
-    }
-
-    /**
-     * HTTP request method aware retrieval of submitted form data.
-     *
-     * @return false|array
-     */
-    public function getSentData()
-    {
-        $method = strtoupper($this->getForm()->getMethod());
-
-        if ($method == 'POST' && $this->_request->isPost()) {
-            return $this->_request->getPost();
-        }
-
-        if ($method == 'GET' && $this->_request->isGet()) {
-            // consider form as submitted using the GET method only if
-            // the request's query part is not empty
-            $query = $this->_request->getQuery();
-            if (count($query)) {
-                return $query;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -201,15 +189,133 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     }
 
     /**
+     * Execute form handling logic
+     *
+     * @return void
+     */
+    public function run()
+    {
+        $this->_prepare();
+
+        $form = $this->getForm();
+        $data = self::getSentData($form->getMethod(), $this->_request);
+
+        if (false !== $data) {
+            $isValid = $this->_validate($data);
+            if ($isValid) {
+                // any success response should be sent in _process() method
+                // by calling ajaxResponse helper
+                $result = $this->_process();
+
+                // form was handled successfully, perform redirection if not
+                // explicitly cancelled by returning false in _process()
+                if (false !== $result) {
+                    // if a string is returned from the _process() method,
+                    // treat it as a redirection url, otherwise use current
+                    // request uri
+                    if (!is_string($result)) {
+                        $result = $this->_request->getRequestUri();
+                        $prependBase = false;
+                    } else {
+                        $baseUrl = $this->_request->getBaseUrl();
+                        $prependBase = strncmp($result, $baseUrl, strlen($baseUrl));
+                    }
+                    return $this->_helper->redirector->gotoUrl(
+                        $result, array('prependBase' => $prependBase)
+                    );
+                }
+            }
+
+            if ($this->isAjax()) {
+                $ajaxResponse = $this->getAjaxResponse();
+                if ($isValid) {
+                    // form validated successfully, no redirection performed,
+                    // no success response was sent in _process()
+                    $ajaxResponse->setSuccess();
+
+                } else {
+                    // form contains invalid values, send response containing
+                    // human-readable message and either full form markup or
+                    // form errors map
+                    $message = $this->_ajaxMessages[self::VALIDATION_FAILED];
+
+                    // translate error message using form translator (if any)
+                    $translator = $form->getTranslator();
+                    if ($translator) {
+                        $message = $translator->translate($message);
+                    }
+
+                    $ajaxResponse->setFail($message);
+                    $ajaxResponse->setData($this->_ajaxFormHtml
+                        ? $this->renderForm()
+                        : self::getFormMessages($form)
+                    );
+                }
+                return $ajaxResponse->sendAndExit();
+            }
+        } else {
+            $this->_populate();
+        }
+
+        if ($this->isAjax()) {
+            // if form is accessed for the first time, i.e. was not submitted,
+            // return its markup regardless of _ajaxFormHtml setting
+            $ajaxResponse = $this->getAjaxResponse();
+            $ajaxResponse->setSuccess();
+            $ajaxResponse->setData($this->renderForm());
+            return $ajaxResponse->sendAndExit();
+        }
+
+        // mark page as already rendered, so that it isn't auto rendered
+        // in viewRenderer::postDispatch(). Append form rendering to
+        // response.
+        $this->_helper->viewRenderer->setNoRender();
+
+        return $this->getResponse()->appendBody($this->renderForm());
+    }
+
+    /**
+     * HTTP request method aware retrieval of submitted form data.
+     *
+     * @param  string $method
+     * @param  Zend_Controller_Request_Http $request
+     * @return false|array
+     */
+    public static function getSentData($method, Zend_Controller_Request_Http $request)
+    {
+        switch (strtoupper($method)) {
+            case 'POST':
+                if ($request->isPost()) {
+                    return $request->getPost();
+                }
+                break;
+
+            case 'GET':
+                // consider form as submitted using the GET method only if
+                // the request's query part is not empty
+                if ($request->isGet() && ($query = $request->getQuery())) {
+                    return $query;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        return false;
+    }
+
+    /**
      * Retrieve error messages from elements failing validations organized
      * by elements' fully qualified names.
      *
+     * @param  Zend_Form $form
      * @return array
      */
-    public function getFormMessages()
+    public static function getFormMessages(Zend_Form $form)
     {
         $messages = array();
-        $forms = array($this->getForm());
+        $forms = array($form);
 
         while ($form = array_shift($forms)) {
             foreach ($form->getElements() as $element) {
@@ -231,102 +337,5 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         }
 
         return $messages;
-    }
-
-    /**
-     * Execute form handling logic
-     *
-     * @return void
-     */
-    public function run()
-    {
-        $isAjax = $this->isAjax();
-
-        $data = $this->getSentData();
-        $form = $this->getForm();
-
-        if (false !== $data) {
-            $isValid = $this->_validate($data);
-            if ($isValid) {
-                try {
-                    // any success response should be sent in _process() method
-                    // by calling ajaxResponse helper
-                    $result = $this->_process();
-
-                    // form was handled successfully, perform redirection if not
-                    // explicitly cancelled by returning false in _process()
-                    if (false !== $result) {
-                        // if a string is returned from the _process() method,
-                        // treat it as a redirection url, otherwise use current
-                        // request uri
-                        if (!is_string($result)) {
-                            $result = $this->_request->getRequestUri();
-                            $prependBase = false;
-                        } else {
-                            $baseUrl = $this->_request->getBaseUrl();
-                            $prependBase = strncmp($result, $baseUrl, strlen($baseUrl));
-                        }
-                        return $this->_helper->redirector->gotoUrl(
-                            $result, array('prependBase' => $prependBase)
-                        );
-                    }
-
-                } catch (Zefram_Controller_Action_Exception_FormValidation $e) {
-                    // treat any thrown validation exception as a last resort
-                    // form validation
-                    $element = $form->getElement($e->getElementName());
-                    if ($element instanceof Zend_Form_Element) {
-                        $element->addErrorMessage($e->getMessage());
-                        $element->markAsError();
-                    }
-
-                    $isValid = false;
-                }
-            }
-
-            if ($isAjax) {
-                $ajaxResponse = $this->getAjaxResponse();
-                if ($isValid) {
-                    // form validated successfully, no redirection performed,
-                    // no success response was sent in _process()
-                    $ajaxResponse->setSuccess();
-
-                } else {
-                    // form contains invalid values, send response containing
-                    // human-readable message and either full form markup or
-                    // form errors map
-                    $message = $this->_ajaxMessages[self::VALIDATION_FAILED];
-
-                    // translate error message using form translator (if any)
-                    $translator = $form->getTranslator();
-                    if ($translator) {
-                        $message = $translator->translate($message);
-                    }
-
-                    $ajaxResponse->setFail($message);
-                    $ajaxResponse->setData(
-                        $this->_ajaxFormHtml ? $this->renderForm() : $this->getFormMessages()
-                    );
-                }
-                return $ajaxResponse->sendAndExit();
-            }
-        } else {
-            $this->_populate();
-        }
-
-        if ($isAjax) {
-            // if form is accessed for the first time return its markup
-            $ajaxResponse = $this->getAjaxResponse();
-            $ajaxResponse->setSuccess();
-            $ajaxResponse->setData($this->renderForm());
-            return $ajaxResponse->sendAndExit();
-        }
-
-        // mark page as already rendered, so that it isn't auto rendered
-        // in viewRenderer::postDispatch(). Append form rendering to
-        // response.
-        $this->_helper->viewRenderer->setNoRender();
-
-        return $this->getResponse()->appendBody($this->renderForm());
     }
 }
