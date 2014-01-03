@@ -3,14 +3,36 @@
 class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 {
     protected $_tableClass = 'Zefram_Db_Table';
+
+    /**
+     * @var array
+     */
     protected $_referencedRows = array();
 
     /**
-     * Does this row has unsaved field modifications
-     *
-     * @param string $columnName OPTIONAL check if given column is modified
+     * @param  string $columnName
+     * @return bool
      */
-    public function isDirty($columnName = null)
+    public function hasColumn($columnName)
+    {
+        $columnName = $this->_transformColumn($columnName);
+        return array_key_exists($columnName, $this->_data);
+    }
+
+    public function hasReference($referenceName)
+    {
+        $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
+        return isset($referenceMap[$referenceName]);
+    }
+
+    /**
+     * Does this row have modified fields, or has a specific field been
+     * modified?
+     *
+     * @param  string $columnName OPTIONAL
+     * @return bool
+     */
+    public function isModified($columnName = null)
     {
         if (null === $columnName) {
             return 0 < count($this->_modifiedFields);
@@ -18,6 +40,28 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
         $columnName = $this->_transformColumn($columnName);
         return isset($this->_modifiedFields[$columnName]);
+    }
+
+    /**
+     * Retrieve an array of modified fields and associated values.
+     *
+     * @return array
+     */
+    public function getModified()
+    {
+        $modified = array();
+        foreach ($this->_modifiedFields as $columnName => $value) {
+            $modified[$columnName] = $this->_data[$columnName];
+        }
+        return $modified;
+    }
+
+    /**
+     * @return array
+     */
+    public function getModifiedFields()
+    {
+        return $this->_modifiedFields;
     }
 
     /**
@@ -30,13 +74,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     public function getAdapter()
     {
-        $table = $this->getTable();
-
-        if (empty($table)) {
-            throw new Zend_Db_Table_Row_Exception('Row is not connected to a table');
-        }
-
-        return $table->getAdapter();
+        return $this->_getTable()->getAdapter();
     }
 
     /**
@@ -120,6 +158,25 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
+     * Does not mark unchanged values as modified.
+     */
+    public function __set($columnName, $value)
+    {
+        $columnName = $this->_transformColumn($columnName);
+        if (!array_key_exists($columnName, $this->_data)) {
+            throw new Zend_Db_Table_Row_Exception(sprintf(
+                'Specified column "%s" is not in the row', $columnName
+            ));
+        }
+ 
+        $origData = $this->_data[$columnName];
+        if ($origData != $value) {
+            $this->_data[$columnName] = $value;
+            $this->_modifiedFields[$columnName] = true;
+        }
+    }
+
+    /**
      * Refreshes properties from the database and clears referenced rows
      * storage. This method gets called after each successful write to the
      * database by the {@see Zend_Db_Table_Row_Abstract::save()} method.
@@ -133,21 +190,12 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * @param string $tableName
-     * @return Zend_Db_Table_Abstract
-     */
-    protected function _getTableFromString($tableName)
-    {
-        return Zefram_Db::getTable($tableName, $this->getAdapter(), false);
-    }
-
-    /**
      * @return mixed
      */
     public function save()
     {
         $result = parent::save();
-        $this->getTable()->addToIdentityMap($this);
+        $this->_getTable()->addToIdentityMap($this);
 
         return $result;
     }
@@ -163,7 +211,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         $result = parent::delete();
 
         if ($result) {
-            $this->getTable()->removeFromIdentityMap($data);
+            $this->_getTable()->removeFromIdentityMap($data);
         }
 
         return $result;
@@ -179,12 +227,37 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
         if ($includeReferencedRows) {
             foreach ($this->_referencedRows as $key => $row) {
-                if (is_object($row)) {
+                if ($row instanceof Zend_Db_Table_Row_Abstract) {
                     $array[$key] = $row->toArray($includeReferencedRows);
                 }
             }
         }
 
         return $array;
+    }
+
+    /**
+     * Retrieve an instance of the table this row is connected to.
+     *
+     * @return Zend_Db_Table_Row_Abstract
+     * @throws Zend_Db_Table_Row_Exception
+     */
+    protected function _getTable()
+    {
+        if (!$this->_connected || !$this->_table) {
+            throw new Zend_Db_Table_Row_Exception('Cannot get table from a disconnected Row');
+        }
+        return $this->_table;
+    }
+
+    /**
+     * Instantiate a table of a given class.
+     *
+     * @param  string $tableName
+     * @return Zend_Db_Table_Abstract
+     */
+    protected function _getTableFromString($tableName)
+    {
+        return Zefram_Db::getTable($tableName, $this->getAdapter(), false);
     }
 }
