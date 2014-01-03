@@ -179,7 +179,9 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
         if ($includeReferencedRows) {
             foreach ($this->_referencedRows as $key => $row) {
-                $array[$key] = $row->toArray($includeReferencedRows);
+                if (is_object($row)) {
+                    $array[$key] = $row->toArray($includeReferencedRows);
+                }
             }
         }
 
