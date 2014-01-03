@@ -6,9 +6,9 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected $_referencedRows = array();
 
     /**
-     * Does this row has unsaved field modifications?
+     * Does this row has unsaved field modifications
      *
-     * @param string $columnName OPTIONAL Is the given column modified?
+     * @param string $columnName OPTIONAL check if given column is modified
      */
     public function isDirty($columnName = null)
     {
@@ -139,5 +139,50 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected function _getTableFromString($tableName)
     {
         return Zefram_Db::getTable($tableName, $this->getAdapter(), false);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function save()
+    {
+        $result = parent::save();
+        $this->getTable()->addToIdentityMap($this);
+
+        return $result;
+    }
+
+    /**
+     * @return int
+     */
+    public function delete()
+    {
+        // before deletion copy all field values to be used when removing
+        // this row from the identity map
+        $data = $this->_data;
+        $result = parent::delete();
+
+        if ($result) {
+            $this->getTable()->removeFromIdentityMap($data);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param  bool $includeReferencedRows
+     * @return array
+     */
+    public function toArray($includeReferencedRows = false)
+    {
+        $array = parent::toArray();
+
+        if ($includeReferencedRows) {
+            foreach ($this->_referencedRows as $key => $row) {
+                $array[$key] = $row->toArray($includeReferencedRows);
+            }
+        }
+
+        return $array;
     }
 }

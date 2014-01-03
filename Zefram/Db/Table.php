@@ -6,6 +6,8 @@ class Zefram_Db_Table extends Zend_Db_Table
 
     protected $_rowClass = 'Zefram_Db_Table_Row';
 
+    protected $_rowsetClass = 'Zefram_Db_Table_Rowset';
+
     /**
      * Storage for rows fetched by {@link findRow()}.
      * @var array
@@ -159,38 +161,61 @@ class Zefram_Db_Table extends Zend_Db_Table
      *     when incomplete primary key values given or if column does not
      *     belong to primary key
      */
-    public function findRow($id, $flags = 0)
+    public function findRow($id)
     {
-        $id = $this->_normalizeId($id);
-        $key = serialize($id);
-
-        if (!array_key_exists($key, $this->_identityMap)) {
-            $primary = $this->info(self::PRIMARY);
+        if (null === ($row = $this->getFromIdentityMap($id))) {
+            $id = $this->_normalizeId($id);
             $db = $this->getAdapter();
             $where = array();
 
-            foreach ($primary as $column) {
-                if (isset($id[$column])) {
-                    $where[] = $db->quoteIdentifier($column) . ' = ' . $db->quote($id[$column]);
-                }
-            }
-
-            if (count($where) != count($primary)) {
-                throw new Exception('Incomplete primary key values');
-            }
-
             $select = $this->select();
-            $select->forUpdate($flags & self::FOR_UPDATE);
             $select->limit(1);
 
-            foreach ($where as $value) {
-                $select->where($value);
+            foreach ($id as $column => $value) {
+                $select->where(
+                    $db->quoteIdentifier($column) . ' = ' . $db->quote($value)
+                );
             }
 
-            $this->_identityMap[$key] = $this->fetchRow($select);
+            $row = $this->fetchRow($select);
         }
 
-        return $this->_identityMap[$key];
+        return $row;
+    }
+
+    /**
+     * Fetch row from the database and store it in the identity map.
+     */
+    public function fetchRow($where = null, $order = null, $offset = null)
+    {
+        $row = parent::fetchRow($where, $order, $offset);
+        if ($row) {
+            // use row from identity map rather than the new one
+            $storedRow = $this->getFromIdentityMap($row);
+            if ($storedRow) {
+                return $storedRow;
+            }
+
+            // otherwise add fetched row to identity map
+            $this->addToIdentityMap($row);
+        }
+        return $row;
+    }
+
+    /**
+     * @param  mixed $key The value(s) of the primary keys.
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function findAll()
+    {
+        $args = func_get_args();
+
+        if (-1 === version_compare(PHP_VERSION, '5.1.2')) {
+            // this line segfaults PHP 5.0.0 - 5.0.3
+			return call_user_func_array(array('parent', 'find'), $args);
+        }
+
+        return call_user_func_array(array($this, 'parent::find'), $args);
     }
 
     /**
@@ -203,6 +228,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      *     The field used as a row index must be unique.
      * @throws Exception
      * @return array<Zend_Db_Table_Row>
+     * @deprecated
      */
     public function findRows($ids, $indexBy = null)
     {
@@ -270,35 +296,6 @@ class Zefram_Db_Table extends Zend_Db_Table
     }
 
     /**
-     * @param Zend_Db_Table_Row_Abstract|array $id
-     */
-    protected function _normalizeId($id)
-    {
-        $primary = $this->info(self::PRIMARY);
-
-        if ($id instanceof Zend_Db_Table_Row_Abstract) {
-            $id = $id->toArray();
-
-        } elseif (!is_array($id)) {
-            // scalar value given, assume one-column primary key
-            foreach ($primary as $column) {
-                $id = array($column => $id);
-                break;
-            }
-        }
-
-        $normalized = array();
-
-        foreach ($primary as $column) {
-            if (isset($id[$column])) {
-                $normalized[$column] = (string) $id[$column];
-            }
-        }
-
-        return $normalized;
-    }
-
-    /**
      * Created an instance of a Zend_Db_Select.
      *
      * @param string|array|bool $column
@@ -310,6 +307,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * @param string $column,... OPTIONAL
      *     Number of additional columns to select from this table.
      * @return Zefram_Db_Table_Select
+     * @deprecated
      */
     public function select($columns = self::SELECT_WITHOUT_FROM_PART)
     {
@@ -397,7 +395,63 @@ class Zefram_Db_Table extends Zend_Db_Table
         // Unsetting an unexistant key from an existing array does not trigger
         // an "Undefined variable" notice. See:
         // http://www.php.net/manual/en/function.unset.php#77310
-        unset($this->_identityMap[serialize($this->_normalizeId($id))]);
+        $key = serialize($this->_normalizeId($id));
+        unset($this->_identityMap[$key]);
         return $this;
+    }
+
+    
+    public function addToIdentityMap($row)
+    {
+        if ((null !== $row) && !$row instanceof $this->_rowClass) {
+            throw new Exception(sprintf(
+                'Non-empty row must be an instance of %s', $this->_rowClass
+            ));
+        }
+        $key = serialize($this->_normalizeId($row));
+        $this->_identityMap[$key] = $row ? $row : false;
+        return $this;
+    }
+
+    public function getFromIdentityMap($id)
+    {
+        $key = serialize($this->_normalizeId($id));
+        if (isset($this->_identityMap[$key])) {
+            return $this->_identityMap[$key];
+        }
+        return null;
+    }
+
+    /**
+     * @param Zend_Db_Table_Row_Abstract|array $id
+     */
+    protected function _normalizeId($id)
+    {
+        $primary = $this->info(self::PRIMARY);
+
+        if ($id instanceof Zend_Db_Table_Row_Abstract) {
+            $id = $id->toArray();
+
+        } elseif (!is_array($id)) {
+            // scalar value given, assume one-column primary key
+            foreach ($primary as $column) {
+                $id = array($column => $id);
+                break;
+            }
+        }
+
+        $normalized = array();
+
+        foreach ($primary as $column) {
+            if (isset($id[$column])) {
+                $normalized[$column] = (string) $id[$column];
+            }
+        }
+
+        if (count($normalized) != count($primary)) {
+            throw new Exception('Incomplete primary key values');
+        }
+
+        return $normalized;
     }
 }
