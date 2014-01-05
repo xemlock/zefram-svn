@@ -19,10 +19,25 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         return array_key_exists($columnName, $this->_data);
     }
 
+    /**
+     * @param  string $referenceName
+     * @return bool
+     */
     public function hasReference($referenceName)
     {
+        $referenceName = (string) $referenceName;
         $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
         return isset($referenceMap[$referenceName]);
+    }
+
+    /**
+     * Is this row stored in the database.
+     *
+     * @return bool
+     */
+    public function isStored()
+    {
+        return !empty($this->_cleanData);
     }
 
     /**
@@ -78,6 +93,36 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
+     * Fetches value for a given column, which effectively re-initializes
+     * this column's value.
+     *
+     * @param  $columnName
+     * @return mixed
+     */
+    protected function _fetchColumn($columnName)
+    {
+        $table = $this->_getTable();
+        $db = $this->getAdapter();
+
+        $columnName = $this->_transformColumn($columnName);
+
+        $select = $db->select();
+        $select->from($table->info(Zend_Db_Table_Abstract::NAME), $columnName);
+
+        // primary key must be set in order to fetch selected column value
+        foreach ($table->info(Zend_Db_Table_Abstract::PRIMARY) as $col) {
+            $select->where($db->quoteIdentifier($col) . ' = ?', $this->$col);
+        }
+
+        $columnValue = $db->fetchCol($select);
+
+        $this->_data[$columnName] = $this->_cleanData[$columnName] = $columnValue;
+        unset($this->_modifiedFields[$columnName]);
+
+        return $columnValue;
+    }
+
+    /**
      * Retrieve row field value.
      *
      * If the field name starts with an uppercase and a reference rule with
@@ -95,7 +140,17 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     public function __get($key)
     {
-        if (is_string($key) && ctype_upper(substr($key, 0, 1))) {
+        // lazy column loading
+        if (!$this->hasColumn($key) && $this->_table) {
+            foreach ($this->_table->info(Zend_Db_Table_Abstract::COLS) as $col) {
+                if (!strcasecmp($col, $key)) {
+                    return $this->_fetchColumn($key);
+                }
+            }
+        }
+
+        // reference loading
+        if (!$this->hasColumn($key) && $this->hasReference($key)) {
             // already have required row or already know that it does not exist
             if (array_key_exists($key, $this->_referencedRows)) {
                 return $this->_referencedRows[$key];
