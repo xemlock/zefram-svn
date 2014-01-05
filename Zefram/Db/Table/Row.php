@@ -109,9 +109,10 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         $select = $db->select();
         $select->from($table->info(Zend_Db_Table_Abstract::NAME), $columnName);
 
-        // primary key must be set in order to fetch selected column value
-        foreach ($table->info(Zend_Db_Table_Abstract::PRIMARY) as $col) {
-            $select->where($db->quoteIdentifier($col) . ' = ?', $this->$col);
+        // Primary Key must be set in order to fetch selected column value,
+        // get stored values, not dirty ones
+        foreach ($this->_getPrimaryKey(false) as $col => $value) {
+            $select->where($db->quoteIdentifier($col) . ' = ?', $value);
         }
 
         $columnValue = $db->fetchCol($select);
