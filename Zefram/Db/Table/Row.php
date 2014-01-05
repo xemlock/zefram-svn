@@ -21,13 +21,24 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
     /**
      * @param  string $referenceName
+     * @param  bool $throw
      * @return bool
+     * @throws Exception
      */
-    public function hasReference($referenceName)
+    public function hasReference($referenceName, $throw = true)
     {
-        $referenceName = (string) $referenceName;
-        $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
-        return isset($referenceMap[$referenceName]);
+        try {
+            $referenceName = (string) $referenceName;
+            $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
+            return isset($referenceMap[$referenceName]);
+
+        } catch (Exception $e) {
+            if ($throw) {
+                throw $e;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -172,7 +183,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         }
 
         // reference loading
-        if (!$this->hasColumn($key) && $this->hasReference($key)) {
+        if (!$this->hasColumn($key) && $this->hasReference($key, false)) {
             // already have required row or already know that it does not exist
             if (array_key_exists($key, $this->_referencedRows)) {
                 return $this->_referencedRows[$key];
