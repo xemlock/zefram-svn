@@ -93,11 +93,38 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
+     * @param  string $columnName
+     * @param  bool $throw OPTIONAL
+     * @return bool
+     */
+    public function tableHasColumn($columnName, $throw = true)
+    {
+        try {
+            $table = $this->_getTable();
+            $columnName = $this->_transformColumn($columnName);
+
+            foreach ($table->info(Zend_Db_Table_Abstract::COLS) as $col) {
+                if (!strcasecmp($col, $columnName)) {
+                    return true;
+                }
+            }
+
+        } catch (Exception $e) {
+            if ($throw) {
+                throw $e;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Fetches value for a given column, which effectively re-initializes
      * this column's value.
      *
      * @param  $columnName
      * @return mixed
+     * @throws Zend_Db_Table_Row_Exception
      */
     protected function _fetchColumn($columnName)
     {
@@ -109,10 +136,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         $select = $db->select();
         $select->from($table->info(Zend_Db_Table_Abstract::NAME), $columnName);
 
-        // Primary Key must be set in order to fetch selected column value,
-        // get stored values, not dirty ones
-        foreach ($this->_getPrimaryKey(false) as $col => $value) {
-            $select->where($db->quoteIdentifier($col) . ' = ?', $value);
+        foreach ($this->_getWhereQuery(false) as $cond) {
+            $select->where($cond);
         }
 
         $columnValue = $db->fetchCol($select);
@@ -142,12 +167,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     public function __get($key)
     {
         // lazy column loading
-        if (!$this->hasColumn($key) && $this->_table) {
-            foreach ($this->_table->info(Zend_Db_Table_Abstract::COLS) as $col) {
-                if (!strcasecmp($col, $key)) {
-                    return $this->_fetchColumn($key);
-                }
-            }
+        if (!$this->hasColumn($key) && $this->tableHasColumn($key, false)) {
+            return $this->_fetchColumn($key);
         }
 
         // reference loading
@@ -214,18 +235,26 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Does not mark unchanged values as modified.
+     * Does not mark unchanged values as modified. Allows to set values for
+     * fields which was not yet fetched from the database.
      */
     public function __set($columnName, $value)
     {
         $columnName = $this->_transformColumn($columnName);
+
         if (!array_key_exists($columnName, $this->_data)) {
-            throw new Zend_Db_Table_Row_Exception(sprintf(
-                'Specified column "%s" is not in the row', $columnName
-            ));
+            if ($this->tableHasColumn($columnName, false)) {
+                $this->_data[$columnName] = $value;
+                $this->_modifiedFields[$columnName] = true;
+            } else {
+                throw new Zend_Db_Table_Row_Exception(sprintf(
+                    'Specified column "%s" is not in the row', $columnName
+                ));
+            }
         }
  
         $origData = $this->_data[$columnName];
+
         if ($origData != $value) {
             $this->_data[$columnName] = $value;
             $this->_modifiedFields[$columnName] = true;
