@@ -8,6 +8,9 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected $_tableClass = 'Zefram_Db_Table';
 
     /**
+     * Available row columns. For usability reasons column names are stored
+     * as keys, array values are ignored.
+     *
      * @var array
      */
     protected $_cols;
@@ -35,7 +38,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             }
         }
 
-        $this->_cols = $config['table']->info(Zend_Db_Table_Abstract::COLS);
+        $this->_cols = array_flip($config['table']->info(Zend_Db_Table_Abstract::COLS));
 
         parent::__construct($config);
     }
@@ -58,7 +61,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     protected function _hasColumn($transformedColumnName)
     {
-        return in_array($transformedColumnName, $this->_cols, true);
+        return isset($this->_cols[$transformedColumnName]);
     }
 
     /**
@@ -332,9 +335,27 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Refreshes properties from the database and clears referenced rows
-     * storage. This method gets called after each successful write to the
-     * database by the {@see Zend_Db_Table_Row_Abstract::save()} method.
+     * Sets all data in the row from an array.
+     *
+     * @param  array $data
+     * @return Zend_Db_Table_Row_Abstract
+     */
+    public function setFromArray(array $data)
+    {
+        $data = array_intersect_key($data, $this->_cols);
+
+        foreach ($data as $columnName => $value) {
+            $this->__set($columnName, $value);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Refresh columns from the database and storage.
+     *
+     * This method gets called after each successful write to the database
+     * by the {@see Zend_Db_Table_Row_Abstract::save()} method.
      *
      * @return void
      */
@@ -360,13 +381,13 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     public function delete()
     {
-        // before deletion copy all field values to be used when removing
-        // this row from the identity map
-        $data = $this->_data;
+        // Prior to deletion, remember primary key values to be used when
+        // removing this row from the identity map.
+        $primaryKey = $this->_getPrimaryKey(false);
         $result = parent::delete();
 
         if ($result) {
-            $this->_getTable()->removeFromIdentityMap($data);
+            $this->_getTable()->removeFromIdentityMap($primaryKey);
         }
 
         return $result;
