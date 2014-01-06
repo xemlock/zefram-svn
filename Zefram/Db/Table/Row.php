@@ -24,7 +24,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * Constructor. See {@see Zend_Db_Table_Row_Abstract::__construct()} for
      * more details.
      *
-     * @param  array $config OPTIONAL Array of user-specified config options.
+     * @param  array $config OPTIONAL
      * @return void
      * @throws Zend_Db_Table_Row_Exception
      */
@@ -139,12 +139,11 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Gets the Zend_Db_Adapter_Abstract used by the table this row
-     * is bound to.
+     * Gets the Zend_Db_Adapter_Abstract from the table this row is
+     * connected to.
      *
      * @return Zend_Db_Adapter_Abstract
      * @throws Zend_Db_Table_Row_Exception
-     *     If this row is disconnected.
      */
     public function getAdapter()
     {
@@ -246,7 +245,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
             if (empty($row)) {
                 // if no referenced row was fetched, check if all referencing
-                // columns are NULL, otherwise report a referential integrity
+                // columns are NULL, otherwise report 
+                // a referential integrity
                 // violation
                 foreach ($cols as $col) {
                     if (isset($this->_data[$col])) {
@@ -410,6 +410,66 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         }
 
         return $array;
+    }
+
+    /**
+     * Whenever possible this method fetches row using find() method
+     * rather fetchRow(), so that identity map can be utilized (if exists).
+     *
+     * @param  string|Zend_Db_Table_Abstract $parentTable
+     * @param  string $ruleKey OPTIONAL
+     * @param  Zend_Db_Table_Select $select OPTIONAL
+     * @return Zend_Db_Table_Row_Abstract
+     */
+    public function findParentRow($parentTable, $ruleKey = null, Zend_Db_Table_Select $select = null)
+    {
+        $db = $this->_getTable()->getAdapter();
+
+        if (is_string($parentTable)) {
+            $parentTable = $this->_getTableFromString($parentTable);
+        }
+
+        if (!$parentTable instanceof Zend_Db_Table_Abstract) {
+            throw new Zend_Db_Table_Row_Exception(sprintf(
+                'Parent table must be a Zend_Db_Table_Abstract, but it is %s',
+                is_object($parentTable) ? get_class($parentTable) : gettype($parentTable)
+            ));
+        }
+
+        // no select, try to fetch referenced row via find() called on the
+        // parent table
+        if (null === $select) {
+            $rule = $this->_prepareReference($this->_getTable(), $parentTable, $ruleKey);
+
+            // mapping between local columns and parent table columns
+            $columnMapping = array_combine(
+                $rule[Zend_Db_Table_Abstract::REF_COLUMNS],
+                $rule[Zend_Db_Table_Abstract::COLUMNS]
+            );
+            if (false === $columnMapping) {
+                throw new Zefram_Db_Table_Row_InvalidArgumentException(sprintf(
+                    'Invalid column cardinality in rule "%s"', $ruleKey
+                ));
+            }
+
+            // if local columns compose complete primary key in the parent
+            // table (as should be the case in most situations) use find()
+            // to retrieve the parent row so that an identity map (if exists)
+            // may be utilized
+            $parentPrimaryKey = array();
+
+            foreach ($columnMapping as $refColumn => $column) {
+                // access column via __get rather than _data to utilize lazy
+                // loading when neccessary
+                $parentPrimaryKey[$refColumn] = $this->{$column};
+            }
+
+            if (count($parentTable->info(Zend_Db_Table_Abstract::PRIMARY)) === count($parentPrimaryKey)) {
+                return $parentTable->find($parentPrimaryKey)->current();
+            }
+        }
+
+        return parent::findParentRow($parentTable, $ruleKey, $select);
     }
 
     /**
