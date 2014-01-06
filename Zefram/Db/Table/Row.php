@@ -62,17 +62,20 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * @param  string $referenceName
+     * Is reference to parent row identified by rule name defined in the
+     * parent table.
+     *
+     * @param  string $ruleName
      * @param  bool $throw
      * @return bool
      * @throws Exception
      */
-    public function hasReference($referenceName, $throw = true)
+    public function hasReference($ruleName, $throw = true)
     {
         try {
-            $referenceName = (string) $referenceName;
+            $ruleName = (string) $ruleName;
             $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
-            return isset($referenceMap[$referenceName]);
+            return isset($referenceMap[$ruleName]);
 
         } catch (Exception $e) {
             if ($throw) {
@@ -181,6 +184,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
+     * Is value for given column present.
+     *
      * @param  string $transformedColumnName
      * @return bool
      */
@@ -190,61 +195,73 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * @param  string $referenceName
+     * Ensure all values of given columns are present.
+     *
+     * @param  string|array $transformedColumnNames
+     * @return void
+     */
+    protected function _ensureLoaded($transformedColumnNames)
+    {
+        $missingCols = null; // lazy array initialization
+
+        foreach ((array) $transformedColumnNames as $col) {
+            // columns in the reference map are expected to be already
+            // transformed
+            if (!$this->_isColumnLoaded($col)) {
+                $missingCols[] = $col;
+            }
+        }
+
+        if ($missingCols) {
+            $this->_fetchColumns($missingCols);
+        }
+    }
+
+    /**
+     * Fetch parent row identified by a given rule name.
+     *
+     * @param  string $ruleName
      * @return mixed
      */
-    protected function _fetchReference($referenceName)
+    protected function _fetchReference($ruleName)
     {
-        $referenceName = (string) $referenceName;
+        $ruleName = (string) $ruleName;
 
         // already have required row or already know that it does not exist
-        if (array_key_exists($referenceName, $this->_referencedRows)) {
-            return $this->_referencedRows[$referenceName];
+        if (array_key_exists($ruleName, $this->_referencedRows)) {
+            return $this->_referencedRows[$ruleName];
         }
 
         // fetch referenced parent row from the database
         $map = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
-        if (isset($map[$referenceName])) {
-            $ref = $map[$referenceName];
-
-            // ensure all required columns are already fetched
+        if (isset($map[$ruleName])) {
+            $ref = $map[$ruleName];
             $cols = (array) $ref[Zend_Db_Table_Abstract::COLUMNS];
-            $missingCols = null; // lazy array initialization
-            foreach ($cols as $col) {
-                // columns in the reference map are expected to be already
-                // transformed
-                if (!$this->_isColumnLoaded($col)) {
-                    $missingCols[] = $col;
-                }
-            }
-            if ($missingCols) {
-                $this->_fetchColumns($missingCols);
-            }
 
-            $row = $this->findParentRow($ref['refTableClass'], $referenceName);
+            $this->_ensureLoaded($cols);
+            $row = $this->findParentRow($ref['refTableClass'], $ruleName);
+
             if (empty($row)) {
-                // if no row was fetched, check if all referencing columns are
-                // NULL, otherwise throw referential integrity exception
-                $allNullCols = true;
+                // if no referenced row was fetched, check if all referencing
+                // columns are NULL, otherwise report a referential integrity
+                // violation
                 foreach ($cols as $col) {
                     if (isset($this->_data[$col])) {
-                        $allNullCols = false;
-                        break;
+                        throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
+                            'Row referenced by rule "%s" defined in Table "%s" not found',
+                            $ruleName, get_class($this->_getTable())
+                        ));
                     }
-                }
-                if (!$allNullCols) {
-                    // prepare meaningful information about searched row
-                    throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
-                        'Referenced row not found: %s (%s)',
-                        get_class($this->_getTable()), $referenceName
-                    ));
                 }
             }
 
-            return $this->_referencedRows[$referenceName] = $row;
+            return $this->_referencedRows[$ruleName] = $row;
         }
 
-        throw new Exception('No reference by that name is defined in the parent Table');
+        throw new Zend_Db_Table_Row_Exception(sprintf(
+            'No reference identified by rule "%s" defined in the parent Table',
+            $ruleName
+        ));
     }
 
     /**

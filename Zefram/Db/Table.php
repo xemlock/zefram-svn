@@ -4,8 +4,14 @@ class Zefram_Db_Table extends Zend_Db_Table
 {
     const FOR_UPDATE = 1;
 
+    /**
+     * @var string
+     */
     protected $_rowClass = 'Zefram_Db_Table_Row';
 
+    /**
+     * @var string
+     */
     protected $_rowsetClass = 'Zefram_Db_Table_Rowset';
 
     /**
@@ -212,7 +218,7 @@ class Zefram_Db_Table extends Zend_Db_Table
 
         if (-1 === version_compare(PHP_VERSION, '5.1.2')) {
             // this line segfaults PHP 5.0.0 - 5.0.3
-			return call_user_func_array(array('parent', 'find'), $args);
+            return call_user_func_array(array('parent', 'find'), $args);
         }
 
         return call_user_func_array(array($this, 'parent::find'), $args);
@@ -360,6 +366,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * Begin transaction on an underlying database adapter.
      *
      * @return Zend_Db_Adapter_Abstract
+     * @deprecated
      */
     public function beginTransaction()
     {
@@ -370,6 +377,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * Commit a transaction.
      *
      * @return Zend_Db_Adapter_Abstract
+     * @deprecated
      */
     public function commit()
     {
@@ -380,6 +388,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * Roll back a transaction.
      *
      * @return Zend_Db_Adapter_Abstract
+     * @deprecated
      */
     public function rollBack()
     {
