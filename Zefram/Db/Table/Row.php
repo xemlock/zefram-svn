@@ -2,7 +2,15 @@
 
 class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 {
+    /**
+     * @var string
+     */
     protected $_tableClass = 'Zefram_Db_Table';
+
+    /**
+     * @var array
+     */
+    protected $_cols;
 
     /**
      * @var array
@@ -10,13 +18,47 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected $_referencedRows = array();
 
     /**
+     * Constructor. See {@see Zend_Db_Table_Row_Abstract::__construct()} for
+     * more details.
+     *
+     * @param  array $config OPTIONAL Array of user-specified config options.
+     * @return void
+     * @throws Zend_Db_Table_Row_Exception
+     */
+    public function __construct(array $config = array())
+    {
+        if (!isset($config['table']) || !$config['table'] instanceof Zend_Db_Table_Abstract) {
+            if ($this->_tableClass !== null) {
+                $config['table'] = $this->_getTableFromString($this->_tableClass);
+            } else {
+                throw new Zend_Db_Table_Row_Exception('Table not provided');
+            }
+        }
+
+        $this->_cols = $config['table']->info(Zend_Db_Table_Abstract::COLS);
+
+        parent::__construct($config);
+    }
+
+    /**
      * @param  string $columnName
      * @return bool
      */
     public function hasColumn($columnName)
     {
-        $columnName = $this->_transformColumn($columnName);
-        return array_key_exists($columnName, $this->_data);
+        return $this->_hasColumn($this->_transformColumn($columnName));
+    }
+
+    /**
+     * For internal use, contrary to {@see hasColumn()} it operates on the
+     * transformed column name.
+     *
+     * @param  string $transformedColumnName
+     * @return bool
+     */
+    protected function _hasColumn($transformedColumnName)
+    {
+        return in_array($transformedColumnName, $this->_cols, true);
     }
 
     /**
@@ -104,59 +146,47 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * @param  string $columnName
-     * @param  bool $throw OPTIONAL
-     * @return bool
-     */
-    public function tableHasColumn($columnName, $throw = true)
-    {
-        try {
-            $table = $this->_getTable();
-            $columnName = $this->_transformColumn($columnName);
-
-            foreach ($table->info(Zend_Db_Table_Abstract::COLS) as $col) {
-                if (!strcasecmp($col, $columnName)) {
-                    return true;
-                }
-            }
-
-        } catch (Exception $e) {
-            if ($throw) {
-                throw $e;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Fetches value for a given column, which effectively re-initializes
-     * this column's value.
+     * Fetches value for given columns, which effectively re-initializes
+     * values of this columns.
      *
-     * @param  $columnName
+     * @param  string|array $transformedColumnNames
      * @return mixed
      * @throws Zend_Db_Table_Row_Exception
      */
-    protected function _fetchColumn($columnName)
+    protected function _fetchColumns($transformedColumnNames)
     {
         $table = $this->_getTable();
-        $db = $this->getAdapter();
+        $db = $table->getAdapter();
 
-        $columnName = $this->_transformColumn($columnName);
+        $value = null;
 
         $select = $db->select();
-        $select->from($table->info(Zend_Db_Table_Abstract::NAME), $columnName);
+        $select->from(
+            $table->info(Zend_Db_Table_Abstract::NAME),
+            (array) $transformedColumnNames
+        );
 
         foreach ($this->_getWhereQuery(false) as $cond) {
             $select->where($cond);
         }
 
-        $columnValue = $db->fetchCol($select);
+        foreach ($db->fetchRow($select) as $column => $value) {
+            $this->_data[$column] = $value;
+            $this->_cleanData[$column] = $value;
+            unset($this->_modifiedFields[$column]);
+        }
 
-        $this->_data[$columnName] = $this->_cleanData[$columnName] = $columnValue;
-        unset($this->_modifiedFields[$columnName]);
+        // return the last fetched value
+        return $value;
+    }
 
-        return $columnValue;
+    /**
+     * @param  string $transformedColumnName
+     * @return bool
+     */
+    protected function _isColumnLoaded($transformedColumnName)
+    {
+        return array_key_exists($transformedColumnName, $this->_data);
     }
 
     /**
@@ -177,20 +207,27 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     public function __get($key)
     {
+        $columnName = $this->_transformColumn($key);
+
+        // column value already available, return it
+        if ($this->_isColumnLoaded($columnName)) {
+            return $this->_data[$columnName];
+        }
+
         // lazy column loading
-        if (!$this->hasColumn($key) && $this->tableHasColumn($key, false)) {
-            return $this->_fetchColumn($key);
+        if ($this->_hasColumn($columnName)) {
+            return $this->_fetchColumns($columnName);
         }
 
         // reference loading
-        if (!$this->hasColumn($key) && $this->hasReference($key, false)) {
+        if ($this->hasReference($key, false)) {
             // already have required row or already know that it does not exist
             if (array_key_exists($key, $this->_referencedRows)) {
                 return $this->_referencedRows[$key];
             }
 
             // fetch row from the database
-            $map = $this->getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
+            $map = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
 
             if (isset($map[$key])) {
                 $db    = $this->getAdapter();
@@ -210,6 +247,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
                 $id = array();
 
                 foreach ($columns as $refColumn => $column) {
+                    // access column via __get rather than _data to utilize lazy
+                    // loading when neccessary
                     $value = $this->{$column};
 
                     // no column of a referenced primary key may be NULL
@@ -242,7 +281,9 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             }
         }
 
-        return parent::__get($key);
+        throw new Zend_Db_Table_Row_Exception(sprintf(
+            'Specified column "%s" is not in the row', $columnName
+        ));
     }
 
     /**
@@ -254,7 +295,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         $columnName = $this->_transformColumn($columnName);
 
         if (!array_key_exists($columnName, $this->_data)) {
-            if ($this->tableHasColumn($columnName, false)) {
+            if ($this->_hasColumn($columnName)) {
                 $this->_data[$columnName] = $value;
                 $this->_modifiedFields[$columnName] = true;
             } else {
