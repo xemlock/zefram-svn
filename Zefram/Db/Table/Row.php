@@ -190,6 +190,64 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
+     * @param  string $referenceName
+     * @return mixed
+     */
+    protected function _fetchReference($referenceName)
+    {
+        $referenceName = (string) $referenceName;
+
+        // already have required row or already know that it does not exist
+        if (array_key_exists($referenceName, $this->_referencedRows)) {
+            return $this->_referencedRows[$referenceName];
+        }
+
+        // fetch referenced parent row from the database
+        $map = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
+        if (isset($map[$referenceName])) {
+            $ref = $map[$referenceName];
+
+            // ensure all required columns are already fetched
+            $cols = (array) $ref[Zend_Db_Table_Abstract::COLUMNS];
+            $missingCols = null; // lazy array initialization
+            foreach ($cols as $col) {
+                // columns in the reference map are expected to be already
+                // transformed
+                if (!$this->_isColumnLoaded($col)) {
+                    $missingCols[] = $col;
+                }
+            }
+            if ($missingCols) {
+                $this->_fetchColumns($missingCols);
+            }
+
+            $row = $this->findParentRow($ref['refTableClass'], $referenceName);
+            if (empty($row)) {
+                // if no row was fetched, check if all referencing columns are
+                // NULL, otherwise throw referential integrity exception
+                $allNullCols = true;
+                foreach ($cols as $col) {
+                    if (isset($this->_data[$col])) {
+                        $allNullCols = false;
+                        break;
+                    }
+                }
+                if (!$allNullCols) {
+                    // prepare meaningful information about searched row
+                    throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
+                        'Referenced row not found: %s (%s)',
+                        get_class($this->_getTable()), $referenceName
+                    ));
+                }
+            }
+
+            return $this->_referencedRows[$referenceName] = $row;
+        }
+
+        throw new Exception('No reference by that name is defined in the parent Table');
+    }
+
+    /**
      * Retrieve row field value.
      *
      * If the field name starts with an uppercase and a reference rule with
@@ -221,64 +279,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
         // reference loading
         if ($this->hasReference($key, false)) {
-            // already have required row or already know that it does not exist
-            if (array_key_exists($key, $this->_referencedRows)) {
-                return $this->_referencedRows[$key];
-            }
-
-            // fetch row from the database
-            $map = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
-
-            if (isset($map[$key])) {
-                $db    = $this->getAdapter();
-                $rule  = $map[$key];
-                $table = Zefram_Db::getTable($rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS], $db, false);
-
-                // all refColumns must belong to referenced table's primary key
-                $columns = array_combine(
-                    (array) $rule[Zend_Db_Table_Abstract::REF_COLUMNS],
-                    (array) $rule[Zend_Db_Table_Abstract::COLUMNS]
-                );
-
-                if (false === $columns) {
-                    throw new Zefram_Db_Table_Row_InvalidArgumentException("Invalid column cardinality in rule '$key'");
-                }
-
-                $id = array();
-
-                foreach ($columns as $refColumn => $column) {
-                    // access column via __get rather than _data to utilize lazy
-                    // loading when neccessary
-                    $value = $this->{$column};
-
-                    // no column of a referenced primary key may be NULL
-                    if (null === $value) {
-                        $this->_referencedRows[$key] = null;
-                        return null;
-                    }
-
-                    $id[$refColumn] = $value;
-                }
-
-                $row = $table->findRow($id);
-
-                if (empty($row)) {
-                    // prepare meaningful information about searched row
-                    $where = array();
-                    foreach ($id as $column => $value) {
-                        $where[] = $db->quoteIdentifier($column) . ' = ' . $db->quote($value);
-                    }
-
-                    throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
-                        "Referenced row not found: %s (%s)",
-                        $table->getName(), implode(' AND ', $where)
-                    ));
-                }
-
-                $this->_referencedRows[$key] = $row;
-
-                return $row;
-            }
+            return $this->_fetchReference($key);
         }
 
         throw new Zend_Db_Table_Row_Exception(sprintf(
@@ -382,7 +383,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected function _getTable()
     {
         if (!$this->_connected || !$this->_table) {
-            throw new Zend_Db_Table_Row_Exception('Cannot get table from a disconnected Row');
+            throw new Zend_Db_Table_Row_Exception('Cannot retrieve Table instance from a disconnected Row');
         }
         return $this->_table;
     }
