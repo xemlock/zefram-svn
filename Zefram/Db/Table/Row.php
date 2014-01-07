@@ -242,17 +242,17 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
             $this->_ensureLoaded($cols);
 
-            // if all values of referencing columns are NULL, assume that
-            // there is no parent row
-            $allNull = true;
+            // if all values of the foreign key are NULL, assume that there
+            // is no parent row
+            $emptyForeignKey = true;
             foreach ($cols as $col) {
                 if (isset($this->_data[$col])) {
-                    $allNull = false;
+                    $emptyForeignKey = false;
                     break;
                 }
             }
 
-            if ($allNull) {
+            if ($emptyForeignKey) {
                 $row = null;
             } else {
                 $row = $this->findParentRow($ref['refTableClass'], $ruleName);
@@ -260,7 +260,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
             // if no referenced row was fetched and there was any non-NULL
             // column involved, report a referential integrity violation
-            if (empty($row) && !$allNull) {
+            if (empty($row) && !$emptyForeignKey) {
                 throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
                     'Row referenced by rule "%s" defined in Table "%s" not found',
                     $ruleName, get_class($this->_getTable())
