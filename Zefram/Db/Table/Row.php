@@ -241,21 +241,30 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $cols = (array) $ref[Zend_Db_Table_Abstract::COLUMNS];
 
             $this->_ensureLoaded($cols);
-            $row = $this->findParentRow($ref['refTableClass'], $ruleName);
 
-            if (empty($row)) {
-                // if no referenced row was fetched, check if all referencing
-                // columns are NULL, otherwise report 
-                // a referential integrity
-                // violation
-                foreach ($cols as $col) {
-                    if (isset($this->_data[$col])) {
-                        throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
-                            'Row referenced by rule "%s" defined in Table "%s" not found',
-                            $ruleName, get_class($this->_getTable())
-                        ));
-                    }
+            // if all values of referencing columns are NULL, assume that
+            // there is no parent row
+            $allNull = true;
+            foreach ($cols as $col) {
+                if (isset($this->_data[$col])) {
+                    $allNull = false;
+                    break;
                 }
+            }
+
+            if ($allNull) {
+                $row = null;
+            } else {
+                $row = $this->findParentRow($ref['refTableClass'], $ruleName);
+            }
+
+            // if no referenced row was fetched and there was any non-NULL
+            // column involved, report a referential integrity violation
+            if (empty($row) && !$allNull) {
+                throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
+                    'Row referenced by rule "%s" defined in Table "%s" not found',
+                    $ruleName, get_class($this->_getTable())
+                ));
             }
 
             return $this->_referencedRows[$ruleName] = $row;
