@@ -344,6 +344,26 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
+     * Test existence of field or reference. For more specific test
+     * use {@see hasColumn()} or {@see hasReference()} methods.
+     *
+     * @param  string $columnName
+     * @return bool
+     */
+    public function __isset($columnName)
+    {
+        return $this->hasColumn($columnName) || $this->hasReference($columnName, false);
+    }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return array_merge(parent::__sleep(), array('_cols'));
+    }
+
+    /**
      * Sets all data in the row from an array.
      *
      * @param  array $data
