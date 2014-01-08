@@ -523,6 +523,6 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     protected function _getTableFromString($tableName)
     {
-        return Zefram_Db::getTable($tableName, $this->getAdapter(), false);
+        return $this->_getTable()->getTable($tableName);
     }
 }

@@ -141,17 +141,28 @@ class Zefram_Db_Table extends Zend_Db_Table
      * @param string|array $where
      * @return int
      */
-    public function countAll($where = null)
+    public function count($where = null)
     {
         $select = $this->select();
-        $select->from($this->_name, 'COUNT(1) AS cnt');
+        $select->from($this->_name, 'COUNT(1)', $this->_schema);
 
         if (null !== $where) {
             $this->_where($select, $where);
         }
 
-        $row = $this->fetchRowAsArray($select);
-        return intval($row['cnt']);
+        foreach ($this->getAdapter()->fetchCol($select) as $value) {
+            return intval($value);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Proxy to {@see count()}.
+     */
+    public function countAll($where = null)
+    {
+        return $this->count($where);
     }
 
     /**
@@ -211,6 +222,7 @@ class Zefram_Db_Table extends Zend_Db_Table
     /**
      * @param  mixed $key The value(s) of the primary keys.
      * @return Zend_Db_Table_Rowset_Abstract
+     * @deprecated
      */
     public function findAll()
     {
@@ -339,27 +351,10 @@ class Zefram_Db_Table extends Zend_Db_Table
             }
             // else array(column1, ..., columnN)
 
-            $select->from($name, $columns, $this->info(self::SCHEMA));
+            $select->from($name, $columns, $this->_schema);
         }
 
         return $select;
-    }
-
-    /**
-     * Get table instance by class name. This method is essentially a proxy
-     * to {@link Zefram_Db::getTable()} called with this object's database
-     * adapter.
-     *
-     * @param  string $tableClass
-     * @return Zend_Db_Table_Abstract
-     */
-    public function getTable($tableClass = null)
-    {
-        if (null === $tableClass) {
-            return $this;
-        }
-
-        return Zefram_Db::getTable($tableClass, $this->getAdapter());
     }
 
     /**
@@ -462,5 +457,50 @@ class Zefram_Db_Table extends Zend_Db_Table
         }
 
         return $normalized;
+    }
+
+    /**
+     * Replacement for {@see Zend_Db_Table_Abstract::delete()} that uses
+     * for Table instance retrieval {@see getTable()} method instead of
+     * {@see Zend_Db_Table_Abstract::getTableFromString()}.
+     *
+     * @param  array|string $where
+     * @return int
+     */
+    public function delete($where)
+    {
+        $depTables = $this->getDependentTables();
+
+        if ($depTables) {
+            foreach ($this->fetchAll($where) as $row) {
+                foreach ($depTables as $tableClass) {
+                    $table = $this->getTable($tableClass);
+                    $table->_cascadeDelete($tableClass, $row->getPrimaryKey());
+                }
+            }
+        }
+
+        return $this->_db->delete($this->getQualifiedName(), $where);
+    }
+
+    /**
+     * Get table instance by class name. This method is essentially a proxy
+     * to {@link Zefram_Db::getTable()} called with this object's database
+     * adapter.
+     *
+     * @param  string $tableClass
+     * @return Zend_Db_Table_Abstract
+     */
+    public function getTable($tableClass = null)
+    {
+        if (null === $tableClass) {
+            return $this;
+        }
+
+        if ($tableClass instanceof Zend_Db_Table_Abstract) {
+            return $tableClass;
+        }
+
+        return Zefram_Db::getTable($tableClass, $this->getAdapter());
     }
 }
