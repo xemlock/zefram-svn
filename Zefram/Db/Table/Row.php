@@ -337,7 +337,10 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
  
         $origData = $this->_data[$columnName];
 
-        if ($origData != $value) {
+        // when comparing with previous value check if both types match
+        // to avoid undesired behavior caused by type convergence, i.e.
+        // NULL == 0, NULL == "", 0 == ""
+        if ($origData !== $value) {
             $this->_data[$columnName] = $value;
             $this->_modifiedFields[$columnName] = true;
         }
