@@ -86,7 +86,7 @@ class Zefram_Validate extends Zend_Validate
                     break;
 
                 default:
-                    throw new Zefram_Validate_InvalidArgumentException(
+                    throw new Zend_Validate_Exception(
                         'Validator specification if given as array, must be non-empty'
                     );
             }
