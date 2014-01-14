@@ -127,4 +127,15 @@ class Zefram_Db_Select extends Zend_Db_Select
         }
         return $this;
     }
+
+    /**
+     * Creates a new Select object for given adapter.
+     *
+     * @param  Zend_Db_Adapter_Abstract $adapter
+     * @return Zefram_Db_Select
+     */
+    public static function factory(Zend_Db_Adapter_Abstract $adapter)
+    {
+        return new self($adapter);
+    }
 }
