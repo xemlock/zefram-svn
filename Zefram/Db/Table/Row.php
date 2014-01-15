@@ -505,17 +505,21 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Retrieve an instance of the table this row is connected to.
+     * Retrieve an instance of the table this row is connected to or, if table
+     * name given, instantiate a table of a this class.
      *
      * @return Zend_Db_Table_Row_Abstract
      * @throws Zend_Db_Table_Row_Exception
      */
-    protected function _getTable()
+    protected function _getTable($tableName = null)
     {
         if (!$this->_connected || !$this->_table) {
             throw new Zend_Db_Table_Row_Exception('Cannot retrieve Table instance from a disconnected Row');
         }
-        return $this->_table;
+        if (null === $tableName) {
+            return $this->_table;
+        }
+        return $this->_table->getTable($tableName);
     }
 
     /**
@@ -526,6 +530,6 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     protected function _getTableFromString($tableName)
     {
-        return $this->_getTable()->getTable($tableName);
+        return $this->_getTable($tableName);
     }
 }
