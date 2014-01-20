@@ -40,16 +40,25 @@ class Zefram_Mail extends Zend_Mail
     /**
      * Attach a file to this message.
      *
+     * Options:
+     *
      * @param  string $path
      * @param  array $options OPTIONAL
      * @return Zefram_Mime_FileStreamPart
      */
     public function attachFile($path, array $options = array())
     {
-        $options = array_merge(array(
-            'disposition' => Zend_Mime::DISPOSITION_ATTACHMENT,
-            'encoding'    => Zend_Mime::ENCODING_BASE64,
-        ), $options);
+        if (isset($options['inline']) && $options['inline']) {
+            $options['disposition'] = Zend_Mime::DISPOSITION_INLINE;
+        }
+
+        if (empty($options['disposition'])) {
+            $options['disposition'] = Zend_Mime::DISPOSITION_ATTACHMENT;
+        }
+
+        if (empty($options['encoding'])) {
+            $options['encoding'] = Zend_Mime::ENCODING_BASE64;
+        }
 
         $part = new Zefram_Mime_FileStreamPart($path, $options);
 
