@@ -10,7 +10,7 @@ class Zefram_Mail extends Zend_Mail
     protected static $_defaultCharset = null;
 
     /**
-     * Encoding of Mail headers
+     * Default encoding of Mail headers
      * @var string
      * @static
      */
@@ -48,7 +48,7 @@ class Zefram_Mail extends Zend_Mail
 
     public function __construct($charset = null)
     {
-        if (null === $charset && null !== self::$_defaultCharset) {
+        if (null === $charset) {
             $charset = self::$_defaultCharset;
         }
 
