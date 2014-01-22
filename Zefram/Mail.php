@@ -38,6 +38,41 @@ class Zefram_Mail extends Zend_Mail
     }
 
     /**
+     * Add recipient and To-header. Duplicated emails are not re-added.
+     *
+     * @param  string|array $email
+     * @param  string $name
+     * @return Zefram_Mail
+     */
+    public function addTo($email, $name = '')
+    {
+        if (!is_array($email)) {
+            $email = array($name => $email);
+        }
+
+        foreach ($email as $name => $address) {
+            if (isset($this->_to[$address])) {
+                continue;
+            }
+
+            $this->_addRecipientAndHeader('To', $address, is_int($name) ? '' : $name);
+            $this->_to[$address] = $address;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Return recipients' email addresses.
+     *
+     * @return array
+     */
+    public function getTo()
+    {
+        return $this->_to;
+    }
+
+    /**
      * Attach a file to this message.
      *
      * Options:
