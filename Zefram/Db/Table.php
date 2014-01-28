@@ -428,10 +428,20 @@ class Zefram_Db_Table extends Zend_Db_Table
 
     /**
      * @param Zend_Db_Table_Row_Abstract|array $id
+     * @return array
      */
     protected function _normalizeId($id)
     {
         $primary = $this->info(self::PRIMARY);
+
+        // if there is a sequence column, other columns are ignored.
+        // InnoDB table engine (MySQL) requires that AUTO_INCREMENT column is
+        // the first one in the compound primary key, see:
+        // http://dev.mysql.com/doc/refman/5.0/en/example-auto-increment.html.
+        // Zend_Db_Table_Abstract assumes the same in insert().
+        if ($this->_sequence) {
+            $primary = array(reset($primary));
+        }
 
         if ($id instanceof Zend_Db_Table_Row_Abstract) {
             $id = $id->toArray();
