@@ -19,11 +19,11 @@ class Zefram_Crypt_Base64url
         $encoded = strtr($encoded, '-_', '+/');
         if (strlen($encoded) > $chunk_size) {          
             $decoded = array();
-            // base64_decode sometimes has problems with strings containing ~5k
-            // characters. To fix this the encoded string is split into 
-            // substrings counting modulo 4 characters, then each substring 
+            // base64_decode() sometimes has problems with strings containing
+            // ~5k characters. To fix this the encoded string is split into
+            // substrings counting modulo 4 characters, then each substring
             // is decoded separately. Resulting string is a concatenation of
-            // all decoded substring.
+            // all decoded substrings.
             for ($i = 0, $n = ceil(strlen($encoded) / $chunk_size); $i < $n; ++$i) {
                 $decoded_chunk = @base64_decode(substr($encoded, $i * $chunk_size, $chunk_size));
                 if (false === $decoded_chunk) {
