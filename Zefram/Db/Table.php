@@ -15,6 +15,11 @@ class Zefram_Db_Table extends Zend_Db_Table
     protected $_rowsetClass = 'Zefram_Db_Table_Rowset';
 
     /**
+     * @var Zefram_Db_TableProvider
+     */
+    protected $_tableProvider;
+
+    /**
      * Storage for rows fetched by {@link findRow()}.
      * @var array
      */
@@ -511,6 +516,36 @@ class Zefram_Db_Table extends Zend_Db_Table
             return $tableClass;
         }
 
+        if ($this->hasTableProvider()) {
+            return $this->getTableProvider()->getTable($tableClass, $this->getAdapter());
+        }
+
         return Zefram_Db::getTable($tableClass, $this->getAdapter());
+    }
+
+    /**
+     * @param Zefram_Db_Table_Provider $tableProvider
+     * @return Zefram_Db_Table
+     */
+    public function setTableProvider(Zefram_Db_Table_Provider $tableProvider)
+    {
+        $this->_tableProvider = $tableProvider;
+        return $this->_tableProvider;
+    }
+
+    /**
+     * @return Zefram_Db_Table_Provider
+     */
+    public function getTableProvider()
+    {
+        return $this->_tableProvider;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTableProvider()
+    {
+        return null !== $this->_tableProvider;
     }
 }
