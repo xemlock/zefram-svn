@@ -66,6 +66,35 @@ class Zefram_Db_Table_Select extends Zend_Db_Table_Select
     }
 
     /**
+     * Adds a WHERE condition to the query by OR.
+     *
+     * @param string|array $cond
+     *     The WHERE condition.
+     * @param mixed $value OPTIONAL
+     *     The value to quote into the condition, used when condition
+     *     is not an array
+     * @param int $type OPTIONAL
+     *     The type of the given value, used when condition is not an array
+     * @return Zefram_Db_Select
+     *     This select object
+     */
+    public function orWhere($cond, $value = null, $type = null)
+    {
+        if (is_array($cond)) {
+            foreach ($cond as $key => $value) {
+                if (is_int($key)) {
+                    parent::orWhere($value);
+                } else {
+                    parent::orWhere($key, $value);
+                }
+            }
+        } else {
+            parent::orWhere($cond, $value, $type); 
+        }
+        return $this;
+    }
+
+    /**
      * Enhancement for {@see Zend_Db_Select::_join()} allowing Zend_Db_Table
      * instances to be passed as the $name parameter.
      *
@@ -85,28 +114,9 @@ class Zefram_Db_Table_Select extends Zend_Db_Table_Select
      */
     protected function _join($type, $name, $cond, $cols, $schema = null)
     {
-        $alias = null;
-
-        if (is_array($name)) {
-            // inconsistent behavior across PHP versions, in 4.4.1, and in
-            // 5.2.4-5.5.0alpha4 the internal pointers of arrays passed by
-            // value to functions are reset. In other versions (4.3.0-4.4.0,
-            // 4.4.2-5.2.3) they are not.
-            reset($name);
-
-            $alias = key($name);
-            $name = current($name);
-        }
-
-        if ($name instanceof Zend_Db_Table_Abstract) {
-            $schema = $name->info(Zend_Db_Table::SCHEMA);
-            $name = $name->info(Zend_Db_Table::NAME);
-        }
-
-        if (null !== $alias) {
-            $name = array($alias => $name);
-        }
-
+        extract(Zefram_Db_Select::_prepareJoin(
+            $this->getAdapter(), $name, $cond, $cols, $schema
+        ));
         return parent::_join($type, $name, $cond, $cols, $schema);
     }
 }
