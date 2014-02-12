@@ -1,34 +1,56 @@
 <?php
 
+/**
+ * INPUT tag renderer.
+ *
+ * @version 2014-02-12
+ */
 class Zefram_View_Helper_FormInput extends Zend_View_Helper_FormElement
 {
     /**
      * Generates an input element.
      *
+     * @param  string|Zend_Form_Element $name
+     * @param  mixed $value OPTIONAL
+     * @param  array $attribs OPTIONAL
      * @return string The element XHTML.
      */
-    public function formInput($name, array $attribs = null)
+    public function formInput($name, $value = null, array $attribs = null)
     {
-        $value = null;
+        // if the $value parameter is an array, it replaces the $attribs
+        // parameter, as an input value must be scalar
+        if (is_array($value)) {
+            $attribs = $value;
+            $value = null;
+        }
+
+        // if value is stored in the $attribs parameter, extract it
+        // and replace $value parameter
+        if (is_array($attribs) && array_key_exists('value', $attribs)) {
+            $value = $attribs['value'];
+            unset($attribs['value']);
+        }
 
         if ($name instanceof Zend_Form_Element) {
-            // If a value is given, assume the element is to be rendered as
-            // a checkable input (checkbox or radio). Compare the element's
-            // value with the given one and if they are equal (both values
-            // must not be NULL) add 'checked' attribute.
-            // Values are compared as strings to avoid implicit conversion
-            // when one of them is a number.
-            if (isset($attribs['value'])) {
-                if (null !== ($value = $name->getValue()) &&
-                    strval($value) === strval($attribs['value'])
-                ) {
+            $element = $name;
+            $elementValue = $element->getValue();
+
+            if (null !== $value) {
+                // If $value parameter is given, assume the element is to be
+                // rendered as a checkable input (checkbox or radio). Compare
+                // the element's value with the given one and if they are equal
+                // (both values must not be NULL) add 'checked' attribute.
+                // Values are compared as strings to avoid implicit conversion
+                // when one of them is a number.
+                if (null !== $elementValue && strval($value) === strval($elementValue)) {
                     $attribs['checked'] = 'checked';
                 }
-                $value = $attribs['value'];
             } else {
-                $value = $name->getValue();
+                // empty $value parameter means there is not value to compare
+                // against. Simply use element's value when rendering input tag.
+                $value = $elementValue;
             }
-            $name = $name->getFullyQualifiedName();
+            $name = $element->getFullyQualifiedName();
         }
 
         $info = $this->_getInfo($name, $value, $attribs);
