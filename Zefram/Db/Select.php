@@ -44,7 +44,6 @@ class Zefram_Db_Select extends Zend_Db_Select
     public function where($cond, $value = null, $type = null)
     {
         $db = $this->getAdapter();
-
         if (is_array($cond)) {
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
@@ -77,6 +76,7 @@ class Zefram_Db_Select extends Zend_Db_Select
      */
     public function orWhere($cond, $value = null, $type = null)
     {
+        $db = $this->getAdapter();
         if (is_array($cond)) {
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
