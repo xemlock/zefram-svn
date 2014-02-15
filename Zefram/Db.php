@@ -6,6 +6,36 @@
  */
 abstract class Zefram_Db
 {
+    /**
+     * @param  Zend_Db_Adapter_Abstract $db
+     * @param  string $string
+     * @return string
+     */
+    public static function quoteEmbeddedIdentifiers(Zend_Db_Adapter_Abstract $db, $string) // {{{
+    {
+        return preg_replace_callback(
+            '/(?P<table>[_a-z][_a-z0-9]*)\.(?P<column>[_a-z][_a-z0-9]*)/i',
+            self::_quoteEmbeddedIdentifiersCallback($db), $string
+        );
+    } // }}}
+
+    /**
+     * @param Zend_Db_Adapter_Abstract|array $dbOrMatch
+     * @return string|callback
+     * @internal
+     */
+    protected static function _quoteEmbeddedIdentifiersCallback($dbOrMatch) // {{{
+    {
+        static $db;
+
+        if ($dbOrMatch instanceof Zend_Db_Adapter_Abstract) {
+            $db = $dbOrMatch;
+            return array(__CLASS__, __FUNCTION__);
+        }
+
+        return $db->quoteIdentifier($dbOrMatch['table']) . '.' . $db->quoteIdentifier($dbOrMatch['column']);
+    } // }}}
+
     protected static $_tablePrefix;
     protected static $_tableRegistry;
 

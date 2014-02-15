@@ -43,15 +43,20 @@ class Zefram_Db_Select extends Zend_Db_Select
      */
     public function where($cond, $value = null, $type = null)
     {
+        $db = $this->getAdapter();
+
         if (is_array($cond)) {
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
+                    $value = Zefram_Db::quoteEmbeddedIdentifiers($db, $value);
                     parent::where($value);
                 } else {
+                    $key = Zefram_Db::quoteEmbeddedIdentifiers($db, $key);
                     parent::where($key, $value);
                 }
             }
         } else {
+            $cond = Zefram_Db::quoteEmbeddedIdentifiers($db, $cond);
             parent::where($cond, $value, $type); 
         }
         return $this;
@@ -75,12 +80,15 @@ class Zefram_Db_Select extends Zend_Db_Select
         if (is_array($cond)) {
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
+                    $value = Zefram_Db::quoteEmbeddedIdentifiers($db, $value);
                     parent::orWhere($value);
                 } else {
+                    $key = Zefram_Db::quoteEmbeddedIdentifiers($db, $key);
                     parent::orWhere($key, $value);
                 }
             }
         } else {
+            $cond = Zefram_Db::quoteEmbeddedIdentifiers($db, $cond);
             parent::orWhere($cond, $value, $type); 
         }
         return $this;
@@ -150,29 +158,9 @@ class Zefram_Db_Select extends Zend_Db_Select
         // quote identifiers present in JOIN condition, identifiers are
         // expected to be in the form table.column
         if (is_string($cond)) {
-            $cond = preg_replace_callback(
-                '/(?P<table>[_a-z][_a-z0-9]*)\.(?P<column>[_a-z][_a-z0-9]*)/i',
-                self::_quoteJoinIdentifier($db), $cond
-            );
+            $cond = Zefram_Db::quoteEmbeddedIdentifiers($db, $cond);
         }
 
         return compact('name', 'cond', 'cols', 'schema');
-    }
-
-    /**
-     * @param array|Zend_Db_Adapter_Abstract $dbOrMatch
-     * @return string|callback
-     * @internal
-     */
-    protected function _quoteJoinIdentifier($dbOrMatch)
-    {
-        static $db;
-
-        if ($dbOrMatch instanceof Zend_Db_Adapter_Abstract) {
-            $db = $dbOrMatch;
-            return array(__CLASS__, __FUNCTION__);
-        }
-
-        return $db->quoteIdentifier($dbOrMatch['table']) . '.' . $db->quoteIdentifier($dbOrMatch['column']);
     }
 }
