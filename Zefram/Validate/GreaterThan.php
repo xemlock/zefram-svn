@@ -4,25 +4,25 @@
  * GreaterThan validator with added support for comparing against a value
  * from the context.
  *
- * @version 2014-02-21
+ * @version 2014-02-25
  * @author xemlock
  */
 class Zefram_Validate_GreaterThan extends Zend_Validate_GreaterThan
 {
-    const NO_CONTEXT_VALUE = 'noContextValue';
+    const NO_CONTEXT = 'noContext';
 
     protected $_min = 0;
 
     protected $_contextKey;
 
     protected $_messageTemplates = array(
-        self::NOT_GREATER      => "'%value%' is not greater than '%min%'",
-        self::NO_CONTEXT_VALUE => "No context value was provided to match against",
+        self::NOT_GREATER => "'%value%' is not greater than '%min%'",
+        self::NO_CONTEXT  => 'No context value was provided to match against',
     );
 
     /**
-     * @param   array|scalar $options
-     * @reuturn void
+     * @param  mixed $options
+     * @return void
      */
     public function __construct($options = null)
     {
@@ -31,11 +31,11 @@ class Zefram_Validate_GreaterThan extends Zend_Validate_GreaterThan
         }
 
         if (is_array($options)) {
-            if (isset($options['min'])) {
-                $this->setMin($options['min']);
-            }
-            if (isset($options['contextKey'])) {
-                $this->setContextKey($options['contextKey']);
+            foreach ($options as $key => $value) {
+                $method = 'set' . $key;
+                if (method_exists($this, $method)) {
+                    $this->{$method}($value);
+                }
             }
         }
 
@@ -55,6 +55,14 @@ class Zefram_Validate_GreaterThan extends Zend_Validate_GreaterThan
     }
 
     /**
+     * @return mixed
+     */
+    public function getContextKey()
+    {
+        return $this->_contextKey;
+    }
+
+    /**
      * @param  mixed $value
      * @param  array $context OPTIONAL
      * @return bool
@@ -65,7 +73,7 @@ class Zefram_Validate_GreaterThan extends Zend_Validate_GreaterThan
 
         if (isset($this->_contextKey)) {
             if (!isset($context[$this->_contextKey])) {
-                $this->_error(self::NO_CONTEXT_VALUE);
+                $this->_error(self::NO_CONTEXT);
                 return false;
             }
             $this->setMin($context[$this->_contextKey]);
