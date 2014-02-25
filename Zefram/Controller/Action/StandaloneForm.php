@@ -5,7 +5,7 @@
  * This class provides encapsulation of form-related logic as well as allows
  * avoiding repetitively writing form handling skeleton code.
  *
- * @version    2013-12-13 / 2013-09-12
+ * @version    2014-02-25 / 2013-12-13 / 2013-09-12
  * @category   Zefram
  * @package    Zefram_Controller
  * @subpackage Zefram_Controller_Action
@@ -66,13 +66,25 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     {}
 
     /**
+     * Retrieve default form values, called when no data is submitted.
+     *
+     * @return array
+     */
+    protected function _defaults()
+    {
+        return array();
+    }
+
+    /**
      * Method called to populate existing form with default values,
      * when no data is submitted.
      *
      * @return void
      */
     protected function _populate()
-    {}
+    {
+        $this->_form->setDefaults($this->_defaults());
+    }
 
     /**
      * Validate form against given data.
