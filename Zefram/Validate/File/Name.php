@@ -38,10 +38,17 @@ class Zefram_Validate_File_Name extends Zend_Validate_Abstract
 
     /**
      * @param  string $value
+     * @param  array  $file  File data from Zend_File_Transfer
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value, $file = null)
     {
+        // if file transfer data was provided, use 'name' instead of provided
+        // value, the latter is expected to equal 'tmp_name'
+        if (isset($file['name'])) {
+            $value = $file['name'];
+        }
+
         $valid = true;
 
         if (function_exists('mb_strlen')) {
