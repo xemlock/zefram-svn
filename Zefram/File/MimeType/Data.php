@@ -26,6 +26,22 @@ class Zefram_File_MimeType_Data
 
     const OLE2 = 'application/x-ole-storage';
 
+    const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    const ODT  = 'application/vnd.oasis.opendocument.text';
+    const ODS  = 'application/vnd.oasis.opendocument.spreadsheet';
+    const ODP  = 'application/vnd.oasis.opendocument.presentation';
+
+    const BZIP2 = 'application/x-bzip2';
+    const ZIP  = 'application/zip';
+    const RAR  = 'application/x-rar-compressed';
+    const GZIP = 'application/x-gzip';
+
+    const JAR  = 'application/java-archive';
+    const APK  = 'application/vnd.android.package-archive';
+
     const UNKNOWN = 'application/octet-stream';
 
     protected static $_magic = array(
@@ -117,10 +133,42 @@ class Zefram_File_MimeType_Data
             ),
             'extension' => 'pdf',  
         ),
-        "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1\x00" => array(
+        "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1\x00" => array( // DOCFILE0
             // OLE2 Compound Document (MS Office)
             'mimetype'  => self::OLE2,
             'extension' => '',
+        ),
+        // }}}
+        // archives {{{
+        "\x50\x4B\x03\x04" => array(
+            'mimetype'   => array(
+                self::ZIP,
+            ),
+            'extension'  => 'zip',
+        ),
+        "\x50\x4B\x05\x06" => array( // empty ZIP archive
+            'mimetype'   => self::ZIP,
+            'extension'  => 'zip',
+        ),
+        "\x50\x4B\x07\x08" => array(
+            'mimetype'   => self::ZIP, // spanned ZIP archive
+            'extension'  => 'zip',
+        ),
+        "\x52\x61\x72\x21\x1A\x07\x00" => array(
+            'mimetype'   => self::RAR,
+            'extension'  => 'rar',
+        ),
+        "\x52\x61\x72\x21\x1A\x07\x01\x00" => array(
+            'mimetype'  => self::RAR,
+            'extension' => 'rar',
+        ),
+        "\x1F\x8B\x08" => array(
+            'mimetype'  => self::GZIP,
+            'extension' => array('gz', 'gzip', 'tgz'),
+        ),
+        "\x42\x5A\x68" => array(
+            'mimetype'  => self::BZIP2,
+            'extension' => 'bz2',
         ),
         // }}}
     );
@@ -134,7 +182,6 @@ class Zefram_File_MimeType_Data
             ),
             'mimetype' => array(
                 self::DOC,
-                'application/msword',
                 'application/doc',
                 'application/vnd.msword',
                 'application/vnd.ms-word',
@@ -243,6 +290,20 @@ class Zefram_File_MimeType_Data
                     return $ext;
                 }
             }
+        }
+
+        $zips = array(
+            self::ODT => 'odt',
+            self::ODS => 'ods',
+            self::ODP => 'odp',
+            self::DOCX => 'docx',
+            self::PPTX => 'pptx',
+            self::XLSX => 'xlsx',
+            self::JAR  => 'jar',
+            self::APK  => 'apk',
+        );
+        if (isset($zips[$mimetype])) {
+            return $zips[$mimetype];
         }
 
         foreach (self::$_magic as $info) {
