@@ -219,9 +219,13 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
                 // by calling ajaxResponse helper
                 $result = $this->_process();
 
-                // form was handled successfully, perform redirection if not
-                // explicitly cancelled by returning false in _process()
-                if (false !== $result) {
+                // form was handled successfully, try to perform redirection,
+                // or do nothing if redirection was explicitly cancelled by
+                // FALSE value returned from _process()
+                if ($this->getResponse()->isRedirect()) {
+                    return;
+
+                } elseif (false !== $result) {
                     // if a string is returned from the _process() method,
                     // treat it as a redirection url, otherwise use current
                     // request uri
