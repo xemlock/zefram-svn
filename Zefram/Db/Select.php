@@ -44,7 +44,7 @@ class Zefram_Db_Select extends Zend_Db_Select
     public function where($cond, $value = null, $type = null)
     {
         $db = $this->getAdapter();
-        if (is_array($cond)) {
+        if (is_array($cond)) { // array cond is now deprecated
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
                     $value = Zefram_Db::quoteEmbeddedIdentifiers($db, $value);
@@ -77,7 +77,7 @@ class Zefram_Db_Select extends Zend_Db_Select
     public function orWhere($cond, $value = null, $type = null)
     {
         $db = $this->getAdapter();
-        if (is_array($cond)) {
+        if (is_array($cond)) { // array cond is now deprecated
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
                     $value = Zefram_Db::quoteEmbeddedIdentifiers($db, $value);
@@ -92,6 +92,36 @@ class Zefram_Db_Select extends Zend_Db_Select
             parent::orWhere($cond, $value, $type); 
         }
         return $this;
+    }
+
+    /**
+     * @param  string $cond
+     * @param  array $params
+     * @return Zefram_Db_Select
+     */
+    public function whereParams($cond, array $params)
+    {
+        $db = $this->getAdapter();
+
+        $cond = Zefram_Db::quoteEmbeddedIdentifiers($db, $cond);
+        $cond = Zefram_Db::quoteParamsInto($db, $cond, $params);
+
+        return parent::where($cond);
+    }
+
+    /**
+     * @param  string $cond
+     * @param  array $params
+     * @return Zefram_Db_Select
+     */
+    public function orWhereParams($cond, array $params)
+    {
+        $db = $this->getAdapter();
+
+        $cond = Zefram_Db::quoteEmbeddedIdentifiers($db, $cond);
+        $cond = Zefram_Db::quoteParamsInto($db, $cond, $params);
+
+        return parent::orWhere($cond);
     }
 
     /**

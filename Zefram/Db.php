@@ -7,6 +7,40 @@
 abstract class Zefram_Db
 {
     /**
+     * Quote parameters into given string using named parameters notation,
+     * regardless of whether database adapter supports named parameters or not.
+     *
+     * Named parameters 
+     * @param  Zend_Db_Adapter_Abstract $db
+     * @param  string $string
+     * @param  array $params
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    public static function quoteParamsInto(Zend_Db_Adapter_Abstract $db, $string, array $params) // {{{
+    {
+        $replace = array();
+        $position = 0;
+
+        // build replacement pairs for positional and named parameters
+        foreach ($params as $name => $value) {
+            if (preg_match('/^[_A-Z][_0-9A-Z]*$/i', $name)) {
+                $quoted = $db->quote($value);
+                $replace[':' . $name] = $quoted;
+                $replace['?' . ++$position] = $quoted;
+
+            } else {
+                throw new InvalidArgumentException(sprintf(
+                    'Invalid parameter name: %s', $name
+                ));
+            }
+        }
+
+        // use strtr() and not str_replace() to avoid recursive replacements
+        return strtr($string, $replace);
+    } // }}}
+
+    /**
      * @param  Zend_Db_Adapter_Abstract $db
      * @param  string $string
      * @return string
