@@ -73,12 +73,44 @@ class Zefram_Db_Table extends Zend_Db_Table
     }
 
     /**
+     * Retrieve metadata for the whole table, selected column or a given
+     * property of a selected column.
+     *
+     * Column and property operators are added for convenience when developing
+     * in PHP version prior to 5.4 when array dereference on functions was not
+     * supported.
+     *
+     * @param  string $column OPTIONAL
+     * @param  string $property OPTIONAL
      * @return array
      */
-    public function getMetadata()
+    public function getMetadata($column = null, $property = null)
     {
         $this->_setupMetadata();
-        return $this->_metadata;
+
+        if (null === $column) {
+            return $this->_metadata;
+        }
+
+        // column names in table descriptions are case-folded according
+        // to database adapter they are bound to, for example see:
+        // Zend_Db_Adapter_Pdo_Pgsql::describeTable()
+
+        $column = $this->getAdapter()->foldCase($column);
+
+        if (isset($this->_metadata[$column])) {
+            if (null === $property) {
+                return $this->_metadata[$column];
+            }
+
+            if (isset($this->_metadata[$column][$property])) {
+                return $this->_metadata[$column][$property];
+            }
+
+            throw new Exception('Invalid column property name');
+        }
+
+        throw new Exception('Invalid column name');
     }
 
     /**
