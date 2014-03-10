@@ -239,18 +239,16 @@ class Zefram_Db_Table extends Zend_Db_Table
 
     /**
      * Fetch row from the database and store it in the identity map.
+     * Rows fetched by this method overwrite those stored in identity
+     * map. Use findRow() for identity map utilization.
      */
     public function fetchRow($where = null, $order = null, $offset = null)
     {
         $row = parent::fetchRow($where, $order, $offset);
         if ($row) {
-            // use row from identity map rather than the new one
-            $storedRow = $this->getFromIdentityMap($row);
-            if ($storedRow) {
-                return $storedRow;
-            }
-
-            // otherwise add fetched row to identity map
+            // No! Don't retrieve row from identity map, as fetchRow()
+            // is used for refreshing table row.
+            // However, we can add this row to identity map, for later use.
             $this->addToIdentityMap($row);
         }
         return $row;
