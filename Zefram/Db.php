@@ -24,16 +24,22 @@ abstract class Zefram_Db
 
         // build replacement pairs for positional and named parameters
         foreach ($params as $name => $value) {
-            if (preg_match('/^[_A-Z][_0-9A-Z]*$/i', $name)) {
-                $quoted = $db->quote($value);
+            $quoted = $db->quote($value);
+
+            if ($name === $position) {
+                $replace['?' . ($position + 1)] = $quoted;
+
+            } elseif (preg_match('/^[_A-Z][_0-9A-Z]*$/i', $name)) {
                 $replace[':' . $name] = $quoted;
-                $replace['?' . ++$position] = $quoted;
+                $replace['?' . ($position + 1)] = $quoted;
 
             } else {
                 throw new InvalidArgumentException(sprintf(
                     'Invalid parameter name: %s', $name
                 ));
             }
+
+            ++$position;
         }
 
         // use strtr() and not str_replace() to avoid recursive replacements
