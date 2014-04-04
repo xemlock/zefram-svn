@@ -28,6 +28,7 @@ class Zefram_Locale extends Zend_Locale
 
         if ($locale instanceof Zefram_Locale) {
             $codeset = $locale->getCodeset();
+            $modifier = $locale->getModifier();
         } else {
             // POSIX locale format: [language[_territory][.codeset][@modifier]]
             // http://en.wikipedia.org/wiki/Locale
