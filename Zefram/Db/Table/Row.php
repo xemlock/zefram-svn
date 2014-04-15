@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * 2014-04-15
+ *          - support for setting referenced rows by assignment to their
+ *            corresponding ruleKeys
+ *          - fixed fetching referenced rows when values of referencing column
+ *            are changed
+ */
 class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 {
     /**
@@ -28,7 +35,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * @return void
      * @throws Zend_Db_Table_Row_Exception
      */
-    public function __construct(array $config = array())
+    public function __construct(array $config = array()) // {{{
     {
         if (!isset($config['table']) || !$config['table'] instanceof Zend_Db_Table_Abstract) {
             if ($this->_tableClass !== null) {
@@ -41,63 +48,38 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         $this->_cols = array_flip($config['table']->info(Zend_Db_Table_Abstract::COLS));
 
         parent::__construct($config);
-    }
+    } // }}}
 
     /**
      * @param  string $columnName
      * @return bool
      */
-    public function hasColumn($columnName)
+    public function hasColumn($columnName) // {{{
     {
         return $this->_hasColumn($this->_transformColumn($columnName));
-    }
+    } // }}}
 
     /**
-     * For internal use, contrary to {@see hasColumn()} it operates on the
-     * transformed column name.
+     * For internal use, contrary to {@see hasColumn()} it operates on an
+     * already transformed column name.
      *
      * @param  string $transformedColumnName
      * @return bool
      */
-    protected function _hasColumn($transformedColumnName)
+    protected function _hasColumn($transformedColumnName) // {{{
     {
         return isset($this->_cols[$transformedColumnName]);
-    }
-
-    /**
-     * Is reference to parent row identified by rule name defined in the
-     * parent table.
-     *
-     * @param  string $ruleName
-     * @param  bool $throw
-     * @return bool
-     * @throws Exception
-     */
-    public function hasReference($ruleName, $throw = true)
-    {
-        try {
-            $ruleName = (string) $ruleName;
-            $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
-            return isset($referenceMap[$ruleName]);
-
-        } catch (Exception $e) {
-            if ($throw) {
-                throw $e;
-            }
-        }
-
-        return false;
-    }
+    } // }}}
 
     /**
      * Is this row stored in the database.
      *
      * @return bool
      */
-    public function isStored()
+    public function isStored() // {{{
     {
         return !empty($this->_cleanData);
-    }
+    } // }}}
 
     /**
      * Does this row have modified fields, or has a specific field been
@@ -106,7 +88,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * @param  string $columnName OPTIONAL
      * @return bool
      */
-    public function isModified($columnName = null)
+    public function isModified($columnName = null) // {{{
     {
         if (null === $columnName) {
             return 0 < count($this->_modifiedFields);
@@ -114,29 +96,21 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
         $columnName = $this->_transformColumn($columnName);
         return isset($this->_modifiedFields[$columnName]);
-    }
+    } // }}}
 
     /**
      * Retrieve an array of modified fields and associated values.
      *
      * @return array
      */
-    public function getModified()
+    public function getModified() // {{{
     {
         $modified = array();
         foreach ($this->_modifiedFields as $columnName => $value) {
             $modified[$columnName] = $this->_data[$columnName];
         }
         return $modified;
-    }
-
-    /**
-     * @return array
-     */
-    public function getModifiedFields()
-    {
-        return $this->_modifiedFields;
-    }
+    } // }}}
 
     /**
      * Gets the Zend_Db_Adapter_Abstract from the table this row is
@@ -145,10 +119,10 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * @return Zend_Db_Adapter_Abstract
      * @throws Zend_Db_Table_Row_Exception
      */
-    public function getAdapter()
+    public function getAdapter() // {{{
     {
         return $this->_getTable()->getAdapter();
-    }
+    } // }}}
 
     /**
      * Fetches value for given columns, which effectively re-initializes
@@ -220,69 +194,220 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * Fetch parent row identified by a given rule name.
+     * Is reference to parent row identified by rule name defined in the
+     * parent table.
      *
-     * @param  string $ruleName
-     * @return mixed
+     * @param  string $ruleKey
+     * @return bool
+     * @throws Exception
      */
-    protected function _fetchReference($ruleName)
+    public function hasReference($ruleKey) // {{{
     {
-        $ruleName = (string) $ruleName;
+        try {
+            return (bool) $this->_getReference($ruleKey);
+        } catch (Exception $e) {
+        }
+        return false;
+    } // }}}
 
-        // already have required row or already know that it does not exist
-        if (array_key_exists($ruleName, $this->_referencedRows)) {
-            return $this->_referencedRows[$ruleName];
+    /**
+     * Get reference rule matching the given key.
+     *
+     * @param  string $ruleKey
+     * @return array
+     * @throws Zend_Db_Table_Row_Exception
+     */
+    protected function _getReference($ruleKey) // {{{
+    {
+        $ruleKey = (string) $ruleKey;
+        $referenceMap = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
+
+        if (isset($referenceMap[$ruleKey])) {
+            return $referenceMap[$ruleKey];
         }
 
-        // fetch referenced parent row from the database
-        $map = $this->_getTable()->info(Zend_Db_Table_Abstract::REFERENCE_MAP);
-        if (isset($map[$ruleName])) {
-            $ref = $map[$ruleName];
-            $cols = (array) $ref[Zend_Db_Table_Abstract::COLUMNS];
+        throw new Zend_Db_Table_Row_Exception(sprintf(
+            'No reference identified by rule "%s" defined in table %s',
+            $ruleKey, get_class($this->_getTable())
+        ));
+    } // }}}
 
-            $this->_ensureLoaded($cols);
+    /**
+     * @param  string|array $rule
+     * @return array
+     * @throws Zefram_Db_Table_Row_InvalidArgumentException
+     */
+    protected function _getReferenceColumnMap($rule) // {{{
+    {
+        if (!is_array($rule)) {
+            $rule = $this->_getReference($rule);
+        }
 
-            // if all values of the foreign key are NULL, assume that there
-            // is no parent row
-            $emptyForeignKey = true;
-            foreach ($cols as $col) {
-                if (isset($this->_data[$col])) {
-                    $emptyForeignKey = false;
+        $columnMap = array_combine(
+            (array) $rule[Zend_Db_Table_Abstract::COLUMNS],
+            (array) $rule[Zend_Db_Table_Abstract::REF_COLUMNS]
+        );
+
+        if (false === $columnMap) {
+            throw new Zefram_Db_Table_Row_InvalidArgumentException(sprintf(
+                "Reference to table %s has invalid column cardinality",
+                $rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS]
+            ));
+        }
+
+        return $columnMap;
+    } // }}}
+
+    /**
+     * Fetch parent row identified by a given rule name.
+     *
+     * @param  string $ruleKey
+     * @return mixed
+     */
+    protected function _fetchReferencedRow($ruleKey) // {{{
+    {
+        $ruleKey = (string) $ruleKey;
+
+        // check if row referenced by given rule is already present in the
+        // _referencedRows collection. If so, make sure its Primary Key values
+        // match the current values of referencing columns
+        if (array_key_exists($ruleKey, $this->_referencedRows)) {
+            $row = $this->_referencedRows[$ruleKey];
+            if (empty($row)) {
+                return null;
+            }
+
+            $match = true;
+            foreach ($this->_getReferenceColumnMap($ruleKey) as $column => $refColumn) {
+                if ($this->{$column} != $row->{$refColumn}) {
+                    $match = false;
                     break;
                 }
             }
 
-            if ($emptyForeignKey) {
-                $row = null;
-            } else {
-                $row = $this->findParentRow($ref['refTableClass'], $ruleName);
+            if ($match) {
+                return $row;
             }
-
-            // if no referenced row was fetched and there was any non-NULL
-            // column involved, report a referential integrity violation
-            if (empty($row) && !$emptyForeignKey) {
-                throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
-                    'Row referenced by rule "%s" defined in Table "%s" not found',
-                    $ruleName, get_class($this->_getTable())
-                ));
-            }
-
-            return $this->_referencedRows[$ruleName] = $row;
         }
 
-        throw new Zend_Db_Table_Row_Exception(sprintf(
-            'No reference identified by rule "%s" defined in the parent Table',
-            $ruleName
-        ));
-    }
+        // fetch referenced parent row from the database
+        $rule = $this->_getReference($ruleKey);
+        $cols = (array) $rule[Zend_Db_Table_Abstract::COLUMNS];
+
+        $this->_ensureLoaded($cols);
+
+        // if all values of the foreign key are NULL, assume that there
+        // is no parent row
+        $emptyForeignKey = true;
+
+        foreach ($cols as $col) {
+            if (isset($this->_data[$col])) {
+                $emptyForeignKey = false;
+                break;
+            }
+        }
+
+        if ($emptyForeignKey) {
+            $row = null;
+        } else {
+            $row = $this->findParentRow(
+                $rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS],
+                $ruleKey
+            );
+        }
+
+        // if no referenced row was fetched and there was any non-NULL
+        // column involved, report a referential integrity violation
+        if (empty($row) && !$emptyForeignKey) {
+            throw new Zefram_Db_Table_Row_Exception_ReferentialIntegrityViolation(sprintf(
+                'Row referenced by rule "%s" defined in Table "%s" not found',
+                $ruleKey,
+                get_class($this->_getTable())
+            ));
+        }
+
+        return $this->_referencedRows[$ruleKey] = $row;
+    } // }}}
+
+    /**
+     * @param  string $ruleKey
+     * @param  Zend_Db_Table_Row_Abstract|null $row
+     * @throws Zend_Db_Table_Row_Exception
+     * @return void
+     */
+    protected function _setReferencedRow($ruleKey, $row = null) // {{{
+    {
+        $rule = $this->_getReference($ruleKey);
+
+        if (null === $row) {
+            // nullify columns that referenced previous object and are not
+            // part of the Primary Key
+            $primary = array_flip((array) $this->_primary);
+            foreach ($this->_getReferenceColumnMap($rule) as $column => $refColumn) {
+                if (!isset($primary[$column])) {
+                    $this->{$column} = null;
+                }
+            }
+            return;
+        }
+
+        $refTable = $this->_getTable($rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS]);
+        $rowClass = $refTable->getRowClass();
+
+        if (!$row instanceof $rowClass) {
+            throw new Zend_Db_Table_Row_Exception(sprintf(
+                "Row referenced by rule '%s' must be an instance of %s",
+                $ruleKey,
+                $refTable->getRowClass()
+            ));
+        }
+
+        // update columns in the current row referencing the newly assigned one
+        foreach ($this->_getReferenceColumnMap($rule) as $column => $refColumn) {
+            $this->{$column} = $row->{$refColumn};
+        }
+
+        $this->_referencedRows[$ruleKey] = $row;
+    } // }}}
+
+    /**
+     * Save all modified or not stored referenced rows.
+     *
+     * This method is called by {@link save()} before saving current row.
+     *
+     * @return void
+     */
+    protected function _saveReferencedRows() // {{{
+    {
+        foreach ($this->_referencedRows as $ruleKey => $row) {
+            if ((!$row instanceof Zend_Db_Table_Row_Abstract) || ($row === $this)) {
+                continue;
+            }
+
+            // row is either modified or not yet stored in the database
+            $isStored = count($row->_cleanData);
+            $isModified = count($row->_modifiedFields);
+
+            if ($isModified || !$isStored) {
+                $row->save();
+
+                // referenced row was not stored in the database, and as such
+                // its Primary Key values might have been undefined
+                if (!$isStored) {
+                    foreach ($this->_getReferenceColumnMap($ruleKey) as $column => $refColumn) {
+                        $this->{$column} = $row->{$refColumn};
+                    }
+                }
+            }
+        }
+    } // }}}
 
     /**
      * Retrieve row field value.
      *
      * If the field name starts with an uppercase and a reference rule with
      * the same name exists, the row referenced by this rule is fetched from
-     * the database ({@see Zefram_Db_Table::findRow()}) and stored for later
-     * use.
+     * the database and stored for later use.
      *
      * @param string $key
      * @throws Zefram_Db_Table_Row_InvalidArgumentException
@@ -307,8 +432,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         }
 
         // reference loading
-        if ($this->hasReference($key, false)) {
-            return $this->_fetchReference($key);
+        if ($this->hasReference($key)) {
+            return $this->_fetchReferencedRow($key);
         }
 
         throw new Zend_Db_Table_Row_Exception(sprintf(
@@ -328,11 +453,17 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             if ($this->_hasColumn($columnName)) {
                 $this->_data[$columnName] = $value;
                 $this->_modifiedFields[$columnName] = true;
+
+            } elseif ($this->hasReference($columnName)) {
+                $this->_setReferencedRow($columnName, $value);
+
             } else {
                 throw new Zend_Db_Table_Row_Exception(sprintf(
                     'Specified column "%s" is not in the row', $columnName
                 ));
             }
+
+            return;
         }
  
         $origData = $this->_data[$columnName];
@@ -355,7 +486,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     public function __isset($columnName)
     {
-        return $this->hasColumn($columnName) || $this->hasReference($columnName, false);
+        return $this->hasColumn($columnName) || $this->hasReference($columnName);
     }
 
     /**
@@ -402,6 +533,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     public function save()
     {
+        $this->_saveReferencedRows();
+
         $result = parent::save();
         $this->_getTable()->addToIdentityMap($this);
 
@@ -453,7 +586,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * @param  Zend_Db_Table_Select $select OPTIONAL
      * @return Zend_Db_Table_Row_Abstract
      */
-    public function findParentRow($parentTable, $ruleKey = null, Zend_Db_Table_Select $select = null)
+    public function findParentRow($parentTable, $ruleKey = null, Zend_Db_Table_Select $select = null) // {{{
     {
         $db = $this->_getTable()->getAdapter();
 
@@ -473,16 +606,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         if (null === $select) {
             $rule = $this->_prepareReference($this->_getTable(), $parentTable, $ruleKey);
 
-            // mapping between local columns and parent table columns
-            $columnMapping = array_combine(
-                $rule[Zend_Db_Table_Abstract::REF_COLUMNS],
-                $rule[Zend_Db_Table_Abstract::COLUMNS]
-            );
-            if (false === $columnMapping) {
-                throw new Zefram_Db_Table_Row_InvalidArgumentException(sprintf(
-                    'Invalid column cardinality in rule "%s"', $ruleKey
-                ));
-            }
+            // mapping between local columns and columns in referenced table
+            $columnMap = $this->_getReferenceColumnMap($rule);
 
             // if local columns compose complete primary key in the parent
             // table (as should be the case in most situations) use find()
@@ -490,7 +615,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             // may be utilized
             $parentPrimaryKey = array();
 
-            foreach ($columnMapping as $refColumn => $column) {
+            foreach ($columnMap as $column => $refColumn) {
                 // access column via __get rather than _data to utilize lazy
                 // loading when neccessary
                 $parentPrimaryKey[$refColumn] = $this->{$column};
@@ -502,7 +627,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         }
 
         return parent::findParentRow($parentTable, $ruleKey, $select);
-    }
+    } // }}}
 
     /**
      * Retrieve an instance of the table this row is connected to or, if table
@@ -511,7 +636,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * @return Zend_Db_Table_Row_Abstract
      * @throws Zend_Db_Table_Row_Exception
      */
-    protected function _getTable($tableName = null)
+    protected function _getTable($tableName = null) // {{{
     {
         if (!$this->_connected || !$this->_table) {
             throw new Zend_Db_Table_Row_Exception('Cannot retrieve Table instance from a disconnected Row');
@@ -520,7 +645,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             return $this->_table;
         }
         return $this->_table->getTable($tableName);
-    }
+    } // }}}
 
     /**
      * Instantiate a table of a given class.
@@ -528,8 +653,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * @param  string $tableName
      * @return Zend_Db_Table_Abstract
      */
-    protected function _getTableFromString($tableName)
+    protected function _getTableFromString($tableName) // {{{
     {
         return $this->_getTable($tableName);
-    }
+    } // }}}
 }
