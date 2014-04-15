@@ -41,7 +41,7 @@ class Zefram_View_Helper_FormInput extends Zend_View_Helper_FormElement
                 // the element's value with the given one and if they are equal
                 // (both values must not be NULL) add 'checked' attribute.
                 // This behaviour is particularily useful when manually
-                // rendering radio/checkbox inputs.
+                // rendering radio/checkbox inputs based on Zend_Form_Element.
                 // Values are compared as strings to avoid implicit conversion
                 // when one of them is a number.
                 if (null !== $elementValue && strval($value) === strval($elementValue)) {
