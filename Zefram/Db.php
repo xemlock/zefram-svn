@@ -6,6 +6,8 @@
  */
 abstract class Zefram_Db
 {
+    protected static $_tableRegistry;
+
     /**
      * Quote parameters into given string using named parameters notation,
      * regardless of whether database adapter supports named parameters or not.
@@ -76,22 +78,6 @@ abstract class Zefram_Db
         return $db->quoteIdentifier($dbOrMatch['table']) . '.' . $db->quoteIdentifier($dbOrMatch['column']);
     } // }}}
 
-    protected static $_tablePrefix;
-    protected static $_tableRegistry;
-
-    public static function setTablePrefix($prefix)
-    {
-        if (!preg_match('/^[_A-Za-z][_0-9A-Za-z]*$/', $prefix)) {
-            throw new Exception('Invalid class prefix provided');
-        }
-        self::$_tablePrefix = $prefix;
-    }
-
-    public static function getTablePrefix($prefix)
-    {
-        return self::$_tablePrefix;
-    }
-
     public static function getTable($className, Zend_Db_Adapter_Abstract $db = null, $addPrefix = true)
     {
         if (null === $db) {
@@ -101,13 +87,7 @@ abstract class Zefram_Db
             throw new Exception('No default database adapter found');
         }
 
-        if ($addPrefix && (0 !== strpos($className, self::$_tablePrefix))) {
-            // add prefix only if it's not already included
-            $fullClassName = self::$_tablePrefix . $className;
-
-        } else {
-            $fullClassName = $className;
-        }
+        $fullClassName = $className;
 
         $adapterId = spl_object_hash($db);
 

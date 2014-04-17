@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * Zend_Db_Table_Abstract:
+ * - duplicated code (building select object from args)
+ * - Zend_Db_Select is not supported, only Zend_Db_Table_Select
+ *   (setIntegrityCheck(false) thwarts all integrity checks and allows
+ *   partial objects to be fetched)
+ * - static function used as a table factory, what if one needs to override it?
+ * - info() is inconvenient! missing getters for metadata, cols 
+ */
+
 class Zefram_Db_Table extends Zend_Db_Table
 {
     const FOR_UPDATE = 1;
@@ -114,43 +124,37 @@ class Zefram_Db_Table extends Zend_Db_Table
     }
 
     /**
-     * Fetches all rows, but returns them as arrays instead of objects.
-     * See {@link Zend_Db_Table_Abstract::fetchAll()} for parameter
-     * explanation.
-     *
-     * @return array
+     * @param  array $data
+     * @param  bool $readOnly
+     * @return Zend_Db_Table_Row_Abstract
+     * @internal
      */
-    public function fetchAllAsArray($where = null, $order = null, $count = null, $offset = null)
+    public function _createStoredRow(array $data, $readOnly = false) // {{{
     {
-        if (!($where instanceof Zend_Db_Select)) {
-            $select = $this->select();
+        $rowClass = $this->getRowClass();
 
-            if (null !== $where) {
-                $this->_where($select, $where);
-            }
-            
-            if ($order !== null) {
-                $this->_order($select, $order);
-            }
-
-            if ($count !== null || $offset !== null) {
-                $select->limit($count, $offset);
-            }
-        } else {
-            $select = $where;
+        if (!class_exists($rowClass)) {
+            Zend_Loader::loadClass($rowClass);
         }
 
-        return $this->getAdapter()->fetchAll($select, null, Zend_Db::FETCH_ASSOC);
-    }
+        return new $rowClass(array(
+            'table' => $this,
+            'data'  => $data,
+            'stored' => true,
+            'readOnly' => $readOnly,
+        ));
+    } // }}}
 
     /**
-     * Fetches one row as array or returns false if no row matches the
-     * specified criteria. See {@link Zend_Db_Table_Abstract::fetchRow()}
-     * for parameter explanation. 
+     * Returns an instance of a Zend_Db_Select object.
      *
-     * @return array|false
+     * @param  string|array|Zend_Db_Select $where  OPTIONAL
+     * @param  mixed                       $order  OPTIONAL
+     * @param  int                         $offset OPTIONAL
+     * @param  int                         $limit  OPTIONAL
+     * @return Zend_Db_Select
      */
-    public function fetchRowAsArray($where = null, $order = null, $offset = null)
+    protected function _select($where = null, $order = null, $offset = null, $limit = null) // {{{
     {
         if (!($where instanceof Zend_Db_Select)) {
             $select = $this->select();
@@ -163,14 +167,101 @@ class Zefram_Db_Table extends Zend_Db_Table
                 $this->_order($select, $order);
             }
 
-            $select->limit(1, is_numeric($offset) ? intval($offset) : null);
+            $select->limit($limit, ((is_numeric($offset)) ? (int) $offset : null));
+
         } else {
-            $select = $where;
+            $select = $where->limit($limit, $where->getPart(Zend_Db_Select::LIMIT_OFFSET));
         }
 
-        $row = $this->getAdapter()->fetchRow($select, null, Zend_Db::FETCH_ASSOC);
-        return empty($row) ? false : $row;
-    }
+        return $select;
+    } // }}}
+
+    /**
+     * Fetches one row in an object of type Zend_Db_Table_Row_Abstract,
+     * or returns null if no row matches the specified criteria.
+     *
+     * @param string|array|Zend_Db_Select $where  OPTIONAL
+     * @param string|array                $order  OPTIONAL
+     * @param int                         $offset OPTIONAL
+     * @return Zend_Db_Table_Row_Abstract|null
+     */
+    public function fetchRow($where = null, $order = null, $offset = null) // {{{
+    {
+        $select = $this->_select($where, $order, $offset, 1);
+        $data = $this->_db->fetchRow($select, null, Zend_Db::FETCH_ASSOC);
+
+        if (empty($data)) {
+            return null;
+        }
+
+        $row = $this->_createStoredRow($data, $select->isReadOnly());
+
+        // Add this row to identity map, for later use.
+        $this->addToIdentityMap($row);
+
+        return $row;
+    } // }}}
+
+    /**
+     * Fetches all rows matching given search criteria.
+     *
+     * @param string|array|Zend_Db_Select $where  OPTIONAL
+     * @param string|array                $order  OPTIONAL
+     * @param int                         $limit  OPTIONAL
+     * @param int                         $offset OPTIONAL
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function fetchAll($where = null, $order = null, $limit = null, $offset = null) // {{{
+    {
+        $select = $this->_select($where, $order, $offset, $limit);
+        $rows = $this->_db->fetchAll($select, null, Zend_Db::FETCH_ASSOC);
+
+        $rowsetClass = $this->getRowsetClass();
+        if (!class_exists($rowsetClass)) {
+            Zend_Loader::loadClass($rowsetClass);
+        }
+
+        return new $rowsetClass(array(
+            'table'    => $this,
+            'data'     => $rows,
+            'readOnly' => $select->isReadOnly(),
+            'rowClass' => $this->getRowClass(),
+            'stored'   => true
+        ));
+    } // }}}
+
+    /**
+     * Fetches all rows matching given search criteria.
+     *
+     * See {@link Zend_Db_Table_Abstract::fetchAll()} for parameter
+     * explanation.
+     *
+     * @return array
+     */
+    public function fetchAllAsArray($where = null, $order = null, $limit = null, $offset = null) // {{{
+    {
+        $select = $this->_select($where, $order, $offset, $limit);
+        return $this->_db->fetchAll($select, null, Zend_Db::FETCH_ASSOC);
+    } // }}}
+
+    /**
+     * Fetches one row as array or returns false if no row matches the
+     * specified criteria. See {@link Zend_Db_Table_Abstract::fetchRow()}
+     * for parameter explanation. 
+     *
+     * @return array|null
+     */
+    public function fetchRowAsArray($where = null, $order = null, $offset = null) // {{{
+    {
+        $select = $this->_select($where, $order, $offset, 1);
+        $row = $this->_db->fetchRow($select, null, Zend_Db::FETCH_ASSOC);
+
+        if (empty($row)) {
+            return null;
+        }
+
+        return $row;
+    } // }}}
 
     /**
      * Count rows matching $where
@@ -178,7 +269,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * @param string|array $where
      * @return int
      */
-    public function count($where = null)
+    public function count($where = null) // {{{
     {
         $select = $this->select();
         $select->from($this->_name, 'COUNT(1)', $this->_schema);
@@ -187,12 +278,12 @@ class Zefram_Db_Table extends Zend_Db_Table
             $this->_where($select, $where);
         }
 
-        foreach ($this->getAdapter()->fetchCol($select) as $value) {
+        foreach ($this->_db->fetchCol($select) as $value) {
             return intval($value);
         }
 
         return 0;
-    }
+    } // }}}
 
     /**
      * Proxy to {@see count()}.
@@ -234,23 +325,6 @@ class Zefram_Db_Table extends Zend_Db_Table
             $row = $this->fetchRow($select);
         }
 
-        return $row;
-    }
-
-    /**
-     * Fetch row from the database and store it in the identity map.
-     * Rows fetched by this method overwrite those stored in identity
-     * map. Use findRow() for identity map utilization.
-     */
-    public function fetchRow($where = null, $order = null, $offset = null)
-    {
-        $row = parent::fetchRow($where, $order, $offset);
-        if ($row) {
-            // No! Don't retrieve row from identity map, as fetchRow()
-            // is used for refreshing table row.
-            // However, we can add this row to identity map, for later use.
-            $this->addToIdentityMap($row);
-        }
         return $row;
     }
 
@@ -527,7 +601,7 @@ class Zefram_Db_Table extends Zend_Db_Table
      * @param  string $tableClass
      * @return Zend_Db_Table_Abstract
      */
-    public function getTable($tableClass = null)
+    public function getTable($tableClass = null) // {{{
     {
         if (null === $tableClass) {
             return $this;
@@ -538,35 +612,35 @@ class Zefram_Db_Table extends Zend_Db_Table
         }
 
         if ($this->hasTableProvider()) {
-            return $this->getTableProvider()->getTable($tableClass, $this->getAdapter());
+            return $this->getTableProvider()->getTable($tableClass, $this->_db);
         }
 
-        return Zefram_Db::getTable($tableClass, $this->getAdapter());
-    }
+        return Zefram_Db::getTable($tableClass, $this->_db);
+    } // }}}
 
     /**
      * @param Zefram_Db_Table_Provider $tableProvider
      * @return Zefram_Db_Table
      */
-    public function setTableProvider(Zefram_Db_Table_Provider $tableProvider)
+    public function setTableProvider(Zefram_Db_Table_Provider $tableProvider) // {{{
     {
         $this->_tableProvider = $tableProvider;
         return $this->_tableProvider;
-    }
+    } // }}}
 
     /**
      * @return Zefram_Db_Table_Provider
      */
-    public function getTableProvider()
+    public function getTableProvider() // {{{
     {
         return $this->_tableProvider;
-    }
+    } // }}}
 
     /**
      * @return bool
      */
-    public function hasTableProvider()
+    public function hasTableProvider() // {{{
     {
         return null !== $this->_tableProvider;
-    }
+    } // }}}
 }

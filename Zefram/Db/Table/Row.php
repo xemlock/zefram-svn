@@ -1,6 +1,18 @@
 <?php
 
 /**
+ * Features Zend_Db_Table_Row does not provide:
+ * 1. Methods to determine the state of row: whether it is modified (isModified)
+ *    or to get the list of modified columns (getModified) or if it stored in
+ *    the database (isStored).
+ * 2. Only assignments of different values are recognized of modifications, i.e.
+ *    setting column value to an identical value does not count as modification
+ * 3. Table factory depends on table instance row is attached to, no static
+ *    method of Zend_Db_Table_Abstract is directly called.
+ * 4. Ability to get or set referenced parent rows identified by a rule key.
+ *    Such rows are available for future use.
+ * 5. Columns can be automatically loaded on demand.
+ *
  * 2014-04-15
  *          - support for setting referenced rows by assignment to their
  *            corresponding ruleKeys
@@ -45,9 +57,27 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             }
         }
 
-        $this->_cols = array_flip($config['table']->info(Zend_Db_Table_Abstract::COLS));
-
         parent::__construct($config);
+        $this->_setupCols();
+    } // }}}
+
+    public function setTable(Zend_Db_Table_Abstract $table = null) // {{{
+    {
+        $result = parent::setTable($table);
+        $this->_setupCols();
+
+        return $result;
+    } // }}}
+
+    protected function _setupCols() // {{{
+    {
+        $table = $this->_getTable();
+
+        if (null === $table) {
+            $this->_cols = null;
+        } else {
+            $this->_cols = array_flip($table->info(Zend_Db_Table_Abstract::COLS));
+        }
     } // }}}
 
     /**
@@ -525,7 +555,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected function _refresh()
     {
         parent::_refresh();
-        $this->_referencedRows = array();
+        // $this->_referencedRows = array();
     }
 
     /**
