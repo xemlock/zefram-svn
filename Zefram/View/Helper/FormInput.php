@@ -10,13 +10,21 @@ class Zefram_View_Helper_FormInput extends Zend_View_Helper_FormElement
     /**
      * Generates an input element.
      *
-     * @param  string|Zend_Form_Element $name
+     * @param  array|string|Zend_Form_Element $name
      * @param  mixed $value OPTIONAL
      * @param  array $attribs OPTIONAL
      * @return string The element XHTML.
      */
     public function formInput($name, $value = null, array $attribs = null)
     {
+        // if the $name parameter is an array, it is expected to be the only
+        // parameter passed to this function specifying all options
+        if (is_array($name)) {
+            $attribs = $name;
+            $value = null;
+            $name = isset($attribs['name']) ? $attribs['name'] : null;
+        }
+
         // if the $value parameter is an array, it replaces the $attribs
         // parameter, as an input value must be scalar
         if (is_array($value)) {
