@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @version 2014-04-30
+ */
 class Zefram_Form_Element_HiddenArray extends Zend_Form_Element_Hidden
 {
     /**
@@ -9,15 +12,28 @@ class Zefram_Form_Element_HiddenArray extends Zend_Form_Element_Hidden
     public $helper = 'formHiddenArray';
 
     /**
+     * This must be false in order to treat value array as whole
+     * during validation
      * @var bool
      */
-    protected $_isArray = true;
+    protected $_isArray = false;
 
     /**
      * Element decorators
      * @var array
      */
     protected $_decorators = array('ViewHelper');
+
+    /**
+     * Does nothing as this element always represents an array.
+     *
+     * @param  bool $flag
+     * @return Zefram_Form_Element_HiddenArray
+     */
+    public function setIsArray($flag)
+    {
+        return $this;
+    }
 
     /**
      * @return array
