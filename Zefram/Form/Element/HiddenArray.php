@@ -12,11 +12,9 @@ class Zefram_Form_Element_HiddenArray extends Zend_Form_Element_Hidden
     public $helper = 'formHiddenArray';
 
     /**
-     * This must be false in order to treat value array as whole
-     * during validation
      * @var bool
      */
-    protected $_isArray = false;
+    protected $_isArray = true;
 
     /**
      * Element decorators
@@ -54,12 +52,27 @@ class Zefram_Form_Element_HiddenArray extends Zend_Form_Element_Hidden
     }
 
     /**
-     * @var array $value
+     * @param  array $value
+     * @return Zefram_Form_Element_HiddenArray
      */
     public function setValue($value)
     {
         $this->_value = (array) $value;
         return $this;
+    }
+
+    /**
+     * @param  mixed $value
+     * @param  array $context OPTIONAL
+     * @return bool
+     */
+    public function isValid($value, $context = null)
+    {
+        // isArray must be false when validating, and true when rendering
+        $this->_isArray = false;
+        $valid = parent::isValid($value, $context);
+        $this->_isArray = true;
+        return $valid;
     }
 
     /**
