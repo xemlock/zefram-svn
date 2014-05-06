@@ -182,15 +182,78 @@ class Zefram_Db_Select extends Zend_Db_Select
             }
         }
 
+        // Overcome another deficiency of Zend_Db_Select - join conditions can
+        // only be given as a single string. Quoting of identifiers and values
+        // must be done manually.
+
+        // Here join conditions can be given just like to WHERE clause:
+        // - join conditions can be given as array, values will be quoted into
+        //   string keys
+        // - table identifiers are automatically quoted
         if (is_array($cond)) {
+            foreach ($cond as $key => $value) {
+                if (is_string($key)) {
+                    unset($cond[$key]);
+
+                    $cond[] = '(' . $db->quoteInto(
+                        Zefram_Db::quoteEmbeddedIdentifiers($db, $key),
+                        $value
+                    ) . ')';
+
+                } else {
+                    $cond[$key] = '(' . Zefram_Db::quoteEmbeddedIdentifiers($db, $value) . ')';
+                }
+            }
             $cond = implode(' AND ', $cond);
-        }
-        // quote identifiers present in JOIN condition, identifiers are
-        // expected to be in the form table.column
-        if (is_string($cond)) {
+
+        } elseif (is_string($cond)) {
+            // quote identifiers present in JOIN condition, identifiers are
+            // expected to be in the form table.column
             $cond = Zefram_Db::quoteEmbeddedIdentifiers($db, $cond);
         }
 
         return compact('name', 'cond', 'cols', 'schema');
+    }
+
+    /**
+     * Prepare mapping between prefixed and actual column names of a given
+     * table.
+     *
+     * Output from this function is suitable for use when building Select objects.
+     *
+     * @param  Zend_Db_Table_Abstract $table
+     *     table to get column information from
+     * @param  string $prefix OPTIONAL
+     *     column name prefix
+     * @param  array $exclude OPTIONAL
+     *     names of columns to be excluded from output
+     * @return array
+     */
+    public static function tableCols(Zend_Db_Table_Abstract $table, $prefix = null, array $exclude = null)
+    {
+        if ($table instanceof Zefram_Db_Table) {
+            $cols = $table->getCols();
+        } else {
+            $cols = $table->info(Zend_Db_Table_Abstract::COLS);
+        }
+
+        // remove unwanted columns
+        if (is_array($exclude)) {
+            $exclude = array_flip(array_map('strtolower', $exclude));
+
+            foreach ($cols as $position => $col) {
+                if (isset($exclude[strtolower($col)])) {
+                    unset($cols[$position]);
+                }
+            }
+        }
+
+        $columnMap = array();
+
+        foreach ($cols as $col) {
+            $columnMap[$prefix . $col] = $col;
+        }
+
+        return $columnMap;
     }
 }

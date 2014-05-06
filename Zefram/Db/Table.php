@@ -272,7 +272,7 @@ class Zefram_Db_Table extends Zend_Db_Table
     public function count($where = null) // {{{
     {
         $select = $this->select();
-        $select->from($this->_name, 'COUNT(1)', $this->_schema);
+        $select->from($this->_name, new Zend_Db_Expr('COUNT(1)'), $this->_schema);
 
         if (null !== $where) {
             $this->_where($select, $where);
@@ -287,6 +287,8 @@ class Zefram_Db_Table extends Zend_Db_Table
 
     /**
      * Proxy to {@see count()}.
+     *
+     * @deprecated
      */
     public function countAll($where = null)
     {
@@ -331,18 +333,35 @@ class Zefram_Db_Table extends Zend_Db_Table
     /**
      * @param  mixed $key The value(s) of the primary keys.
      * @return Zend_Db_Table_Rowset_Abstract
-     * @deprecated
+     * @throws Zend_Db_Table_Exception
      */
     public function findAll()
     {
-        $args = func_get_args();
-
-        if (-1 === version_compare(PHP_VERSION, '5.1.2')) {
-            // this line segfaults PHP 5.0.0 - 5.0.3
-            return call_user_func_array(array('parent', 'find'), $args);
+        /*
+        if (null === $ids) {
+            // null means that no IDs are specified which makes this function
+            // behave like fetchAll() method
+            return $this->fetchAll(null, $order);
         }
 
-        return call_user_func_array(array($this, 'parent::find'), $args);
+        if (empty($ids)) {
+            // empty array of IDs means that no value of ID will be matched
+
+        }
+
+        $orWhere = array();
+
+        foreach ($ids as $id) {
+            $id = $this->_normalizeId($id);
+            $where = array();
+        }
+*/
+        if (-1 === version_compare(PHP_VERSION, '5.1.2')) {
+            // this line segfaults PHP 5.0.0 - 5.0.3
+            return call_user_func_array(array('parent', 'find'), $args, $ids);
+        }
+
+        return call_user_func_array(array($this, 'parent::find'), $args, $ids);
     }
 
     /**
@@ -546,7 +565,7 @@ class Zefram_Db_Table extends Zend_Db_Table
         $primary = $this->info(self::PRIMARY);
 
         if ($id instanceof Zend_Db_Table_Row_Abstract) {
-            $id = $id->toArray();
+            $id = (array) $id->toArray();
 
         } elseif (!is_array($id)) {
             // scalar value given, assume one-column primary key
@@ -554,15 +573,29 @@ class Zefram_Db_Table extends Zend_Db_Table
                 $id = array($column => $id);
                 break;
             }
+
+        } else {
+            // handle positional columns, i.e. replace integer keys with
+            // corresponding column names. Primary key indexing is 1-based,
+            // $id is expected to be 0-based.
+            // Let $primary = array(1 => 'a', 2 => 'b') and $id = array(1, 2)
+            // After the loop $id will equal to array('a' => 1, 'b' => 2)
+            foreach ($id as $key => $value) {
+                if (is_int($key) && isset($primary[$key - 1])) {
+                    $id[$primary[$key - 1]] = $value;
+                    unset($id[$key]);
+                }
+            }
         }
 
         $normalized = array();
 
         foreach ($primary as $column) {
+            // assume all values in compound primary key are NOT NULL
             if (isset($id[$column])) {
                 $normalized[$column] = strval($id[$column]);
             } else {
-                throw new Exception('Incomplete primary key values');
+                throw new Zend_Db_Table_Exception('Missing value(s) for the primary key');
             }
         }
 
