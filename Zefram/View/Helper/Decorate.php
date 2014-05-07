@@ -32,7 +32,7 @@ class Zefram_View_Helper_Decorate extends Zend_View_Helper_Abstract
             }
         }
 
-        $decorator->setElement($this);
+        $decorator->setElement($element);
 
         if (is_string($options)) {
             $content = $options;
