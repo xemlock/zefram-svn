@@ -156,9 +156,35 @@ class Zefram_Db_Table_Provider
             ));
         }
 
-        if (($tablePrefix = $this->_tablePrefix)) {
+        // pass table provider to the table instance
+        if ($table instanceof Zefram_Db_Table) {
+            $table->setTableProvider($this);
+        }
+
+        if ($this->_tablePrefix) {
+            if ($table instanceof Zefram_Db_Table) {
+                $name = $table->getName();
+            } else {
+                // Zend_Db_Table_Abstract way of retrieving table name via
+                // info() sucks, as there is no non-hackish way of retrieving
+                // table name without fetching table's metadata from db.
+                // Since PHP's reflection does not allow to access protected
+                // properties we need to retrieve by taking advantage of how
+                // PHP engine casts objects to arrays.
+                //
+                // When object is cast to an array, private properties
+                // are stored at "\x00ClassName\x00propertyName" key, protected
+                // properties at "\x00*\x00propertyName".
+                //
+                // See more:
+                //   http://derickrethans.nl/private-properties-exposed.html
+                //   http://stackoverflow.com/questions/6325447/array-to-object-and-object-to-array-in-php-interesting-behaviour
+                $tableArray = (array) $table;
+                $name = $tableArray["\x00*\x00_name"];
+            }
+
             $table->setOptions(array(
-                'name' => $tablePrefix . $table->info(Zend_Db_Table_Abstract::NAME),
+                Zend_Db_Table_Abstract::NAME => $this->_tablePrefix . $name,
             ));
         }
 
