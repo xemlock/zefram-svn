@@ -11,6 +11,8 @@
 abstract class Zefram_Url extends Zend_Uri
 {
     /**
+     * URL factory.
+     *
      * @param  string $uri
      * @return Zend_Uri_Http
      */
@@ -29,7 +31,7 @@ abstract class Zefram_Url extends Zend_Uri
         }
 
         // it turns out that Zend_Uri_Http can handle any correct URL,
-        // not only having http(s) scheme.
+        // not only those having http(s) scheme.
         // As a notice, all Zend_Uri subclasses are required to have protected
         // contructors.
         return new Zend_Uri_Http($scheme, $schemeSpecific);
