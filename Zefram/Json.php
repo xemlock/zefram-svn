@@ -1,13 +1,32 @@
 <?php
 
-abstract class Zefram_Json extends Zend_Json
+/**
+ * Wrapper around Zend_Json class for more flexible JSON encoding / decoding.
+ *
+ * @package Zefram_Json
+ * @uses    Zend_Json
+ */
+abstract class Zefram_Json
 {
+    const TYPE_ARRAY  = Zend_Json::TYPE_ARRAY;
+    const TYPE_OBJECT = Zend_Json::TYPE_OBJECT;
+
     const CYCLE_CHECK       = 'cycleCheck';
     const PRETTY_PRINT      = 'prettyPrint';
     const UNESCAPED_SLASHES = 'unescapedSlashes';
     const UNESCAPED_UNICODE = 'unescapedUnicode';
     const HEX_TAG           = 'hexTag';
     const HEX_QUOT          = 'hexQuot';
+
+    /**
+     * @param string $encodedValue
+     * @param int $objectDecodeType
+     * @return mixed
+     */
+    public static function decode($encodedValue, $objectDecodeType = self::TYPE_ARRAY)
+    {
+        return Zend_Json::decode($encodedValue, $objectDecodeType);
+    }
 
     /**
      * @param mixed $value
@@ -68,7 +87,7 @@ abstract class Zefram_Json extends Zend_Json
         }
 
         $minVersion = $requirePhp54 ? '5.4.0' : ($requirePhp53 ? '5.3.0' : 0);
-        $useNative = extension_loaded('json') 
+        $useNative = extension_loaded('json')
             && (!$minVersion || version_compare(PHP_VERSION, $minVersion, '>='));
 
         if ($useNative) {
@@ -82,7 +101,7 @@ abstract class Zefram_Json extends Zend_Json
             return json_encode($value, $flags);
         }
 
-        $json = parent::encode($value, $cycleCheck, $options);
+        $json = Zend_Json::encode($value, $cycleCheck, $options);
 
         $search = array();
         $replace = array();
@@ -132,7 +151,7 @@ abstract class Zefram_Json extends Zend_Json
         return preg_replace(
             '/(?<!\\\\)":(["\[\{]|\d)/',
             '": \1',
-            parent::prettyPrint($json, array(
+            Zend_Json::prettyPrint($json, array(
                 'format' => 'txt',
                 'indent' => '    ',
             ))
