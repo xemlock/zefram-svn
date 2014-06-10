@@ -194,7 +194,8 @@ class Zefram_Db_Table extends Zend_Db_Table
             return null;
         }
 
-        $row = $this->_createStoredRow($data, $select->isReadOnly());
+        $readOnly = method_exists($select, 'isReadOnly') ? $select->isReadOnly() : false;
+        $row = $this->_createStoredRow($data, $readOnly);
 
         // Add this row to identity map, for later use.
         $this->addToIdentityMap($row);
@@ -221,10 +222,12 @@ class Zefram_Db_Table extends Zend_Db_Table
             Zend_Loader::loadClass($rowsetClass);
         }
 
+        $readOnly = method_exists($select, 'isReadOnly') ? $select->isReadOnly() : false;
+
         return new $rowsetClass(array(
             'table'    => $this,
             'data'     => $rows,
-            'readOnly' => $select->isReadOnly(),
+            'readOnly' => $readOnly,
             'rowClass' => $this->getRowClass(),
             'stored'   => true
         ));
