@@ -44,7 +44,7 @@ class Zefram_Db_Select extends Zend_Db_Select
     public function where($cond, $value = null, $type = null)
     {
         $db = $this->getAdapter();
-        if (is_array($cond)) { // array cond is now deprecated
+        if (is_array($cond)) {
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
                     $value = Zefram_Db::quoteEmbeddedIdentifiers($db, $value);
@@ -77,7 +77,7 @@ class Zefram_Db_Select extends Zend_Db_Select
     public function orWhere($cond, $value = null, $type = null)
     {
         $db = $this->getAdapter();
-        if (is_array($cond)) { // array cond is now deprecated
+        if (is_array($cond)) {
             foreach ($cond as $key => $value) {
                 if (is_int($key)) {
                     $value = Zefram_Db::quoteEmbeddedIdentifiers($db, $value);
@@ -155,14 +155,18 @@ class Zefram_Db_Select extends Zend_Db_Select
      */
     public static function _prepareJoin(Zend_Db_Adapter_Abstract $db, $name, $cond, $cols, $schema)
     {
-        // replace all instances of Zend_Db_Table_Abstract with their
-        // names and schemas
+        $table = null;
+
+        // 1. Allow Zend_Db_Table_Abstract instances to be passed as table names
+
+        // replace any Zend_Db_Table_Abstract instance with its name and schema
         if ($name instanceof Zend_Db_Table_Abstract) {
             $name = array($name);
         }
         if (is_array($name)) {
             foreach ($name as $correlationName => $tableName) {
                 if ($tableName instanceof Zend_Db_Table_Abstract) {
+                    $table = $tableName;
                     $name[$correlationName] = $tableName->info(Zend_Db_Table_Abstract::NAME);
                     $schema = $tableName->info(Zend_Db_Table_Abstract::SCHEMA);
                 }
@@ -170,6 +174,35 @@ class Zefram_Db_Select extends Zend_Db_Select
             }
         }
 
+        if (!is_array($cols)) {
+            // don't cast to array as there may be Zend_Db_Expr instances
+            $cols = array($cols);
+        }
+
+        // 2. Prefixed/suffixed wildcard
+
+        // Replace prefixed/suffixed wildcard with prefixed column names,
+        // this however can work only if a Zend_Db_Table_Abstract instance
+        // was passed
+        $tmpCols = array();
+        foreach ($cols as $key => $value) {
+            if (is_string($value) && $value !== self::SQL_WILDCARD &&
+                strpos($value, self::SQL_WILDCARD) !== false
+            ) {
+                if (!$table) {
+                    throw new Zend_Db_Select_Exception('Prefixed/suffixed wildcard can only be used if a Zend_Db_Table_Abstract instance is provided as a table name');
+                }
+                list($prefix, $suffix) = explode(self::SQL_WILDCARD, $value, 2);
+                foreach ($table->info(Zend_Db_Table_Abstract::COLS) as $col) {
+                    $tmpCols[$prefix . $col . $suffix] = $col;
+                }
+            } else {
+                $tmpCols[$key] = $value;
+            }
+        }
+        $cols = $tmpCols;
+
+        // DEPRECATED
         // remove columns which are marked as false, replace true values
         // with column names
         if (is_array($cols)) {
@@ -181,6 +214,9 @@ class Zefram_Db_Select extends Zend_Db_Select
                 }
             }
         }
+
+        // 3. Join conditions given as array, automaticall quote embedded
+        //    identifiers
 
         // Overcome another deficiency of Zend_Db_Select - join conditions can
         // only be given as a single string. Quoting of identifiers and values
@@ -225,11 +261,13 @@ class Zefram_Db_Select extends Zend_Db_Select
      *     table to get column information from
      * @param  string $prefix OPTIONAL
      *     column name prefix
-     * @param  array $exclude OPTIONAL
+     * @param  string|array $exclude OPTIONAL
      *     names of columns to be excluded from output
      * @return array
+     *
+     * @deprecated
      */
-    public static function tableCols(Zend_Db_Table_Abstract $table, $prefix = null, array $exclude = null)
+    public static function tableCols(Zend_Db_Table_Abstract $table, $prefix = null, $exclude = null)
     {
         if ($table instanceof Zefram_Db_Table) {
             $cols = $table->getCols();
@@ -238,8 +276,8 @@ class Zefram_Db_Select extends Zend_Db_Select
         }
 
         // remove unwanted columns
-        if (is_array($exclude)) {
-            $exclude = array_flip(array_map('strtolower', $exclude));
+        if ($exclude) {
+            $exclude = array_flip(array_map('strtolower', (array) $exclude));
 
             foreach ($cols as $position => $col) {
                 if (isset($exclude[strtolower($col)])) {

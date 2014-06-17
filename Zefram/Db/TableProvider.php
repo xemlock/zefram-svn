@@ -125,8 +125,9 @@ class Zefram_Db_TableProvider
             $table = new $this->_tableClass($tableName, $tableDefinition);
 
         } else {
-            // assume tableName is a class name
-            if (!class_exists($tableName, false)) {
+            // assume tableName is a class name, try to use autoloader and
+            // if that fails, fall back to Zend_Loader
+            if (!class_exists($tableName)) {
                 try {
                     Zend_Loader::loadClass($tableName);
                 } catch (Zend_Exception $e) {
