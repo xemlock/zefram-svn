@@ -381,7 +381,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             return;
         }
 
-        $refTable = $this->_getTable($rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS]);
+        $refTable = $this->_getTableFromString($rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS]);
         $rowClass = $refTable->getRowClass();
 
         if (!$row instanceof $rowClass) {
@@ -663,7 +663,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      * Retrieve an instance of the table this row is connected to or, if table
      * name given, instantiate a table of a this class.
      *
-     * @return Zend_Db_Table_Row_Abstract
+     * @return Zend_Db_Table_Abstract
      * @throws Zend_Db_Table_Row_Exception
      */
     protected function _getTable($tableName = null) // {{{
@@ -674,17 +674,36 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         if (null === $tableName) {
             return $this->_table;
         }
-        return $this->_table->getTable($tableName);
+
+        try {
+            throw new Exception;
+        } catch (Exception $e) {
+            $trace = $e->getTrace();
+            $last = reset($trace);
+            trigger_error(sprintf(
+                'Calling %s() with table name parameter is deprecated. Called in %s on line %d',
+                __METHOD__, $last['file'], $last['line']
+            ), E_USER_NOTICE);
+        }
+
+        return $this->_table->_getTableFromString($tableName);
     } // }}}
 
     /**
-     * Instantiate a table of a given class.
+     * Instantiate a table of a given class using connected table as
+     * a factory.
      *
      * @param  string $tableName
      * @return Zend_Db_Table_Abstract
      */
     protected function _getTableFromString($tableName) // {{{
     {
-        return $this->_getTable($tableName);
+        $table = $this->_getTable();
+
+        if ($table instanceof Zefram_Db_Table) {
+            return $table->_getTableFromString($tableName);
+        }
+
+        return parent::_getTableFromString($tableName);
     } // }}}
 }

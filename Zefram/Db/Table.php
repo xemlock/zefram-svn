@@ -445,6 +445,28 @@ class Zefram_Db_Table extends Zend_Db_Table
     }
 
     /**
+     * Get an array with table columns suitable for use in a select object.
+     *
+     * @param  string $prefix OPTIONAL
+     * @param  string $suffix OPTIONAL
+     * @return array
+     */
+    public function getColsForSelect($prefix = null, $suffix = null) // {{{
+    {
+        $cols = $this->_getCols();
+
+        if (strlen($prefix) || strlen($suffix)) {
+            $tmpCols = array();
+            foreach ($cols as $col) {
+                $tmpCols[$prefix . $col . $suffix] = $col;
+            }
+            $cols = $tmpCols;
+        }
+
+        return $cols;
+    } // }}}
+
+    /**
      * Created an instance of a Zend_Db_Select.
      *
      * @param string|array|bool $column
@@ -463,6 +485,17 @@ class Zefram_Db_Table extends Zend_Db_Table
         $select = new Zefram_Db_Table_Select($this);
 
         if (self::SELECT_WITHOUT_FROM_PART !== $columns) {
+            try {
+                throw new Exception;
+            } catch (Exception $e) {
+                $trace = $e->getTrace();
+                $last = reset($trace);
+                trigger_error(sprintf(
+                    'Using %s() for retrieving incomplete rows is deprecated. Called in %s on line %d',
+                    __METHOD__, $last['file'], $last['line']
+                ), E_USER_NOTICE);
+            }
+
             // substitute true with SQL wildcard to match all columns
             if (self::SELECT_WITH_FROM_PART === $columns) {
                 $columns = Zend_Db_Select::SQL_WILDCARD;
@@ -486,39 +519,6 @@ class Zefram_Db_Table extends Zend_Db_Table
         }
 
         return $select;
-    }
-
-    /**
-     * Begin transaction on an underlying database adapter.
-     *
-     * @return Zend_Db_Adapter_Abstract
-     * @deprecated
-     */
-    public function beginTransaction()
-    {
-        return $this->getAdapter()->beginTransaction();
-    }
-
-    /**
-     * Commit a transaction.
-     *
-     * @return Zend_Db_Adapter_Abstract
-     * @deprecated
-     */
-    public function commit()
-    {
-        return $this->getAdapter()->commit();
-    }
-
-    /**
-     * Roll back a transaction.
-     *
-     * @return Zend_Db_Adapter_Abstract
-     * @deprecated
-     */
-    public function rollBack()
-    {
-        return $this->getAdapter()->rollBack();
     }
 
     /**
@@ -630,6 +630,27 @@ class Zefram_Db_Table extends Zend_Db_Table
     }
 
     /**
+     * getTableFromString() is already used as static, this method although
+     * public is underscored and intented for use in DbTable and DbTableRow
+     * subclasses only.
+     *
+     * @param  string $tableClass
+     * @return Zend_Db_Table_Abstract
+     */
+    public function _getTableFromString($tableClass) // {{{
+    {
+        if ($tableClass instanceof Zend_Db_Table_Abstract) {
+            return $tableClass;
+        }
+
+        if ($this->hasTableProvider()) {
+            return $this->getTableProvider()->getTable($tableClass, $this->_db);
+        }
+
+        return Zefram_Db::getTable($tableClass, $this->_db);        
+    } // }}}
+
+    /**
      * Get table instance by class name. This method is essentially a proxy
      * to {@link Zefram_Db::getTable()} called with this object's database
      * adapter.
@@ -643,15 +664,18 @@ class Zefram_Db_Table extends Zend_Db_Table
             return $this;
         }
 
-        if ($tableClass instanceof Zend_Db_Table_Abstract) {
-            return $tableClass;
+        try {
+            throw new Exception;
+        } catch (Exception $e) {
+            $trace = $e->getTrace();
+            $last = reset($trace);
+            trigger_error(sprintf(
+                'Calling %s() with table name parameter is deprecated. Called in %s on line %d',
+                __METHOD__, $last['file'], $last['line']
+            ), E_USER_NOTICE);
         }
 
-        if ($this->hasTableProvider()) {
-            return $this->getTableProvider()->getTable($tableClass, $this->_db);
-        }
-
-        return Zefram_Db::getTable($tableClass, $this->_db);
+        return $this->_getTableFromString($tableClass);
     } // }}}
 
     /**
