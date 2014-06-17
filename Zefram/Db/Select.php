@@ -157,7 +157,7 @@ class Zefram_Db_Select extends Zend_Db_Select
     {
         $table = null;
 
-        // 1. Allow Zend_Db_Table_Abstract instances to be passed as table names
+        // Allow Zend_Db_Table_Abstract instances to be passed as table names
 
         // replace any Zend_Db_Table_Abstract instance with its name and schema
         if ($name instanceof Zend_Db_Table_Abstract) {
@@ -179,34 +179,23 @@ class Zefram_Db_Select extends Zend_Db_Select
             $cols = array($cols);
         }
 
-        // 2. Prefixed/suffixed wildcard
-
-        // Replace prefixed/suffixed wildcard with prefixed column names,
-        // this however can work only if a Zend_Db_Table_Abstract instance
-        // was passed
-        $tmpCols = array();
-        foreach ($cols as $key => $value) {
-            if (is_string($value) && $value !== self::SQL_WILDCARD &&
-                strpos($value, self::SQL_WILDCARD) !== false
-            ) {
-                if (!$table) {
-                    throw new Zend_Db_Select_Exception('Prefixed/suffixed wildcard can only be used if a Zend_Db_Table_Abstract instance is provided as a table name');
-                }
-                list($prefix, $suffix) = explode(self::SQL_WILDCARD, $value, 2);
-                foreach ($table->info(Zend_Db_Table_Abstract::COLS) as $col) {
-                    $tmpCols[$prefix . $col . $suffix] = $col;
-                }
-            } else {
-                $tmpCols[$key] = $value;
-            }
-        }
-        $cols = $tmpCols;
-
         // DEPRECATED
         // remove columns which are marked as false, replace true values
         // with column names
         if (is_array($cols)) {
             foreach ($cols as $key => $value) {
+                if (is_bool($value)) {
+                    try {
+                        throw new Exception;
+                    } catch (Exception $e) {
+                        $trace = $e->getTrace();
+                        $last = reset($trace);
+                        trigger_error(sprintf(
+                            'Using boolean column spec is deprecated in %s(). Called in %s on line %d',
+                            __METHOD__, $last['file'], $last['line']
+                        ), E_USER_NOTICE);
+                    }
+                }
                 if (false === $value) {
                     unset($cols[$key]);
                 } elseif (true === $value) {
@@ -215,8 +204,7 @@ class Zefram_Db_Select extends Zend_Db_Select
             }
         }
 
-        // 3. Join conditions given as array, automaticall quote embedded
-        //    identifiers
+        // Join conditions given as array, automaticall quote embedded identifiers
 
         // Overcome another deficiency of Zend_Db_Select - join conditions can
         // only be given as a single string. Quoting of identifiers and values
