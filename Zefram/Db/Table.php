@@ -655,17 +655,17 @@ class Zefram_Db_Table extends Zend_Db_Table
     } // }}}
 
     /**
-     * @param Zefram_Db_Table_Provider $tableProvider
+     * @param Zefram_Db_TableProvider $tableProvider
      * @return Zefram_Db_Table
      */
-    public function setTableProvider(Zefram_Db_Table_Provider $tableProvider) // {{{
+    public function setTableProvider(Zefram_Db_TableProvider $tableProvider) // {{{
     {
         $this->_tableProvider = $tableProvider;
         return $this->_tableProvider;
     } // }}}
 
     /**
-     * @return Zefram_Db_Table_Provider
+     * @return Zefram_Db_TableProvider
      */
     public function getTableProvider() // {{{
     {
