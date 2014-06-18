@@ -491,7 +491,7 @@ class Zefram_Db_Table extends Zend_Db_Table
                 $trace = $e->getTrace();
                 $last = reset($trace);
                 trigger_error(sprintf(
-                    'Using %s() for retrieving incomplete rows is deprecated. Called in %s on line %d',
+                    'Using %s() for retrieving incomplete rows is deprecated. Called in <strong>%s</strong> on line <strong>%d</strong>',
                     __METHOD__, $last['file'], $last['line']
                 ), E_USER_NOTICE);
             }
@@ -670,7 +670,7 @@ class Zefram_Db_Table extends Zend_Db_Table
             $trace = $e->getTrace();
             $last = reset($trace);
             trigger_error(sprintf(
-                'Calling %s() with table name parameter is deprecated. Called in %s on line %d',
+                'Calling %s() with table name parameter is deprecated. Called in <strong>%s</strong> on line <strong>%d</strong>',
                 __METHOD__, $last['file'], $last['line']
             ), E_USER_NOTICE);
         }

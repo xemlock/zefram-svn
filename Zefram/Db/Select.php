@@ -189,10 +189,18 @@ class Zefram_Db_Select extends Zend_Db_Select
                         throw new Exception;
                     } catch (Exception $e) {
                         $trace = $e->getTrace();
-                        $last = reset($trace);
+
+                        // skip frames with 
+                        while ($frame = array_shift($trace)) {
+                            if (isset($frame['class']) && $frame['class'] === 'Zefram_Db_Select') {
+                                continue;
+                            }
+                            break;
+                        };
+
                         trigger_error(sprintf(
-                            'Using boolean column spec is deprecated in %s(). Called in %s on line %d',
-                            __METHOD__, $last['file'], $last['line']
+                            'Using boolean column spec is deprecated in %s(). Called in <strong>%s</strong> on line <strong>%d</strong>',
+                            __METHOD__, $frame['file'], $frame['line']
                         ), E_USER_NOTICE);
                     }
                 }
