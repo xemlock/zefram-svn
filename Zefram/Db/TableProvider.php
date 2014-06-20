@@ -98,9 +98,9 @@ class Zefram_Db_TableProvider
      * @param  string $prefix
      * @return Zefram_Db_Table_Provider
      */
-    public function setTablePrefix($tablePrefix)
+    public function setTablePrefix($tablePrefix = null)
     {
-        $this->_tablePrefix = strval($tablePrefix);
+        $this->_tablePrefix = (string) $tablePrefix;
         return $this;
     }
 
@@ -162,7 +162,7 @@ class Zefram_Db_TableProvider
             $table->setTableProvider($this);
         }
 
-        if ($this->_tablePrefix) {
+        if (strlen($this->_tablePrefix)) {
             if ($table instanceof Zefram_Db_Table) {
                 $name = $table->getName();
             } else {
@@ -190,5 +190,17 @@ class Zefram_Db_TableProvider
         }
 
         return $table;
+    }
+
+    /**
+     * @param  string $name
+     * @return string
+     */
+    public function tableName($name)
+    {
+        if (strlen($this->_tablePrefix)) {
+            $name = $this->_tablePrefix . $name;
+        }
+        return (string) $name;
     }
 }
