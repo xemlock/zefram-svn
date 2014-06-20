@@ -170,7 +170,13 @@ class Zefram_Db_Table extends Zend_Db_Table
             $select->limit($limit, ((is_numeric($offset)) ? (int) $offset : null));
 
         } else {
-            $select = $where->limit($limit, $where->getPart(Zend_Db_Select::LIMIT_OFFSET));
+            if ($limit === null) {
+                $limit = $where->getPart(Zend_Db_Select::LIMIT_COUNT);
+            }
+            if ($offset === null) {
+                $offset = $where->getPart(Zend_Db_Select::LIMIT_OFFSET);
+            }
+            $select = $where->limit($limit, $offset);
         }
 
         return $select;
