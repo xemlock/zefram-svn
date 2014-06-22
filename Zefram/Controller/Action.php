@@ -94,8 +94,8 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     {
         $bootstrap = $this->getFrontController()->getParam('bootstrap');
 
-        if (empty($bootstrap)) {
-            throw new DomainException('No Bootstrap is available');
+        if (!$bootstrap instanceof Zend_Application_Bootstrap_BootstrapAbstract) {
+            throw new Exception('Bootstrap is not available');
         }
 
         return $bootstrap;
@@ -110,13 +110,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
      */
     public function getResource($name)
     {
-        $resource = $this->getBootstrap()->getResource($name);
-
-        if (empty($resource)) {
-            throw new DomainException("Resource not found: " . $name);
-        }
-
-        return $resource;
+        return $this->getBootstrap()->getResource($name);
     }
 
     /**
