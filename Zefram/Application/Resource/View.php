@@ -135,13 +135,7 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
             $translate = $options['translator'];
 
             if (is_string($translate)) {
-                $bootstrap = $this->getBootstrap();
-                if ($bootstrap->hasResource($translate) || $bootstrap->hasPluginResource($translate)) {
-                    $bootstrap->bootstrap($translate);
-                    $translate = $bootstrap->getResource($translate);
-                } else {
-                    $translate = null;
-                }
+                $translate = $this->_getBootstrapResource($translate);
             }
 
             if ($translate) {
@@ -150,6 +144,28 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
         }
 
         return $this->_view = $view;
+    }
+
+    /**
+     * Get a resource from bootstrap, initialize it if necessary.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    protected function _getBootstrapResource($name)
+    {
+        $bootstrap = $this->getBootstrap();
+
+        if ($bootstrap->hasResource($name)) {
+            $resource = $bootstrap->getResource($name);
+        } elseif ($bootstrap->hasPluginResource($name) || method_exists($bootstrap, '_init' . $name)) {
+            $bootstrap->bootstrap($name);
+            $resource = $bootstrap->getResource($name);
+        } else {
+            $resource = null;
+        }
+
+        return $resource;
     }
 
     /**
