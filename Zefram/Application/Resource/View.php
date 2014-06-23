@@ -15,7 +15,7 @@
  *   resources.view.headTitle.separator =
  *   resources.view.headTitle.defaultAttachOrder =
  *
- * Options providing Zend_Application_Resource_View functionality: 
+ * Options originally supported by the Zend_Application_Resource_View:
  *
  *   resources.view.doctype =
  *   resources.view.charset =
@@ -36,215 +36,129 @@
  *   resources.view.assign =
  *
  *
- * @version 2013-12-05
+ * @version 2014-06-23 / 2013-12-05
  * @author xemlock
  */
 class Zefram_Application_Resource_View extends Zend_Application_Resource_ResourceAbstract
 {
+    /**
+     * @var Zend_View_Abstract
+     */
     protected $_view;
-    protected $_class = 'Zend_View';
 
-    public function __construct($options = null)
-    {
-        if (isset($options['class'])) {
-            $this->_class = $options['class'];
-            unset($options['class']);
-        }
-
-        // postpone setting of charset until suitable doctype is set
-        if (array_key_exists('charset', $options)) {
-            $charset = $options['charset'];
-            unset($options['charset']);
-
-            if (isset($options['doctype'])) {
-                $options['charset'] = $charset;
-            }
-        }
-
-        $viewClass = $this->_class;
-        $this->_view = new $viewClass($options);
-
-        parent::__construct($options);
-    }
-
+    /**
+     * @return Zend_View_Abstract
+     */
     public function init()
     {
-        $view = $this->getView();
-        $this->getViewRenderer()->setView($view);
+        $options = $this->getOptions();
 
-        return $view;
-    }
-
-    public function getViewRenderer()
-    {
-        return Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
-    }
-
-    public function getView()
-    {
-        return $this->_view;
-    }
-
-    /**
-     * Set doctype using doctype view helper.
-     *
-     * @param  string $doctype
-     * @return Zefram_Application_Resource_View
-     */
-    public function setDoctype($doctype)
-    {
-        $this->_view->doctype()->setDoctype(strtoupper($doctype));
-        return $this;
-    }
-
-    /**
-     * Create an HTML5-style meta charset tag using headMeta view helper.
-     *
-     * @param  string $charset
-     * @return Zefram_Application_Resource_View
-     * @throws Zend_View_Exception
-     */
-    public function setCharset($charset)
-    {
-        if (!$this->_view->doctype()->isHtml5()) {
-            throw new Zend_View_Exception('Meta charset tag requires an HTML5 doctype');
-        }
-        $this->_view->headMeta()->setCharset($charset);
-        return $this;
-    }
-
-    /**
-     * Set content-type meta tag using headMeta view helper.
-     *
-     * @param  string $contentType
-     * @return Zefram_Application_Resource_View
-     */
-    public function setContentType($contentType)
-    {
-        $this->_view->headMeta()->appendHttpEquiv('Content-Type', $contentType);
-        return $this;
-    }
-
-    /**
-     * Add http-equiv meta tags using headMeta view helper.
-     *
-     * @param  array $httpEquiv
-     * @return Zefram_Application_Resource_View
-     */
-    public function setHttpEquiv($httpEquiv)
-    {
-        $headMeta = $this->_view->headMeta();
-
-        foreach ((array) $httpEquiv as $key => $value) {
-            $headMeta->appendHttpEquiv($key, $value);
+        if (isset($options['class'])) {
+            $viewClass = $options['class'];
+        } else {
+            $viewClass = 'Zend_View';
         }
 
-        return $this;
-    }
+        $view = new $viewClass($options);
 
-    public function setHeadTitle($options)
-    {
-        $headTitle = $this->_view->headTitle();
+        $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
+        $viewRenderer->setView($view);
 
-        foreach ($options as $key => $value) {
-            switch (strtolower($key)) {
-                case 'title':
-                    $headTitle->set($value);
-                    break;
+        // Set view script path specification
+        if (isset($options['scriptPathSpec'])) {
+            $viewRenderer->setViewScriptPathSpec($options['scriptPathSpec']);
+        }
 
-                case 'separator':
-                    $headTitle->setSeparator($value);
-                    break;
+        // Set view script path specification (no controller variant)
+        if (isset($options['scriptPathNoControllerSpec'])) {
+            $viewRenderer->setViewScriptPathNoControllerSpec($options['scriptPathNoControllerSpec']);
+        }
 
-                case 'defaultattachorder':
-                    $headTitle->setDefaultAttachOrder($value);
-                    break;
+        // Set view script suffix
+        if (isset($options['suffix'])) {
+            $viewRenderer->setViewSuffix($options['suffix']);
+        }
+
+        // Set the auto-render flag
+        if (isset($options['noRender'])) {
+            $viewRenderer->setNoRender($options['noRender']);
+        }
+
+        // Set doctype using doctype view helper
+        if (isset($options['doctype'])) {
+            $view->doctype()->setDoctype(strtoupper($options['doctype']));
+        }
+
+        // Create an HTML5-style meta charset tag using headMeta view helper
+        if (isset($options['charset'])) {
+            if (!$view->doctype()->isHtml5()) {
+                throw new Zend_View_Exception('Meta charset tag requires an HTML5 doctype');
+            }
+            $view->headMeta()->setCharset($options['charset']);
+        }
+
+        // Set content-type meta tag using headMeta view helper
+        if (isset($options['contentType'])) {
+            $view->headMeta()->appendHttpEquiv('Content-Type', $options['contentType']);
+        }
+
+        // Add http-equiv meta tags using headMeta view helper
+        if (isset($options['httpEquiv'])) {
+            foreach ($options['httpEquiv'] as $key => $value) {
+                $view->headMeta()->appendHttpEquiv($key, $value);
             }
         }
 
-        return $this;
-    }
+        // Set head title
+        if (isset($options['headTitle'])) {
+            foreach ($options['headTitle'] as $key => $value) {
+                switch ($key) {
+                    case 'title':
+                        $view->headTitle()->set($value);
+                        break;
 
-    /**
-     * Set a translation adapter for translate view helper.
-     *
-     * @param  Zend_Translate|Zend_Translate_Adapter|string $translate
-     * @return Zefram_Application_Resource_View
-     */
-    public function setTranslator($translate)
-    {
-        if (is_string($translate)) {
-            $bootstrap = $this->getBootstrap();
+                    case 'separator':
+                        $view->headTitle()->setSeparator($value);
+                        break;
 
-            // hasPluginResource() creates a resource if it does not exist,
-            // but it does not mark it as executed. This may result in an
-            // infinite loading loop, especially when there are resources
-            // that depend on other resources. To avoid this bootstrap given
-            // resource (catch any exceptions) instead of checking for its
-            // existence.
-            if ($bootstrap instanceof Zend_Application_Bootstrap_ResourceBootstrapper) {
-                try {
-                    $bootstrap->bootstrap($translate);
-                    $translate = $bootstrap->getResource($translate);
-                } catch (Zend_Application_Bootstrap_Exception $e) {
-                    // invalid resource name or circular dependency detected
-                    $translate = null;
+                    case 'defaultAttachOrder':
+                        $view->headTitle()->setDefaultAttachOrder($value);
+                        break;
                 }
             }
         }
 
-        if ($translate && ($helper = $this->_view->getHelper('translate'))) {
-            $helper->setTranslator($translate);
+        // Set a translation adapter for translate view helper
+        // (To avoid duplicated resources or cyclic dependency exceptions
+        // the bootstrapping of other resources hast to be done in init())
+        if (isset($options['translator'])) {
+            $translate = $options['translator'];
+
+            if (is_string($translate)) {
+                $bootstrap = $this->getBootstrap();
+                if ($bootstrap->hasResource($translate) || $bootstrap->hasPluginResource($translate)) {
+                    $bootstrap->bootstrap($translate);
+                    $translate = $bootstrap->getResource($translate);
+                } else {
+                    $translate = null;
+                }
+            }
+
+            if ($translate) {
+                $view->translate()->setTranslator($translate);
+            }
         }
 
-        return $this;
+        return $this->_view = $view;
     }
 
     /**
-     * Set view script path specification.
+     * Return initialized view object.
      *
-     * @param  string $path
-     * @return Zefram_Application_Resource_View
+     * @return Zend_View_Abstract|null
      */
-    public function setScriptPathSpec($path)
+    public function getView()
     {
-        $this->getViewRenderer()->setViewScriptPathSpec($path);
-        return $this;
-    }
-
-    /**
-     * Set view script path specification (no controller variant).
-     *
-     * @param  string $path
-     * @return Zefram_Application_Resource_View
-     */
-    public function setScriptPathNoControllerSpec($path)
-    {
-        $this->getViewRenderer()->setViewScriptPathNoControllerSpec($path);
-        return $this;
-    }
-
-    /**
-     * Set view script suffix.
-     *
-     * @param  string $suffix
-     * @return Zefram_Application_Resource_View
-     */
-    public function setSuffix($suffix)
-    {
-        $this->getViewRenderer()->setViewSuffix($suffix);
-        return $this;
-    }
-
-    /**
-     * Set the auto-render flag.
-     *
-     * @param  bool $flag
-     * @return Zefram_Application_Resource_View
-     */
-    public function setNoRender($flag = true)
-    {
-        $this->getViewRenderer()->setNoRender($flag);
-        return $this;
+        return $this->_view;
     }
 }
