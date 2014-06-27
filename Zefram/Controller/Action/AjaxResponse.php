@@ -80,6 +80,6 @@ class Zefram_Controller_Action_AjaxResponse extends Zefram_Controller_Action_Aja
         if ($this->_data) {
             $response['data'] = $this->_data;
         }
-        return Zend_Json::encode($response);
+        return Zefram_Json::encode($response);
     }
 }

@@ -98,43 +98,56 @@ abstract class Zefram_Json
                 | ($unescapedUnicode ? JSON_UNESCAPED_UNICODE : 0)
                 | ($prettyPrint ? JSON_PRETTY_PRINT : 0);
 
-            return json_encode($value, $flags);
+            $json = json_encode($value, $flags);
+
+        } else {
+            $json = Zend_Json::encode($value, $cycleCheck, $options);
+
+            $search = array();
+            $replace = array();
+
+            if ($hexTag) {
+                $search[]  = '<';
+                $replace[] = '\u003C';
+
+                $search[]  = '>';
+                $replace[] = '\u003E';
+            }
+
+            if ($hexQuot) {
+                $search[]  = '"';
+                $replace[] = '\u0022';
+            }
+
+            if ($unescapedSlashes) {
+                $search[]  = '\\/';
+                $replace[] = '/';
+            }
+
+            if ($search) {
+                $json = str_replace($search, $replace, $json);
+            }
+
+            if ($unescapedUnicode) {
+                $json = Zend_Json_Decoder::decodeUnicodeString($json);
+            }
+
+            if ($prettyPrint) {
+                $json = self::prettyPrint($json);
+            }
         }
 
-        $json = Zend_Json::encode($value, $cycleCheck, $options);
-
-        $search = array();
-        $replace = array();
-
-        if ($hexTag) {
-            $search[]  = '<';
-            $replace[] = '\u003C';
-
-            $search[]  = '>';
-            $replace[] = '\u003E';
-        }
-
-        if ($hexQuot) {
-            $search[]  = '"';
-            $replace[] = '\u0022';
-        }
-
-        if ($unescapedSlashes) {
-            $search[]  = '\\/';
-            $replace[] = '/';
-        }
-
-        if ($search) {
-            $json = str_replace($search, $replace, $json);
-        }
-
-        if ($unescapedUnicode) {
-            $json = Zend_Json_Decoder::decodeUnicodeString($json);
-        }
-
-        if ($prettyPrint) {
-            $json = self::prettyPrint($json);
-        }
+        // No string in JavaScript can contain a literal U+2028 or a U+2029
+        // (line terminator and paragraph terminator respectively), so remove
+        // them from the encoded string. Read more:
+        // http://timelessrepo.com/json-isnt-a-javascript-subset
+        $json = strtr(
+            $json,
+            array(
+                "\xE2\x80\xA8" => '', // \u2028
+                "\xE2\x80\xA9" => '', // \u2029
+            )
+        );
 
         return $json;
     }
