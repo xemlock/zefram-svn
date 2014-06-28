@@ -7,7 +7,7 @@
  * @version 2014-06-22
  * @author xemlock
  */
-class Zefram_Stdlib_ObjectWrapper
+class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
 {
     /**
      * @var object
@@ -99,5 +99,25 @@ class Zefram_Stdlib_ObjectWrapper
         if (isset($this->_extras[$key])) {
             unset($this->_extras[$key]);
         }
+    }
+
+    public function offsetGet($key)
+    {
+        return $this->__get($key);
+    }
+
+    public function offsetSet($key, $value)
+    {
+        return $this->__set($key, $value);
+    }
+
+    public function offsetUnset($key)
+    {
+        $this->__unset($key);
+    }
+
+    public function offsetExists($key)
+    {
+        return $this->__isset($key);
     }
 }
