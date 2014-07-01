@@ -4,11 +4,18 @@ class Zefram_Application_Resource_Session extends Zend_Application_Resource_Sess
 {
     protected $_sessionId;
 
+    protected $_start;
+
     public function __construct($options = null)
     {
         if (isset($options['id'])) {
             $this->setId($options['id']);
             unset($options['id']);
+        }
+
+        if (isset($options['start'])) {
+            $this->setStart($options['start']);
+            unset($options['start']);
         }
 
         parent::__construct($options);
@@ -20,12 +27,22 @@ class Zefram_Application_Resource_Session extends Zend_Application_Resource_Sess
         return $this;
     }
 
+    public function setStart($flag)
+    {
+        $this->_start = (bool) $flag;
+        return $this;
+    }
+
     public function init()
     {
         if ($this->_sessionId) {
             Zend_Session::setId($this->_sessionId);
         }
 
-        return parent::init();
+        parent::init();
+
+        if ($this->_start) {
+            Zend_Session::start();
+        }
     }
 }
