@@ -36,7 +36,7 @@
  *   resources.view.assign =
  *
  *
- * @version 2014-06-23 / 2013-12-05
+ * @version 2014-07-01
  * @author xemlock
  */
 class Zefram_Application_Resource_View extends Zend_Application_Resource_ResourceAbstract
@@ -53,7 +53,7 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
     {
         $options = $this->getOptions();
 
-        $resourceOptions = array_merge(array(
+        $resourceOptions = array(
             'class'                      => 'Zend_View',
             'charset'                    => null,
             'contentType'                => null,
@@ -65,7 +65,12 @@ class Zefram_Application_Resource_View extends Zend_Application_Resource_Resourc
             'scriptPathSpec'             => null,
             'suffix'                     => null,
             'translator'                 => null,
-        ), $options);
+        );
+        foreach ($resourceOptions as $key => $value) {
+            if (isset($options[$key])) {
+                $resourceOptions[$key] = $options[$key];
+            }
+        }
 
         $viewOptions = array_diff_key($options, $resourceOptions);
         $viewClass = $resourceOptions['class'];
