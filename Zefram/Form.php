@@ -106,6 +106,14 @@ class Zefram_Form extends Zend_Form
             );
 
             switch (strtolower($element)) {
+                case 'button':
+                case 'reset':
+                case 'submit':
+                    if (!isset($options['decorators'])) {
+                        $options['decorators'] = self::buttonDecorators();
+                    }
+                    break;                    
+
                 case 'hidden':
                     // handle hidden field decorators
                     if (!isset($options['decorators'])) {
@@ -131,7 +139,6 @@ class Zefram_Form extends Zend_Form
                     if (!isset($options['cols'])) $options['cols'] = 50;
                     if (!isset($options['rows'])) $options['rows'] = 5;
                     break;
-
             }
             if (isset($options['decorators']) && !is_array($options['decorators'])) {
                 $options['decorators'] = (array) $options['decorators'];
@@ -205,6 +212,24 @@ class Zefram_Form extends Zend_Form
                 array('tag' => 'dd')
             ),
             self::label(array('tag' => 'dt')), // label wrapped in <dt>
+            new Zefram_Form_Decorator_DlWrapper,
+        ), $opts);
+    }
+
+    public static function buttonDecorators($opts = array())
+    {        
+        return array_merge(array(
+            'ViewHelper',
+            array('Description', array(
+                'tag' => 'p',
+                'class' => 'hint',
+                'escape' => false,
+            )),
+            'Errors',
+            array( // field wrapped in <dd>
+                array('data' => 'HtmlTag'),
+                array('tag' => 'dd')
+            ),
             new Zefram_Form_Decorator_DlWrapper,
         ), $opts);
     }
