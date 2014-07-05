@@ -4,7 +4,7 @@
  * This is a container for objects that allows additional custom variables
  * to be added to objects.
  *
- * @version 2014-06-22
+ * @version 2014-07-05
  * @author xemlock
  */
 class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
@@ -119,5 +119,17 @@ class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
     public function offsetExists($key)
     {
         return $this->__isset($key);
+    }
+
+    /**
+     * Calls method on underlying object.
+     *
+     * @param  string $method
+     * @param  array $args
+     * @return mixed
+     */
+    public function __call($method, $args)
+    {
+        return call_user_func_array(array($this->_object, $method), $args);
     }
 }
