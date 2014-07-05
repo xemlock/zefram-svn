@@ -134,6 +134,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      *
      * @param  bool $suppressArrayNotation
      * @return array
+     * @deprecated
      */
     public function getFormValues($suppressArrayNotation = false)
     {
@@ -145,6 +146,7 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
      *
      * @param  string $name
      * @return mixed
+     * @deprecated
      */
     public function getFormValue($name)
     {
