@@ -288,6 +288,49 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         return $columnMap;
     } // }}}
 
+    protected function _normalizeValue($value)
+    {
+        if (is_float($value) || is_int($value) || is_null($value)) {
+            return $value;
+        }
+        $value = (string) $value;
+        if (ctype_digit($value)) {
+            $numericValue = (float) $value;
+            if ((string) $numericValue === $value) {
+                $value = $numericValue;
+            }
+        }
+        return $value;
+    }
+
+    /**
+     * @var array
+     */
+    protected $_referenceKeyCache;
+
+    /**
+     * @param  string $ruleKey
+     * @return string
+     */
+    protected function _getReferenceKey($ruleKey)
+    {
+        if (empty($this->_referenceKeyCache[$ruleKey])) {
+            $rule = $this->_getReference($ruleKey);
+
+            $cols = (array) $rule[Zend_Db_Table_Abstract::COLUMNS];
+            $this->_ensureLoaded($cols);
+
+            $temp = array();
+            foreach ($cols as $column) {
+                $temp[$column] = $this->_normalizeValue($this->{$column});
+            }
+
+            // lazy array initialization
+            $this->_referenceKeyCache[$ruleKey] = $ruleKey . '@' . serialize($temp);
+        }
+        return $this->_referenceKeyCache[$ruleKey];
+    }
+
     /**
      * Fetch parent row identified by a given rule name.
      *
@@ -297,34 +340,21 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected function _fetchReferencedRow($ruleKey) // {{{
     {
         $ruleKey = (string) $ruleKey;
+    
+        // we must store values of referencing columns and the result they
+        // correspond to (a referenced row or null), hence the computed
+        // reference key
+        $refKey = $this->_getReferenceKey($ruleKey);
 
         // check if row referenced by given rule is already present in the
-        // _referencedRows collection. If so, make sure its Primary Key values
-        // match the current values of referencing columns
-        if (array_key_exists($ruleKey, $this->_referencedRows)) {
-            $row = $this->_referencedRows[$ruleKey];
-            if (empty($row)) {
-                return null;
-            }
-
-            $match = true;
-            foreach ($this->_getReferenceColumnMap($ruleKey) as $column => $refColumn) {
-                if ($this->{$column} != $row->{$refColumn}) {
-                    $match = false;
-                    break;
-                }
-            }
-
-            if ($match) {
-                return $row;
-            }
+        // _referencedRows collection
+        if (array_key_exists($refKey, $this->_referencedRows)) {
+            return $this->_referencedRows[$refKey];
         }
 
         // fetch referenced parent row from the database
         $rule = $this->_getReference($ruleKey);
         $cols = (array) $rule[Zend_Db_Table_Abstract::COLUMNS];
-
-        $this->_ensureLoaded($cols);
 
         // if all values of the foreign key are NULL, assume that there
         // is no parent row
@@ -356,7 +386,12 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             ));
         }
 
-        return $this->_referencedRows[$ruleKey] = $row;
+        $this->_referencedRows[$refKey] = $row;
+
+        if ($row instanceof Zend_Db_Table_Row_Abstract) {
+            return $row;
+        }
+        return null;
     } // }}}
 
     /**
@@ -368,6 +403,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected function _setReferencedRow($ruleKey, $row = null) // {{{
     {
         $rule = $this->_getReference($ruleKey);
+        $refKey = $this->_getReferenceKey($ruleKey);
 
         if (null === $row) {
             // nullify columns that referenced previous object and are not
@@ -378,6 +414,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
                     $this->{$column} = null;
                 }
             }
+            unset($this->_referencedRows[$id]);
             return;
         }
 
@@ -397,7 +434,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $this->{$column} = $row->{$refColumn};
         }
 
-        $this->_referencedRows[$ruleKey] = $row;
+        $this->_referencedRows[$refKey] = $row;
     } // }}}
 
     /**
@@ -410,7 +447,11 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected function _saveReferencedRows() // {{{
     {
         foreach ($this->_referencedRows as $ruleKey => $row) {
-            if ((!$row instanceof Zend_Db_Table_Row_Abstract) || ($row === $this)) {
+            // any encountered empty referenced rows are removed from storage
+            if (!$row instanceof Zend_Db_Table_Row_Abstract) {
+                unset($this->_referencedRows[$ruleKey]);
+            }
+            if ($row === $this) {
                 continue;
             }
 
@@ -419,6 +460,14 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $isModified = count($row->_modifiedFields);
 
             if ($isModified || !$isStored) {
+                try {
+                    throw new Exception('Referenced rows must be explicitly saved');
+                } catch (Exception $e) {
+                    $fh = fopen(Zefram_Os::getTempDir() . '/db_table_row.log', 'a+');
+                    fprintf($fh, "%s\n\n", $e->getTraceAsString());
+                    fclose($fh);
+                }
+
                 $row->save();
 
                 // referenced row was not stored in the database, and as such
@@ -505,6 +554,9 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $this->_data[$columnName] = $value;
             $this->_modifiedFields[$columnName] = true;
         }
+
+        // force recalculation of referenced rows identifiers
+        $this->_referenceKeyCache = null;
     }
 
     /**
@@ -519,12 +571,27 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         return $this->hasColumn($columnName) || $this->hasReference($columnName);
     }
 
+    public function __unset($columnName)
+    {
+        if (!$this->hasColumn($columnName) && $this->hasReference($columnName)) {
+            unset($this->_referencedRows[$columnName]);
+            return $this;
+        }
+        return parent::__unset($columnName);
+    }
+
     /**
      * @return array
      */
     public function __sleep()
     {
         return array_merge(parent::__sleep(), array('_cols'));
+    }
+
+    protected function _refresh()
+    {
+        $this->_referenceKeyCache = null;
+        return parent::_refresh();
     }
 
     /**
@@ -537,25 +604,11 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     {
         $data = array_intersect_key($data, $this->_cols);
 
-        foreach ($data as $columnName => $value) {
-            $this->__set($columnName, $value);
+        foreach ($data as $columnname => $value) {
+            $this->__set($columnname, $value);
         }
 
         return $this;
-    }
-
-    /**
-     * Refresh columns from the database and storage.
-     *
-     * This method gets called after each successful write to the database
-     * by the {@see Zend_Db_Table_Row_Abstract::save()} method.
-     *
-     * @return void
-     */
-    protected function _refresh()
-    {
-        parent::_refresh();
-        // $this->_referencedRows = array();
     }
 
     /**
@@ -564,6 +617,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     public function save()
     {
         $this->_saveReferencedRows();
+        // no! this may lead to infinite recursion if referential integrity
+        // actions are performed!!! Referenced rows must be saved explicitly
 
         $result = parent::save();
         $this->_getTable()->addToIdentityMap($this);
@@ -589,7 +644,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     }
 
     /**
-     * @param  bool $includeReferencedRows
+     * @param  bool $includeReferencedRows deprecated
      * @return array
      */
     public function toArray($includeReferencedRows = false)
