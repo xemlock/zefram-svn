@@ -402,22 +402,21 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
      */
     protected function _setReferencedRow($ruleKey, $row = null) // {{{
     {
-        $rule = $this->_getReference($ruleKey);
-        $refKey = $this->_getReferenceKey($ruleKey);
-
         if (null === $row) {
-            // nullify columns that referenced previous object and are not
-            // part of the Primary Key
+            // nullify columns that are referencing previous parent object
+            // and do not belong to the Primary Key
+            $refKey = $this->_getReferenceKey($ruleKey);
             $primary = array_flip((array) $this->_primary);
             foreach ($this->_getReferenceColumnMap($rule) as $column => $refColumn) {
                 if (!isset($primary[$column])) {
                     $this->{$column} = null;
                 }
             }
-            unset($this->_referencedRows[$id]);
+            unset($this->_referencedRows[$refKey]);
             return;
         }
 
+        $rule = $this->_getReference($ruleKey);
         $refTable = $this->_getTableFromString($rule[Zend_Db_Table_Abstract::REF_TABLE_CLASS]);
         $rowClass = $refTable->getRowClass();
 
@@ -434,6 +433,8 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $this->{$column} = $row->{$refColumn};
         }
 
+        // referencing columns have changed, compute new reference key
+        $refKey = $this->_getReferenceKey($ruleKey);
         $this->_referencedRows[$refKey] = $row;
     } // }}}
 
