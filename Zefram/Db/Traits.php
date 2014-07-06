@@ -27,4 +27,40 @@ abstract class Zefram_Db_Traits
 
         return $sql;
     }
+
+    /**
+     * Normalize value.
+     *
+     * PDO by default treats all values as strings. This however, is not
+     * necessarily true for other code utilizing database access layer.
+     * This method aims to mitigate effects of such type inconsistencies.
+     *
+     * @param  mixed
+     * @return mixed
+     */
+    public function normalizeValue($value)
+    {
+        if (is_int($value) || is_bool($value) || is_null($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            // try to convert integral floats to integers
+            if ($value == ($intValue = (int) $value)) {
+                return $intValue;
+            }
+            return $value;
+        }
+
+        // try to convert integer-looking strings to integers
+        if (is_string($value) &&
+            ctype_digit($value) &&
+            $value == (string) ($intValue = (int) $value)
+        ) {
+            return $intValue;
+        }
+
+        // convert other values to strings
+        return (string) $value;
+    }
 }
