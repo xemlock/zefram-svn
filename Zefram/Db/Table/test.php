@@ -28,6 +28,14 @@ class ATable extends Zefram_Db_Table
     protected $_primary = 'a_id';
 
     protected $_sequence = true;
+
+    protected $_referenceMap = array(
+        'B' => array(
+            'columns'       => 'b_id',
+            'refTableClass' => 'BTable',
+            'refColumns'    => 'b_id',
+        ),
+    );
 }
 
 class BTable extends Zefram_Db_Table
@@ -47,7 +55,7 @@ class BTable extends Zefram_Db_Table
     );
 }
 
-$db->query('CREATE TABLE a (a_id INTEGER NOT NULL PRIMARY KEY, aval VARCHAR(32) NOT NULL)');
+$db->query('CREATE TABLE a (a_id INTEGER NOT NULL PRIMARY KEY, aval VARCHAR(32) NOT NULL, b_id INTEGER)');
 $db->query('CREATE TABLE b (b_id INTEGER NOT NULL PRIMARY KEY, bval VARCHAR(32) NOT NULL, a_id INTEGER REFERENCES a (a_id))');
 
 $tableProvider = new Zefram_Db_TableProvider($db);
@@ -100,6 +108,39 @@ $b3->save();
 assertTrue($a3->a_id !== null, 'Parent row was persisted by child row');
 assertTrue($a3 === $b3->A,     'Child row retained reference to parent row after save');
 assertTrue($a3->a_id == $b3->a_id, 'Child row has correct parent ID value');
+
+
+$a4 = $aTable->createRow(array('aval' => 'a4'));
+$a4->save();
+
+$b4 = $bTable->createRow(array('bval' => 'b4'));
+$b4->A = $a4;
+$b4->save();
+
+$a4->a_id = 128;
+$a4->save(); // persist modified primary key in database
+
+// What if refresh() is called instead of save()?
+// new a_id value will be loaded from db,
+// row corresponding to old a_id is in _parentRows and wont be detected upon
+// access, so new a4 will be fetched.
+// Conclusion: refresh() called explicitly may break connections between row
+// objects.
+$b4->save();
+assertTrue($b4->a_id == 128,   'Parent row ID was updated');
+assertTrue($b4->A === $a4,     'Parent row with modified primary key was retained');
+
+
+$a5 = $aTable->createRow(array('aval' => 'a5'));
+$b5 = $bTable->createRow(array('bval' => 'b5'));
+
+$a5->B = $b5;
+$b5->A = $a5;
+
+$a5->save();
+
+assertTrue($a5->isStored() && $b5->isStored(),  'Cyclic references are stored');
+assertTrue($a5->B === $b5 && $b5->A === $a5,    'Cyclically referenced objects are retained');
 
 $db->closeConnection();
 $db = null;

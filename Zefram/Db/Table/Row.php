@@ -35,6 +35,15 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     protected $_cols;
 
     /**
+     * If true, this row is in the process of saving.
+     *
+     * @var bool
+     */
+    protected $_isSaving = false;
+
+    /**
+     * Referenced parent rows.
+     *
      * @var array
      */
     protected $_parentRows = array();
@@ -646,15 +655,24 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     /**
      * @return mixed
      */
-    public function save()
+    public function save() // {{{
     {
+        if ($this->_isSaving) {
+            return false;
+        }
+
+        // mark this row as being during save process to avoid infinite
+        // recursion of save() calls if cycle references (referenced rows
+        // referencing this row) are present
+        $this->_isSaving = true;
         $this->_saveParentRows();
 
         $result = parent::save();
         $this->_getTable()->addToIdentityMap($this);
 
+        $this->_isSaving = false;
         return $result;
-    }
+    } // }}}
 
     /**
      * @return int
