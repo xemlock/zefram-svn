@@ -43,6 +43,12 @@ class Zefram_Application_Resource_Request extends Zend_Application_Resource_Reso
         $request = $this->getRequest();
 
         $frontController = $bootstrap->getResource('FrontController');
+
+        // baseUrl must be retrieved from the Front Controller before
+        // a request is attached. Otherwise the request's baseUrl
+        // overwrites it.
+        $request->setBaseUrl($frontController->getBaseUrl());
+
         $frontController->setRequest($request);
 
         return $request;
