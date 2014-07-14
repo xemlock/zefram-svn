@@ -142,6 +142,21 @@ $a5->save();
 assertTrue($a5->isStored() && $b5->isStored(),  'Cyclic references are stored');
 assertTrue($a5->B === $b5 && $b5->A === $a5,    'Cyclically referenced objects are retained');
 
+// check if modified detached rows are not saved when referencing row is saved
+$a6 = $aTable->createRow(array('aval' => 'a6'));
+$b6 = $bTable->createRow(array('bval' => 'b6'));
+
+$a6->B = $b6;
+$a6->save();
+
+$b6->bval = 'b.vi';
+
+$a6->b_id = null;
+$a6->save();
+
+assertTrue($b6->isModified() === true, 'Detached rows are not saved');
+assertTrue($a6->b_id === null,         'Detached rows are not referenced after save()');
+
 $db->closeConnection();
 $db = null;
 unlink($dbname);

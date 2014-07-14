@@ -500,7 +500,17 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
                 continue;
             }
 
-            // check if row is modified or not yet stored in the database
+            // update values of columns referencing parent row
+            list($ruleKey, ) = explode('@', $key, 2);
+
+            // check if parent row is still referenced by this row, if not
+            // detach it
+            if ($this->_getParentRowKey($ruleKey) !== $key) {
+                $this->_setParentRow($ruleKey, null);
+                continue;
+            }
+
+            // check if parent row is modified or not yet stored in the database
             $isStored = count($row->_cleanData);
             $isModified = count($row->_modifiedFields);
 
@@ -509,13 +519,11 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
                 $row->save();
             }
 
-            // update values of columns referencing parent row
-            list($ruleKey, ) = explode('@', $key, 2);
             foreach ($this->_getReferenceColumnMap($ruleKey) as $column => $refColumn) {
                 $this->{$column} = $row->{$refColumn};
             }
 
-            // store parent row under an updated key
+            // store parent row under an _updated key_
             // here foreach loop operates on a copy of array, any items
             // added or removed will not affect iteration
             $this->_setParentRow($this->_getParentRowKey($ruleKey), $row);
