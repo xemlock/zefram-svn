@@ -75,6 +75,11 @@ class Zefram_View_Helper_FormInput extends Zend_View_Helper_FormElement
             $type = 'text';
         }
 
+        // don't show values on password inputs
+        if ($type === 'password') {
+            $value = '';
+        }
+
         $disabled = '';
         if ($disable) {
             $disabled = ' disabled="disabled"';
