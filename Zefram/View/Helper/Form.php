@@ -29,7 +29,7 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
      * @param array $attribs
      * @return string
      */
-    public function openTag($form = null, $attribs = null)
+    public function openTag($form = null, array $attribs = null)
     {
         if ($form instanceof Zend_Form) {
             $attribs = array_merge(
@@ -44,7 +44,10 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
             );
             $action = trim($form->getAction());
         } else {
-            $attribs = (array) $form;
+            // use form param instead of attribs if the latter was not provided
+            if ($attribs === null) {
+                $attribs = (array) $form;            
+            }
 
             // action attribute is required by XHTML 4.01 Strict doctype
             $action = isset($attribs['action']) ? trim($attribs['action']) : '';
