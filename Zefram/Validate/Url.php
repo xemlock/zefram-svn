@@ -20,7 +20,7 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
     protected $_allowedSchemes = array('http', 'https');
 
     protected $_messageTemplates = array(
-        self::INVALID_URL    => "'%value%' is not a valid URL",
+        self::INVALID_URL    => "This is not a valid URL",
         self::INVALID_SCHEME => "URL scheme '%scheme%' is not allowed",
     );
 
