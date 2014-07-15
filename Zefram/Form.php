@@ -14,6 +14,11 @@ class Zefram_Form extends Zend_Form
 {
     public function __construct($options = null)
     {
+        $this->addPrefixPath('Zefram_Form_Element_',   'Zefram/Form/Element/',   self::ELEMENT);
+        $this->addPrefixPath('Zefram_Form_Decorator_', 'Zefram/Form/Decorator/', self::DECORATOR);
+
+        $this->addElementPrefixPath('Zefram_Validate_', 'Zefram/Validate/', Zend_Form_Element::VALIDATE);
+
         if ($options instanceof Zend_Config) {
             $options = $options->toArray();
         }
