@@ -34,7 +34,7 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
         if ($form instanceof Zend_Form) {
             $attribs = array_merge(
                 array(
-                    'action'  => null,
+                    'action'  => $form->getAction(),
                     'method'  => $form->getMethod(),
                     'enctype' => $form->getEnctype(),
                     'id'      => $form->getId(),
@@ -42,7 +42,7 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
                 $form->getAttribs(),
                 (array) $attribs
             );
-            $action = trim($form->getAction());
+            $action = $attribs['action'];
         } else {
             // use form param instead of attribs if the latter was not provided
             if ($attribs === null) {
@@ -50,12 +50,14 @@ class Zefram_View_Helper_Form extends Zend_View_Helper_Form
             }
 
             // action attribute is required by XHTML 4.01 Strict doctype
-            $action = isset($attribs['action']) ? trim($attribs['action']) : '';
+            $action = isset($attribs['action']) ? $attribs['action'] : '';
         }
 
         if (empty($attribs['id'])) {
             unset($attribs['id']);
         }
+
+        $action = trim($action);
 
         if ('' === $action && $this->view->doctype()->isHtml5()) {
             // action attribute must be non-empty according to HTML 5 spec
