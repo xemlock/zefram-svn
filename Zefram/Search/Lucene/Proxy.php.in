@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * Proxy class to track when index object goes out of scope and forces
+ * its closing.
+ *
+ * This implementation, contrary to the original one, is extendable.
+ *
+ * @author xemlock
+ * @version 2014-07-22
+ */
+class Zefram_Search_Lucene_Proxy implements Zend_Search_Lucene_Interface
+{
+    /**
+     * Index object
+     *
+     * @var Zend_Search_Lucene_Interface
+     */
+    protected $_index;
+
+    /**
+     * Constructor
+     *
+     * @param  Zend_Search_Lucene_Interface $index
+     * @return void
+     */
+    public function __construct(Zend_Search_Lucene_Interface $index)
+    {
+        $this->_index = $index;
+        $this->_index->addReference();
+    }
+
+    /**
+     * Destructor.
+     *
+     * Upon proxy destruction index's reference counter is decremented.
+     * If it reaches 0, the underlying index is closed.
+     *
+     * @return void
+     */
+    public function __destruct()
+    {
+        if ($this->_index !== null) {
+            // This code is invoked if Zend_Search_Lucene_Interface object
+            // constructor throws an exception
+            $this->_index->removeReference();
+        }
+        $this->_index = null;
+    }
+
+    /**
+     * Call method on underlying index instance.
+     *
+     * @param  string $method
+     * @param  array $args
+     * @return mixed
+     */
+    public function __call($method, $args)
+    {
+        return call_user_func_array(array($this->_index, $method), $args);
+    }
+
+    /** @proxyimpl */
+}
