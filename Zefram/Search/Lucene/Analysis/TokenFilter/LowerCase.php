@@ -3,26 +3,30 @@
 /**
  * Lower case token filter.
  */
-class Zefram_Search_Lucene_Analysis_TokenFilter_LowerCase extends Zend_Search_Lucene_Analysis_TokenFilter
+class Zefram_Search_Lucene_Analysis_TokenFilter_LowerCase
+    extends Zefram_Search_Lucene_Analysis_TokenFilter
 {
     /**
-     * @var string|null
+     * @var string
      */
     protected $_encoding;
 
     /**
-     * Constructor.
+     * Set filter encoding.
      *
-     * @param  string $encoding OPTIONAL
-     * @return void
+     * @param  string $encoding
+     * @return Zefram_Search_Lucene_Analysis_TokenFilter_LowerCase
+     * @throws Zend_Search_Lucene_Exception
      */
-    public function __construct($encoding = null)
+    public function setEncoding($encoding)
     {
-        if ($encoding !== null && !function_exists('mb_strtolower')) {
+        $encoding = trim($encoding);
+        if ($encoding && !function_exists('mb_strtolower')) {
             // mbstring extension is disabled
             throw new Zend_Search_Lucene_Exception('UTF-8 compatible lower case filter needs mbstring extension to be enabled.');
         }
         $this->_encoding = $encoding;
+        return $this;
     }
 
     /**
@@ -31,10 +35,11 @@ class Zefram_Search_Lucene_Analysis_TokenFilter_LowerCase extends Zend_Search_Lu
      * @param Zend_Search_Lucene_Analysis_Token $srcToken
      * @return Zend_Search_Lucene_Analysis_Token
      */
-    public function normalize(Zend_Search_Lucene_Analysis_Token $srcToken)
+    public function normalize(Zend_Search_Lucene_Analysis_Token $token)
     {
-        $srcToken->setTermText($this->_toLowerCase($text));
-        return $srcToken;
+        $text = $this->_toLowerCase($token->getTermText());
+        $token->setTermText($text);
+        return $token;
     }
 
     /**
@@ -45,7 +50,7 @@ class Zefram_Search_Lucene_Analysis_TokenFilter_LowerCase extends Zend_Search_Lu
      */
     protected function _toLowerCase($text)
     {
-        if ($this->_encoding === null) {
+        if (empty($this->_encoding)) {
             $text = strtolower($text);
         } else {
             $text = mb_strtolower($text, $this->_encoding);

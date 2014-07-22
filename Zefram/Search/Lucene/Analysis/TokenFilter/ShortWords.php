@@ -3,10 +3,11 @@
 /**
  * Short words token filter.
  */
-class Zefram_Search_Lucene_Analysis_TokenFilter_ShortWords extends Zend_Search_Lucene_Analysis_TokenFilter
+class Zefram_Search_Lucene_Analysis_TokenFilter_ShortWords
+    extends Zefram_Search_Lucene_Analysis_TokenFilter
 {
     /**
-     * @var string|null
+     * @var string
      */
     protected $_encoding;
 
@@ -14,24 +15,53 @@ class Zefram_Search_Lucene_Analysis_TokenFilter_ShortWords extends Zend_Search_L
      * Minimum allowed term length
      * @var integer
      */
-    protected $_length;
+    protected $_minLength = 2;
 
     /**
-     * Constructor.
-     *
-     * @param  int $short  minimum allowed length of term which passes this filter
-     * @param  string $encoding OPTIONAL
+     * @param  array|int $options
      * @return void
+     */
+    public function __construct($options = null)
+    {
+        if (is_int($options)) {
+            $options = array('minLength' => $options);
+        }
+        parent::__construct($options);
+    }
+
+    /**
+     * Set minimum term length
+     *
+     * @param  int $minLength
+     * @return Zefram_Search_Lucene_Analysis_TokenFilter_ShortWords
      * @throws Zend_Search_Lucene_Exception
      */
-    public function __construct($length = 2, $encoding = null)
+    public function setMinLength($minLength)
     {
-        if ($encoding !== null && !function_exists('mb_strlen')) {
+        $minLength = (int) $minLength;
+        if ($minLength < 0) {
+            throw new Zend_Search_Lucene_Exception('Minimum length must be greater or equal zero');
+        }
+        $this->_minLength = $minLength;
+        return $this;
+    }
+
+    /**
+     * Set filter encoding. 
+     *
+     * @param  string $encoding
+     * @return Zefram_Search_Lucene_Analysis_TokenFilter_ShortWords
+     * @throws Zend_Search_Lucene_Exception
+     */
+    public function setEncoding($encoding)
+    {
+        $encoding = trim($encoding);
+        if ($encoding && !function_exists('mb_strlen')) {
             // mbstring extension is disabled
             throw new Zend_Search_Lucene_Exception('UTF-8 compatible short words filter needs mbstring extension to be enabled.');
         }
         $this->_encoding = $encoding;
-        $this->_length = (int) $length;
+        return $this;
     }
 
     /**
@@ -42,13 +72,13 @@ class Zefram_Search_Lucene_Analysis_TokenFilter_ShortWords extends Zend_Search_L
      */
     public function normalize(Zend_Search_Lucene_Analysis_Token $srcToken)
     {
-        if ($this->_encoding === null) {
+        if (empty($this->_encoding)) {
             $length = strlen($srcToken->getTermText());
         } else {
             $length = mb_strlen($srcToken->getTermText(), $this->_encoding);
         }
 
-        if ($length < $this->length) {
+        if ($length < $this->_minLength) {
             return null;
         } else {
             return $srcToken;
