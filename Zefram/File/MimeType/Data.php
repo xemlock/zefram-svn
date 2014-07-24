@@ -42,7 +42,10 @@ class Zefram_File_MimeType_Data
     const JAR  = 'application/java-archive';
     const APK  = 'application/vnd.android.package-archive';
 
-    const UNKNOWN = 'application/octet-stream';
+    const TEXT = 'text/plain';
+    const BINARY = 'application/octet-stream';
+
+    const UNKNOWN = self::BINARY;
 
     protected static $_magic = array(
         // image {{{
@@ -271,8 +274,83 @@ class Zefram_File_MimeType_Data
             }
         }
 
+        if (false === $mimetype && self::isTextFile($file)) {
+            $mimetype = self::TEXT;
+        }
+
         return $mimetype ? $mimetype : self::UNKNOWN;
     } // }}}
+
+    public static function isTextFile($file, &$utf8 = null)
+    {
+        $fh = fopen($file, 'rb');
+        $buf = fread($fh, 1024);
+
+        $utf8 = false;
+
+        if (!strlen($buf)) {
+            // An empty file is considered a valid text file
+            return true;
+        }
+
+        if (strpos($buf, "\x00") !== false) {
+            // Files with null bytes are binary
+            return false;
+        }
+
+        $num_ascii = 0;
+        $num_iso   = 0;
+        $num_utf8  = 0;
+
+        $utf8_cont = false;
+
+        $len = strlen($buf);
+
+        for ($i = 0; $i < $len; ++$i) {
+            $ord = ord($buf[$i]);
+            if (($ord >= 32 && $ord < 127) ||
+                ($ord >= 9 && $ord <= 13)  // ASCII control chars: 9 HT - 13 CR
+            ) {
+                ++$num_ascii;
+                continue;
+            }
+
+            if ($ord >= 160 && $ord < 255) {
+                // ISO/IEC encoding
+                ++$num_iso;
+            }
+
+            if (
+                ($ord >= 0xC0 && $ord <= 0xDF) ||
+                ($ord >= 0xE0 && $ord <= 0xEF) ||
+                ($ord >= 0xF0 && $ord <= 0xF7) ||
+                ($ord >= 0xF8 && $ord <= 0xFB) ||
+                ($ord >= 0xFC && $ord <= 0xFD)
+            ) {
+                // valid UTF8 opening byte, expect continuations
+                $utf8_cont = true;
+                ++$num_utf8;
+
+            } elseif ($utf8_cont && $ord >= 0x80 && $ord <= 0xBF) {
+                // UTF8 continuation byte
+                ++$num_utf8;
+            } else {
+                // invalid UTF8 charactrer, do not expect continuation bytes
+                $utf8_cont = false;
+            }
+        }
+
+        if ($num_ascii + $num_iso >= .9 * $len) {
+            return true;
+        }
+
+        if ($num_utf8 >= .9 * $len) {
+            $utf8 = true;
+            return true;
+        }
+
+        return false;
+    }
 
     /**
      * Returns extension corresponding to given MIME type.
