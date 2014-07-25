@@ -283,10 +283,17 @@ class Zefram_File_MimeType_Data
 
     public static function isTextFile($file, &$utf8 = null)
     {
-        $fh = fopen($file, 'rb');
-        $buf = fread($fh, 1024);
-
         $utf8 = false;
+
+        $fh = @fopen($file, 'rb');
+
+        if (!$fh) {
+            // Not a file, perhaps exception should be thrown
+            return false;
+        }
+
+        $buf = fread($fh, 1024);
+        fclose($fh);
 
         if (!strlen($buf)) {
             // An empty file is considered a valid text file
@@ -309,7 +316,7 @@ class Zefram_File_MimeType_Data
         for ($i = 0; $i < $len; ++$i) {
             $ord = ord($buf[$i]);
             if (($ord >= 32 && $ord < 127) ||
-                ($ord >= 9 && $ord <= 13)  // ASCII control chars: 9 HT - 13 CR
+                ($ord >= 9 && $ord <= 13) // ASCII control chars: 9 HT - 13 CR
             ) {
                 ++$num_ascii;
                 continue;
