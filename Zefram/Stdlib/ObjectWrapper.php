@@ -4,7 +4,7 @@
  * This is a container for objects that allows additional custom variables
  * to be added to objects.
  *
- * @version 2014-07-05
+ * @version 2014-07-26
  * @author xemlock
  */
 class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
@@ -127,9 +127,25 @@ class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
      * @param  string $method
      * @param  array $args
      * @return mixed
+     * @throws BadMethodCallException
      */
     public function __call($method, $args)
     {
-        return call_user_func_array(array($this->_object, $method), $args);
+        if (is_callable($this->_object, $method)) {
+            return call_user_func_array(array($this->_object, $method), $args);
+        }
+        throw new BadMethodCallException(sprintf(
+            'Call to undefined method %s::%s()', get_class($this->_object), $method
+        ));
+    }
+
+    /**
+     * Retrieves underlying object.
+     *
+     * @return object
+     */
+    public function getObject()
+    {
+        return $this->_object;
     }
 }
