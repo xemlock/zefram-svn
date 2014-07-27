@@ -25,9 +25,9 @@ class Zefram_Db_Table extends Zend_Db_Table
     protected $_rowsetClass = 'Zefram_Db_Table_Rowset';
 
     /**
-     * @var Zefram_Db_TableProvider
+     * @var Zefram_Db_Table_FactoryInterface
      */
-    protected $_tableProvider;
+    protected $_tableFactory;
 
     /**
      * Storage for rows fetched by {@link findRow()}.
@@ -649,8 +649,8 @@ class Zefram_Db_Table extends Zend_Db_Table
             return $tableClass;
         }
 
-        if ($this->hasTableProvider()) {
-            return $this->getTableProvider()->getTable($tableClass, $this->_db);
+        if ($this->hasTableFactory()) {
+            return $this->getTableFactory()->getTable($tableClass, $this->_db);
         }
 
         return Zefram_Db::getTable($tableClass, $this->_db);        
@@ -685,28 +685,28 @@ class Zefram_Db_Table extends Zend_Db_Table
     } // }}}
 
     /**
-     * @param Zefram_Db_TableProvider $tableProvider
+     * @param Zefram_Db_Table_FactoryInterface $tableProvider
      * @return Zefram_Db_Table
      */
-    public function setTableProvider(Zefram_Db_TableProvider $tableProvider) // {{{
+    public function setTableFactory(Zefram_Db_Table_FactoryInterface $factory) // {{{
     {
-        $this->_tableProvider = $tableProvider;
-        return $this->_tableProvider;
+        $this->_tableFactory = $factory;
+        return $this->_tableFactory;
     } // }}}
 
     /**
-     * @return Zefram_Db_TableProvider
+     * @return Zefram_Db_Table_FactoryInterface
      */
-    public function getTableProvider() // {{{
+    public function getTableFactory() // {{{
     {
-        return $this->_tableProvider;
+        return $this->_tableFactory;
     } // }}}
 
     /**
      * @return bool
      */
-    public function hasTableProvider() // {{{
+    public function hasTableFactory() // {{{
     {
-        return null !== $this->_tableProvider;
+        return null !== $this->_tableFactory;
     } // }}}
 }
