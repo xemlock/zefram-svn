@@ -685,6 +685,39 @@ class Zefram_Db_Table extends Zend_Db_Table
     } // }}}
 
     /**
+     * Insert new rows using INSERT SELECT.
+     *
+     * @param  Zend_Db_Select $select
+     * @return int
+     * @throws Exception
+     */
+    public function insertFromSelect(Zend_Db_Select $select) // {{{
+    {
+        $tableCols = array_flip($this->_getCols());
+        $cols = array();
+        $db = $this->getAdapter();
+
+        foreach ($select->getPart(Zend_Db_Select::COLUMNS) as $value) {
+            list($correlationName, $column, $alias) = $value;
+
+            $col = is_string($alias) ? $alias : $column;
+            if (!isset($tableCols[$col])) {
+                throw new Exception(sprintf("Column '%s' does not exist in table %s", $col, $this->getName()));
+            }
+
+            $cols[] = $db->quoteIdentifier($col, false);
+        }
+
+        $sql = 'INSERT INTO ' .
+            $db->quoteIdentifier($this->getQualifiedName(), false) .
+            ' (' . implode(', ', $cols) . ') ' .
+            $select;
+
+        $result = $db->query($sql); 
+        return $result->rowCount();
+    } // }}}
+
+    /**
      * @param Zefram_Db_Table_FactoryInterface $tableProvider
      * @return Zefram_Db_Table
      */
