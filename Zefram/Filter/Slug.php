@@ -17,6 +17,7 @@ class Zefram_Filter_Slug extends Zefram_Filter_Translit
             '/[^-0-9a-z]/i',
             '/-+/',
         ), '-', $value);
+        $value = strtolower($value);
 
         return $value;
     }
