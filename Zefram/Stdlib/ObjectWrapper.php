@@ -131,8 +131,9 @@ class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
      */
     public function __call($method, $args)
     {
-        if (is_callable($this->_object, $method)) {
-            return call_user_func_array(array($this->_object, $method), $args);
+        $callable = array($this->_object, $method);
+        if (is_callable($callable)) {
+            return call_user_func_array($callable, $args);
         }
         throw new BadMethodCallException(sprintf(
             'Call to undefined method %s::%s()', get_class($this->_object), $method
