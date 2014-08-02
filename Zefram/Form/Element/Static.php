@@ -64,4 +64,9 @@ class Zefram_Form_Element_Static extends Zend_Form_Element
     {
         return $this;
     }
+
+    public function getValue()
+    {
+        return $this->_value;
+    }
 }
