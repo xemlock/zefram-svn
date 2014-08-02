@@ -1,11 +1,150 @@
 <?php
 
-/**
- * Contrary to class name which suggests similarity to Zend_Db
- * this class' reason for existence is being a registry for table objects.
- */
-abstract class Zefram_Db
+class Zefram_Db
 {
+    /**
+     * @var Zend_Db_Adapter_Abstract
+     */
+    protected $_adapter;
+
+    /**
+     * @var Zefram_Db_Table_Factory
+     */
+    protected $_tableFactory;
+
+    /**
+     * Factory for Db objects.
+     *
+     * @param  string|Zend_Config $adapter
+     * @param  array|Zend_Config $config OPTIONAL
+     * @return Zefram_Db
+     */
+    public static function factory($adapter, $config = array()) // {{{
+    {
+        $adapter = Zend_Db::factory($adapter, $config);
+        return new self($adapter);
+    } // }}}
+
+    /**
+     * Constructor.
+     *
+     * @param Zend_Db_Adapter_Abstract|Zefram_Db_Table_FactoryInterface $adapter
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    public function __construct($adapter) // {{{
+    {
+        if ($adapter instanceof Zefram_Db_Table_FactoryInterface) {
+            $this->_adapter = $adapter->getAdapter();
+            $this->_tableFactory = $adapter;
+        } elseif ($adapter instanceof Zend_Db_Adapter_Abstract) {
+            $this->_adapter = $adapter;
+        } else {
+            throw new InvalidArgumentException('Adapter must be either an instance of Zend_Db_Adapter_Abstract or Zefram_Db_Table_FactoryInterface');
+        }
+    } // }}}
+
+    /**
+     * @return Zefram_Db
+     */
+    public function beginTransaction() // {{{
+    {
+        $this->_adapter->beginTransaction();
+        return $this;
+    } // }}}
+
+    /**
+     * @return Zefram_Db
+     */
+    public function rollBack() // {{{
+    {
+        $this->_adapter->rollBack();
+        return $this;
+    } // }}}
+
+    /**
+     * @return Zefram_Db
+     */
+    public function commit() // {{{
+    {
+        $this->_adapter->commit();
+        return $this;
+    } // }}}
+
+    /**
+     * @param  callable $callable
+     * @return bool
+     */
+    public function inTransaction($callable) // {{{
+    {
+        // support __invoke() when older than PHP 5.3
+        if (!is_callable($callable) && is_object($callable) && is_callable(array($callable, '__invoke'))) {
+            $callable = array($callable, '__invoke');
+        }
+        if (!is_callable($callable)) {
+            throw new InvalidArgumentException('Callable must be a valid callback');
+        }
+        $this->_adapter->beginTransaction();
+        try {
+            if ($result = (call_user_func($callable) !== false)) {
+                $this->_adapter->commit();
+            } else {
+                $this->_adapter->rollBack();
+            }
+        } catch (Exception $e) {
+            $this->_adapter->rollBack();
+            throw $e;
+        }
+
+        return $result;
+    } // }}}
+
+    /**
+     * @return Zend_Db_Adapter_Abstract
+     */
+    public function getAdapter() // {{{
+    {
+        return $this->_adapter;
+    } // }}}
+
+    /**
+     * @return Zefram_Db_Table_FactoryInterface
+     */
+    public function getTableFactory() // {{{
+    {
+        if ($this->_tableFactory === null) {
+            $this->_tableFactory = new Zefram_Db_Table_Factory($this->_adapter);
+        }
+        return $this->_tableFactory;
+    } // }}}
+
+    /**
+     * @return Zend_Db_Table_Abstract
+     */
+    public function getTable2($name) // {{{
+    {
+        return $this->getTableFactory()->getTable($name);
+    } // }}}
+
+    /**
+     * @param  string $prefix
+     * @return Zefram_Db
+     */
+    public function setTablePrefix($prefix) // {{{
+    {
+        $this->getTableFactory()->setTablePrefix($prefix);
+        return $this;
+    } // }}}
+
+    /**
+     * @return string
+     */
+    public function getTablePrefix() // {{{
+    {
+        return $this->getTableFactory()->getTablePrefix();
+    } // }}}
+
+
     protected static $_tableRegistry;
 
     /**
