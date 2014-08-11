@@ -37,6 +37,13 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
     protected $_ajaxOnly = false;
 
     /**
+     * View script to be used for rendering form when page is accessed via
+     * XmlHttpRequest.
+     * @var string
+     */
+    protected $_ajaxViewScript;
+
+    /**
      * Allow processing of partially valid form?
      * @var bool
      */
@@ -189,7 +196,13 @@ abstract class Zefram_Controller_Action_StandaloneForm extends Zefram_Controller
         $view = $controller->initView();
 
         $form = $this->getForm()->setView($view);
-        $script = $controller->getViewScript();
+
+        if ($this->isAjax()) {
+            $script = $this->_ajaxViewScript;
+        }
+        if (empty($script)) {
+            $script = $controller->getViewScript();
+        }
 
         if (!is_file($view->getScriptPath($script))) {
             // render form directly if view script does not exist
