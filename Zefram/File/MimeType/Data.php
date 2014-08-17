@@ -274,7 +274,7 @@ class Zefram_File_MimeType_Data
             }
         }
 
-        if (false === $mimetype && self::isTextFile($file)) {
+        if (false === $mimetype && self::isTextFile($filename)) {
             $mimetype = self::TEXT;
         }
 
