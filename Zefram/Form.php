@@ -18,6 +18,7 @@ class Zefram_Form extends Zend_Form
         $this->addPrefixPath('Zefram_Form_Decorator_', 'Zefram/Form/Decorator/', self::DECORATOR);
 
         $this->addElementPrefixPath('Zefram_Validate_', 'Zefram/Validate/', Zend_Form_Element::VALIDATE);
+        $this->addElementPrefixPath('Zefram_Filter_',   'Zefram/Filter/', Zend_Form_Element::FILTER);
 
         if ($options instanceof Zend_Config) {
             $options = $options->toArray();

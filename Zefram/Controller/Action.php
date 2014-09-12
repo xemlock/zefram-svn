@@ -5,10 +5,6 @@
  */
 class Zefram_Controller_Action extends Zend_Controller_Action
 {
-    protected $_ajaxResponseClass = 'Zefram_Controller_Action_AjaxResponse';
-
-    protected $_ajaxResponse;
-
     /**
      * @param string|ReflectionClass $controllerClass
      * @param string $actionMethod
@@ -90,40 +86,6 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         parent::__call($method, $arguments);
     }
 
-    public function getBootstrap()
-    {
-        $bootstrap = $this->getFrontController()->getParam('bootstrap');
-
-        if (!$bootstrap instanceof Zend_Application_Bootstrap_BootstrapAbstract) {
-            throw new Exception('Bootstrap is not available');
-        }
-
-        return $bootstrap;
-    }
-
-    /**
-     * Get bootstrap resource.
-     *
-     * @param  string $name
-     * @return mixed
-     * @throws DomainException
-     */
-    public function getResource($name)
-    {
-        return $this->getBootstrap()->getResource($name);
-    }
-
-    /**
-     * Proxy to {@see getResource()}.
-     *
-     * @param  string $name
-     * @return mixed
-     */
-    public function getBootstrapResource($name)
-    {
-        return $this->getResource($name);
-    }
-
     /**
      * null is not considered a scalar value 
      * (@see http://php.net/manual/en/function.is-scalar.php)
@@ -138,6 +100,46 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $value = parent::getParam($name, $default);
         return is_scalar($value) ? $value : $default;
     }
+
+    /**
+     * Get resource from container.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    public function getResource($name)
+    {
+        return $this->_helper->resource($name);
+    }
+
+    // all below methods are now deprecated
+    
+    protected $_ajaxResponseClass = 'Zefram_Controller_Action_AjaxResponse';
+
+    protected $_ajaxResponse;
+
+    public function getBootstrap()
+    {
+        $bootstrap = $this->getFrontController()->getParam('bootstrap');
+
+        if (!$bootstrap instanceof Zend_Application_Bootstrap_BootstrapAbstract) {
+            throw new Exception('Bootstrap is not available');
+        }
+
+        return $bootstrap;
+    }
+
+    /**
+     * Proxy to {@see getResource()}.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    public function getBootstrapResource($name)
+    {
+        return $this->getResource($name);
+    }
+
 
     public function getAjaxResponse()
     {
