@@ -1,6 +1,6 @@
 <?php
 
-class Zefram_Db
+class Zefram_Db implements Zefram_Db_TransactionManager
 {
     /**
      * @var Zend_Db_Adapter_Abstract
@@ -11,6 +11,11 @@ class Zefram_Db
      * @var Zefram_Db_Table_Factory
      */
     protected $_tableFactory;
+
+    /**
+     * @var int
+     */
+    protected $_transactionLevel = 0;
 
     /**
      * Factory for Db objects.
@@ -45,61 +50,6 @@ class Zefram_Db
     } // }}}
 
     /**
-     * @return Zefram_Db
-     */
-    public function beginTransaction() // {{{
-    {
-        $this->_adapter->beginTransaction();
-        return $this;
-    } // }}}
-
-    /**
-     * @return Zefram_Db
-     */
-    public function rollBack() // {{{
-    {
-        $this->_adapter->rollBack();
-        return $this;
-    } // }}}
-
-    /**
-     * @return Zefram_Db
-     */
-    public function commit() // {{{
-    {
-        $this->_adapter->commit();
-        return $this;
-    } // }}}
-
-    /**
-     * @param  callable $callable
-     * @return bool
-     */
-    public function inTransaction($callable) // {{{
-    {
-        // support __invoke() when older than PHP 5.3
-        if (!is_callable($callable) && is_object($callable) && is_callable(array($callable, '__invoke'))) {
-            $callable = array($callable, '__invoke');
-        }
-        if (!is_callable($callable)) {
-            throw new InvalidArgumentException('Callable must be a valid callback');
-        }
-        $this->_adapter->beginTransaction();
-        try {
-            if ($result = (call_user_func($callable) !== false)) {
-                $this->_adapter->commit();
-            } else {
-                $this->_adapter->rollBack();
-            }
-        } catch (Exception $e) {
-            $this->_adapter->rollBack();
-            throw $e;
-        }
-
-        return $result;
-    } // }}}
-
-    /**
      * @return Zend_Db_Adapter_Abstract
      */
     public function getAdapter() // {{{
@@ -116,6 +66,52 @@ class Zefram_Db
             $this->_tableFactory = new Zefram_Db_Table_Factory($this->_adapter);
         }
         return $this->_tableFactory;
+    } // }}}
+
+    /**
+     * @return Zefram_Db
+     */
+    public function beginTransaction() // {{{
+    {
+        if ($this->_transactionLevel === 0) {
+            // increase level counter _after_ beginning transaction,
+            // in case an exception is thrown
+            $this->_adapter->beginTransaction();
+            ++$this->_transactionLevel;
+        }
+        return $this;
+    } // }}}
+
+    /**
+     * @return Zefram_Db
+     */
+    public function rollBack() // {{{
+    {
+        if ($this->_transactionLevel === 1) {
+            $this->_adapter->rollBack();
+        }
+        --$this->_transactionLevel;
+        return $this;
+    } // }}}
+
+    /**
+     * @return Zefram_Db
+     */
+    public function commit() // {{{
+    {
+        if ($this->_transactionLevel === 1) {
+            $this->_adapter->commit();
+        }
+        --$this->_transactionLevel;
+        return $this;
+    } // }}}
+
+    /**
+     * @return bool
+     */
+    public function inTransaction() // {{{
+    {
+        return ($this->_transactionLevel > 0);
     } // }}}
 
     /**

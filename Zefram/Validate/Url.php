@@ -29,6 +29,11 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
     );
 
     /**
+     * @var string
+     */
+    protected $_scheme;
+
+    /**
      * @param array|object $options
      */
     public function __construct($options = null)
