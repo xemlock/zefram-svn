@@ -4,9 +4,52 @@
  * @version 2014-09-25
  */
 class Zefram_Controller_Action extends Zend_Controller_Action
+    // implements Zend_EventManager_EventManagerAware
 {
     const EVENT_PRE_DISPATCH  = 'preDispatch';
     const EVENT_POST_DISPATCH = 'postDispatch';
+
+    /*
+     *
+    // @var Zend_EventManager_EventCollection
+    protected $_events;
+
+    public function setEventManager(Zend_EventManager_EventCollection $events)
+    {
+        if ($events instanceof Zend_EventManager_EventManager) {
+            $events->setIdentifiers(array(get_class($this)) + array_values(class_parents($this)));
+        }
+        $this->_events = $events;
+        return $this;
+    }
+
+    public function getEventManager()
+    {
+        if (!$this->_events instanceof Zend_EventManager_EventCollection) {
+            $this->setEventManager($this->_helper->eventManagerFactory->createEventManager());
+        }
+        return $this->_events;
+    }
+
+    public function preDispatch()
+    {
+        $this->_preDispatch();
+        $this->getEventManager()->trigger(self::EVENT_PRE_DISPATCH, $this);
+    }
+
+    protected function _preDispatch()
+    {}
+
+    public function postDispatch()
+    {
+        $this->_postDispatch();
+        $this->getEventManager()->trigger(self::EVENT_POST_DISPATCH, $this);
+    }
+
+    protected function _postDispatch()
+    {}
+
+     */
 
     /**
      * Dispatch the requested action
