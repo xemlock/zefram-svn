@@ -1,10 +1,26 @@
 <?php
 
 /**
- * @version 2013-12-13
+ * @version 2014-09-25
  */
 class Zefram_Controller_Action extends Zend_Controller_Action
 {
+    const EVENT_PRE_DISPATCH  = 'preDispatch';
+    const EVENT_POST_DISPATCH = 'postDispatch';
+
+    /**
+     * Dispatch the requested action
+     *
+     * @param string $action Method name of action
+     * @return void
+     */
+    public function dispatch($action)
+    {
+        $this->_helper->events->trigger(self::EVENT_PRE_DISPATCH, compact('action'));
+        parent::dispatch($action);
+        $this->_helper->events->trigger(self::EVENT_POST_DISPATCH, compact('action'));
+    }
+
     /**
      * @param string|ReflectionClass $controllerClass
      * @param string $actionMethod
