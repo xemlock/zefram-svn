@@ -4,64 +4,93 @@
  * @version 2014-09-25
  */
 class Zefram_Controller_Action extends Zend_Controller_Action
-    // implements Zend_EventManager_EventManagerAware
+    implements Zend_EventManager_EventManagerAware
 {
     const EVENT_PRE_DISPATCH  = 'preDispatch';
     const EVENT_POST_DISPATCH = 'postDispatch';
 
-    /*
-     *
-    // @var Zend_EventManager_EventCollection
+    /**
+     * @var Zend_EventManager_EventCollection
+     */
     protected $_events;
 
+    /**
+     * @var string
+     */
+    protected $_currentAction;
+
+    /**
+     * @param  Zend_EventManager_EventCollection $events
+     * @return Zefram_Controller_Action
+     */
     public function setEventManager(Zend_EventManager_EventCollection $events)
     {
         if ($events instanceof Zend_EventManager_EventManager) {
-            $events->setIdentifiers(array(get_class($this)) + array_values(class_parents($this)));
+            $events->setIdentifiers(array(
+                __CLASS__,
+                get_class($this)
+            ));
         }
         $this->_events = $events;
         return $this;
     }
 
+    /**
+     * @return Zend_EventManager_EventCollection|null
+     */
     public function getEventManager()
     {
-        if (!$this->_events instanceof Zend_EventManager_EventCollection) {
-            $this->setEventManager($this->_helper->eventManagerFactory->createEventManager());
-        }
         return $this->_events;
     }
 
     public function preDispatch()
     {
         $this->_preDispatch();
-        $this->getEventManager()->trigger(self::EVENT_PRE_DISPATCH, $this);
+
+        if ($this->getEventManager()) {
+            $this->getEventManager()->trigger(self::EVENT_PRE_DISPATCH, $this, array('action' => $this->_currentAction));
+        }
     }
 
+    /**
+     * Pre-dispatch routine, see {@link Zend_Controller_Action::preDispatch()}
+     * for more details.
+     */
     protected function _preDispatch()
     {}
 
     public function postDispatch()
     {
         $this->_postDispatch();
-        $this->getEventManager()->trigger(self::EVENT_POST_DISPATCH, $this);
+
+        if ($this->getEventManager()) {
+            $this->getEventManager()->trigger(self::EVENT_POST_DISPATCH, $this, array('action' => $this->_currentAction));
+        }
     }
 
+    /**
+     * Post-dispatch routine, see {@link Zend_Controller_Action::postDispatch()}
+     * for more details.
+     */
     protected function _postDispatch()
     {}
 
-     */
-
     /**
-     * Dispatch the requested action
+     * {@inheritDoc}
      *
-     * @param string $action Method name of action
-     * @return void
+     * Original dispatch() implementation offers no ability do get the currently
+     * dispatched action in preDispatch() and postDispatch() routines. Here, the
+     * currently dispatched action name is stored in $_currentAction property.
+     *
+     * This functionality is needed, as the dispatched action name cannot be
+     * changed by action helpers, whereas the value of 'action' request
+     * parameter can.
      */
     public function dispatch($action)
     {
-        $this->_helper->events->trigger(self::EVENT_PRE_DISPATCH, compact('action'));
+        $this->_currentAction = $action;
         parent::dispatch($action);
-        $this->_helper->events->trigger(self::EVENT_POST_DISPATCH, compact('action'));
+        $this->_currentAction = null;
     }
 
     /**

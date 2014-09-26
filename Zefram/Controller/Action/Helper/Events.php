@@ -1,147 +1,86 @@
 <?php
 
 /**
- * Event action helper.
- *
- * This component allows controllers to trigger events. Each controller has its
- * own event manager identified by the class name of this controller (in
- * consequence, two instances of the same controller class will have a common
- * event manager).
- * This helper stores also a shared collection of listeners for use by the
- * controllers' event managers.
- * If a event manager related method is called from outside action controller
- * context an exception will be thrown.
- * 
- * @version 2014-09-25
+ * @version 2014-09-26
  */
 class Zefram_Controller_Action_Helper_Events
     extends Zend_Controller_Action_Helper_Abstract
-    implements Zend_EventManager_EventManagerAware,
-               Zend_EventManager_SharedEventCollectionAware
+    implements Zend_EventManager_EventManagerAware
 {
     /**
-     * @var Zend_EventManager_SharedEventCollection|null
+     * @var Zend_EventManager_EventCollection
      */
-    protected $_sharedCollections;
+    protected $_events;
 
     /**
-     * @var Zend_EventManager_EventManager[]
-     */
-    protected $_events = array();
-
-    /**
-     * @param  Zend_EventManager_SharedEventCollection $collections
-     * @return Zefram_Controller_Action_Helper_Events
-     */
-    public function setSharedCollections(Zend_EventManager_SharedEventCollection $collections = null)
-    {
-        $this->_sharedCollections = $collections;
-
-        if ($collections === null) {
-            foreach ($this->_events as $eventManager) {
-                $eventManager->unsetSharedCollections();
-            }
-        } else {
-            foreach ($this->_events as $eventManager) {
-                $eventManager->setSharedCollections($collections);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Zefram_Controller_Action_Helper_Events|null
-     */
-    public function getSharedCollections()
-    {
-        return $this->_sharedCollections;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasEventManager()
-    {
-        return isset($this->_events[$this->_getEventManagerId()]);
-    }
-
-    /**
-     * Get event manager for the current action controller.
+     * Retrieves event manager
      *
-     * @return Zend_EventManager_EventManager
+     * @return Zend_EventManager_EventCollection
      */
     public function getEventManager()
     {
         if (!$this->hasEventManager()) {
-            $this->setEventManager(new Zend_EventManager_EventManager());
+            $this->setEventManager($this->createEventManager());
         }
-        return $this->_events[$this->_getEventManagerId()];
+        return $this->_events;
     }
 
     /**
-     * Set event manager for the current action controller.
+     * Sets event manager
      *
-     * @param  Zend_EventManager_EventManager $events
+     * @param  $events
      * @return Zefram_Controller_Action_Helper_Events
      */
     public function setEventManager(Zend_EventManager_EventCollection $events)
     {
-        $id = $this->_getEventManagerId();
-
-        if ($events instanceof Zend_EventManager_EventManager) {
-            $events->setIdentifiers(array($id) + array_values(class_parents($id)));
-        }
-
-        $collections = $this->getSharedCollections();
-        if ($collections) {
-            $events->setSharedCollections($collections);
-        }
-
-        $this->_events[$id] = $events;
+        $this->_events = $events;
         return $this;
     }
 
     /**
-     * @return string
-     * @throws Zend_Controller_Action_Exception
+     * Is event manager set
+     *
+     * @return Zefram_Controller_Action_Helper_Events
      */
-    protected function _getEventManagerId()
+    public function hasEventManager()
+    {
+        return ($this->_events instanceof Zend_EventManager_EventCollection);
+    }
+
+    /**
+     * Creates an event manager instance
+     *
+     * Newly created event manager gets the same shared event collection
+     * as the helper's event manager.
+     *
+     * @return Zend_EventManager_EventManager
+     */
+    public function createEventManager()
+    {
+        $events = new Zend_EventManager_EventManager();
+
+        if ($this->_events instanceof Zend_EventManager_EventManager) {
+            $events->setSharedCollections($events->getSharedCollections());
+        }
+
+        return $events;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * This routine initializes action controller's event manager, provided
+     * that the controller supports it. This method is executed before
+     * controller's preDispatch(), so event manager becomes available as
+     * early as possible in the action lifetime.
+     *
+     * @return void
+     */
+    public function preDispatch()
     {
         $controller = $this->getActionController();
-        if ($controller === null) {
-            throw new Zend_Controller_Action_Exception('Event manager requires an action controller');
+        if ($controller instanceof Zend_EventManager_EventManagerAware) {
+            $controller->setEventManager($this->createEventManager());
         }
-        return get_class($controller);
-    }
-
-    /**
-     * Triggers all listeners for the given event attached to the event manager
-     * of the current controller
-     *
-     * @param  string $event Event instance or name
-     * @param  array|ArrayAccess $params Event parameters
-     * @param  callable|null $callback   If provided, event propagation will be stopped after TRUE is returned
-     * @return Zefram_Controller_Action_Helper_Events
-     * @throws Zend_Stdlib_Exception_InvalidCallbackException if invalid callback provided
-     */
-    public function trigger($event, $params = array(), $callback = null)
-    {
-        if ($this->hasEventManager() || $this->getSharedCollections()) {
-            $this->getEventManager()->trigger($event, $this->getActionController(), $params, $callback);
-        }
-        return $this;
-    }
-
-    /**
-     * @param  string|array $event
-     * @param  callable $callback
-     * @param  int $priority
-     * @return Zefram_Controller_Action_Helper_Events
-     */
-    public function attach($event, $callback, $priority = 1)
-    {
-        $this->getEventManager()->attach($event, $callback, $priority);
-        return $this;
     }
 }
