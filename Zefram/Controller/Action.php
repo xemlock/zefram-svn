@@ -17,7 +17,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
     /**
      * @var string
      */
-    protected $_currentAction;
+    protected $_dispatchAction;
 
     /**
      * @param  Zend_EventManager_EventCollection $events
@@ -48,7 +48,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $this->_preDispatch();
 
         if ($this->getEventManager()) {
-            $this->getEventManager()->trigger(self::EVENT_PRE_DISPATCH, $this, array('action' => $this->_currentAction));
+            $this->getEventManager()->trigger(self::EVENT_PRE_DISPATCH, $this);
         }
     }
 
@@ -64,7 +64,7 @@ class Zefram_Controller_Action extends Zend_Controller_Action
         $this->_postDispatch();
 
         if ($this->getEventManager()) {
-            $this->getEventManager()->trigger(self::EVENT_POST_DISPATCH, $this, array('action' => $this->_currentAction));
+            $this->getEventManager()->trigger(self::EVENT_POST_DISPATCH, $this);
         }
     }
 
@@ -74,6 +74,14 @@ class Zefram_Controller_Action extends Zend_Controller_Action
      */
     protected function _postDispatch()
     {}
+
+    /**
+     * @return string|null
+     */
+    public function getDispatchAction()
+    {
+        return $this->_dispatchAction;
+    }
 
     /**
      * {@inheritDoc}
@@ -88,9 +96,9 @@ class Zefram_Controller_Action extends Zend_Controller_Action
      */
     public function dispatch($action)
     {
-        $this->_currentAction = $action;
+        $this->_dispatchAction = (string) $action;
         parent::dispatch($action);
-        $this->_currentAction = null;
+        $this->_dispatchAction = null;
     }
 
     /**
