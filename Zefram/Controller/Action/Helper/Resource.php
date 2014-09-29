@@ -1,60 +1,56 @@
 <?php
 
 /**
- * This helper allows controllers to get resources in a more elegant way
- * than directly referencing global registry.
+ * This helper allows controllers to access bootstrap resources without
+ * directly referencing bootstrap, front controller, or global registry.
+ *
+ * @version 2014-09-29
+ * @author xemlock
  */
 class Zefram_Controller_Action_Helper_Resource
     extends Zend_Controller_Action_Helper_Abstract
 {
     /**
-     * @var object
+     * @var Zend_Application_Bootstrap_BootstrapAbstract
      */
-    protected $_container;
+    protected $_bootstrap;
 
     /**
-     * Retrieve resource container.
+     * Retrieve bootstrap.
      *
-     * If no resource container is set bootstrap's resource container is used.
-     *
-     * @return object
-     * @throws Exception
+     * @return Zend_Application_Bootstrap_BootstrapAbstract
      */
-    public function getContainer()
+    public function getBootstrap()
     {
-        if (empty($this->_container)) {
+        if (empty($this->_bootstrap)) {
             // all bootstrapped plugin resources have 'bootstrap' param
             $bootstrap = $this->getFrontController()->getParam('bootstrap');
-            $this->setContainer($bootstrap->getContainer());
+            $this->setBootstrap($bootstrap);
         }
-        return $this->_container;
+        return $this->_bootstrap;
     }
 
     /**
-     * Set resource container.
+     * Set bootstrap.
      *
-     * @param  object $container
-     * @return Maniple_Controller_Action_Helper_Resource
-     * @throws Exception
+     * @param  Zend_Application_Bootstrap_BootstrapAbstract $bootstrap
+     * @return Zefram_Controller_Action_Helper_Resource
      */
-    public function setContainer($container)
+    public function setBootstrap(Zend_Application_Bootstrap_BootstrapAbstract $bootstrap)
     {
-        if (!is_object($container)) {
-            throw new Exception('Resource container must be an object');
-        }
-        $this->_container = $container;
+        $this->_bootstrap = $bootstrap;
         return $this;
     }
 
     /**
-     * Retrieve resource from container.
+     * Retrieve resource from bootstrap.
      *
      * @param  string $resource
      * @return mixed
      */
     public function getResource($resource)
     {
-        return $this->getContainer()->{$resource};
+        return $this->getBootstrap()->getResource($resource);
     }
 
     /**
