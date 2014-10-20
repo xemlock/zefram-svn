@@ -28,7 +28,7 @@ class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
         $this->_object = (object) $object;
 
         if ($extras) {
-            $this->addExtras($extras);
+            $this->setExtras($extras);
         }
     }
 
@@ -36,12 +36,17 @@ class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
      * @param  array|Traversable $extras
      * @return Maniple_Model_ModelWrapper
      */
-    public function addExtras($extras)
+    public function setExtras($extras)
     {
         foreach ($extras as $key => $value) {
-            $this->addExtra($key, $value);
+            $this->setExtra($key, $value);
         }
         return $this;
+    }
+
+    public function addExtras($extras)
+    {
+        return $this->setExtras($extras);
     }
 
     /**
@@ -49,10 +54,15 @@ class Zefram_Stdlib_ObjectWrapper implements ArrayAccess
      * @param  mixed $value
      * @return Maniple_Model_ModelWrapper
      */
-    public function addExtra($key, $value)
+    public function setExtra($key, $value)
     {
         $this->_extras[(string) $key] = $value;
         return $this;
+    }
+
+    public function addExtra($key, $value)
+    {
+        return $this->setExtra($key, $value);
     }
 
     /**
