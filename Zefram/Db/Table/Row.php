@@ -13,6 +13,13 @@
  *    Such rows are available for future use.
  * 5. Columns can be automatically loaded on demand.
  *
+ * 2014-10-23
+ *          - reimplemented _refresh() so that it does not involve creation
+ *            of a temporary row instance
+ *          - added _postLoad()
+ *          - added setModified() for better control of which columns should
+ *            be persisted to database
+ *
  * 2014-04-15
  *          - support for setting referenced rows by assignment to their
  *            corresponding ruleKeys
@@ -72,7 +79,14 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         }
 
         parent::__construct($config);
+
         $this->_setupCols();
+
+        // if this row is marked as stored (i.e. exists in the database)
+        // run post-load logic
+        if (count($this->_cleanData)) {
+            $this->_postLoad();
+        }
     } // }}}
 
     public function setTable(Zend_Db_Table_Abstract $table = null) // {{{
@@ -93,6 +107,17 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $this->_cols = array_flip($table->info(Zend_Db_Table_Abstract::COLS));
         }
     } // }}}
+
+    /**
+     * Allows post-load logic to be applied to row. Subclasses may override
+     * this method.
+     *
+     * This method is called after a row is loaded from the database.
+     *
+     * @return void
+     */
+    protected function _postLoad()
+    {}
 
     /**
      * @param  string $columnName
@@ -154,6 +179,30 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
             $modified[$columnName] = $this->_data[$columnName];
         }
         return $modified;
+    } // }}}
+
+    /**
+     * This function is intended for internal use, you are free to use
+     * it as long as you know what you're doing.
+     *
+     * Marking column as modified will essentially make it to update
+     * value in the database.
+     *
+     * @param  string $columnName
+     * @return Zefram_Db_Table_Row
+     */
+    public function setModified($columnName) // {{{
+    {
+        $columnName = $this->_transformColumn($columnName);
+
+        if (!$this->_hasColumn($columnName)) {
+            throw new Zend_Db_Table_Row_Exception(sprintf(
+                'Specified column "%s" is not in the row', $columnName
+            ));
+        }
+
+        $this->_modifiedFields[$columnName] = true;
+        return $this;
     } // }}}
 
     /**
@@ -637,10 +686,41 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         return array_merge(parent::__sleep(), array('_cols'));
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * This is a replacement implementation which does not involve
+     * an unnecessary creation of a temporary row instance. After
+     * successful retrieval of data the post-load logic is triggered.
+     */
     protected function _refresh()
     {
+        $select = $this->_getTable()->getAdapter()->select();
+        $select->from(
+            $this->_getTable()->info(Zend_Db_Table_Abstract::NAME)
+        );
+        $select->limit(1);
+
+        foreach ($this->_getWhereQuery() as $key => $value) {
+            if (is_int($key)) {
+                $select->where($value);
+            } else {
+                $select->where($key, $value);
+            }
+        }
+
+        $data = $select->query(Zend_Db::FETCH_ASSOC)->fetch();
+
+        if (false === $data) {
+            throw new Zend_Db_Table_Row_Exception('Cannot refresh row from the database');
+        }
+
+        $this->_data = $data;
+        $this->_cleanData = $data;
+        $this->_modifiedFields = array();
         $this->_parentRowsKeyCache = null;
-        return parent::_refresh();
+
+        $this->_postLoad();
     }
 
     /**

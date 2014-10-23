@@ -53,6 +53,35 @@ class BTable extends Zefram_Db_Table
             'refColumns'    => 'a_id',
         ),
     );
+
+    protected $_rowClass = 'BTableRow';
+}
+
+class BTableRow extends Zefram_Db_Table_Row
+{
+    protected $_tableClass = 'BTable';
+
+    protected function _postLoad()
+    {
+        self::$_postLoadLog[] = self::postLoadLogEntry($this);
+    }
+
+    protected static $_postLoadLog = array();
+
+    public static function postLoadLogEntry(BTableRow $row)
+    {
+        return __METHOD__ . '(' . $row->b_id . ')';
+    }
+
+    public static function getPostLoadLog()
+    {
+        return (array) self::$_postLoadLog;
+    }
+
+    public static function clearPostLoadLog()
+    {
+        self::$_postLoadLog = array();
+    }
 }
 
 $db->query('CREATE TABLE a (a_id INTEGER NOT NULL PRIMARY KEY, aval VARCHAR(32) NOT NULL, b_id INTEGER)');
@@ -156,6 +185,21 @@ $a6->save();
 
 assertTrue($b6->isModified() === true, 'Detached rows are not saved');
 assertTrue($a6->b_id === null,         'Detached rows are not referenced after save()');
+
+// check if _postLoad is triggered whenever necessary
+BTableRow::clearPostLoadLog();
+$b7 = $bTable->createRow(array('bval' => 'b7'));
+assertTrue(BTableRow::getPostLoadLog() === array(), 'Post-load logic is not triggered when row is not stored');
+
+BTableRow::clearPostLoadLog();
+$b7->save();
+assertTrue(BTableRow::getPostLoadLog() === array(BTableRow::postLoadLogEntry($b7)), 'Post-load logic is triggered upon save()');
+
+BTableRow::clearPostLoadLog();
+$bTable->removeFromIdentityMap($b7);
+$b8 = $bTable->findRow($b7->b_id);
+assertTrue(BTableRow::getPostLoadLog() === array(BTableRow::postLoadLogEntry($b8)), 'Post-load logic is triggered on a stored row');
+
 
 $db->closeConnection();
 $db = null;
