@@ -189,16 +189,16 @@ assertTrue($a6->b_id === null,         'Detached rows are not referenced after s
 // check if _postLoad is triggered whenever necessary
 BTableRow::clearPostLoadLog();
 $b7 = $bTable->createRow(array('bval' => 'b7'));
-assertTrue(BTableRow::getPostLoadLog() === array(), 'Post-load logic is not triggered when row is not stored');
+assertTrue(BTableRow::getPostLoadLog() === array(), 'Post-load logic is not triggered when a not stored row is created');
 
 BTableRow::clearPostLoadLog();
 $b7->save();
-assertTrue(BTableRow::getPostLoadLog() === array(BTableRow::postLoadLogEntry($b7)), 'Post-load logic is triggered upon save()');
+assertTrue(BTableRow::getPostLoadLog() === array(BTableRow::postLoadLogEntry($b7)), 'Post-load logic is executed upon save()');
 
 BTableRow::clearPostLoadLog();
 $bTable->removeFromIdentityMap($b7);
 $b8 = $bTable->findRow($b7->b_id);
-assertTrue(BTableRow::getPostLoadLog() === array(BTableRow::postLoadLogEntry($b8)), 'Post-load logic is triggered on a stored row');
+assertTrue(BTableRow::getPostLoadLog() === array(BTableRow::postLoadLogEntry($b8)), 'Post-load logic is executed when row is fetched');
 
 
 $db->closeConnection();

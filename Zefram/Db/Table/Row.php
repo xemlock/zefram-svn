@@ -689,16 +689,13 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
     /**
      * {@inheritDoc}
      *
-     * This is a replacement implementation which does not involve
-     * an unnecessary creation of a temporary row instance. After
-     * successful retrieval of data the post-load logic is triggered.
+     * This is a replacement implementation which does not involve an
+     * unnecessary creation of a temporary row instance. After the successful
+     * retrieval of row's data, the post-load logic is executed.
      */
-    protected function _refresh()
+    protected function _refresh() // {{{
     {
-        $select = $this->_getTable()->getAdapter()->select();
-        $select->from(
-            $this->_getTable()->info(Zend_Db_Table_Abstract::NAME)
-        );
+        $select = $this->_getTable()->select();
         $select->limit(1);
 
         foreach ($this->_getWhereQuery() as $key => $value) {
@@ -711,7 +708,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
 
         $data = $select->query(Zend_Db::FETCH_ASSOC)->fetch();
 
-        if (false === $data) {
+        if (empty($data)) {
             throw new Zend_Db_Table_Row_Exception('Cannot refresh row from the database');
         }
 
@@ -721,7 +718,7 @@ class Zefram_Db_Table_Row extends Zend_Db_Table_Row
         $this->_parentRowsKeyCache = null;
 
         $this->_postLoad();
-    }
+    } // }}}
 
     /**
      * Sets all data in the row from an array.
