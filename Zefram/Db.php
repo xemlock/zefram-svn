@@ -69,6 +69,24 @@ class Zefram_Db implements Zefram_Db_TransactionManager
     } // }}}
 
     /**
+     * Proxy to adapter's quote() method.
+     * See {@link Zend_Db_Adapter_Abstract::quote()} for details.
+     */
+    public function quote($value, $type = null)
+    {
+        return $this->_adapter->quote($value, $type);
+    }
+
+    /**
+     * Proxy to adapter's quoteInto() method.
+     * See {@link Zend_Db_Adapter_Abstract::quoteInto()} for details.
+     */
+    public function quoteInto($text, $value, $type = null, $count = null)
+    {
+        return $this->_adapter->quoteInto($text, $value, $type, $count);
+    }
+
+    /**
      * @return Zefram_Db
      */
     public function beginTransaction() // {{{
