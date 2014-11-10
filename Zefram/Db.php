@@ -135,7 +135,7 @@ class Zefram_Db implements Zefram_Db_TransactionManager
     /**
      * @return Zend_Db_Table_Abstract
      */
-    public function getTable2($name) // {{{
+    public function getTable($name) // {{{
     {
         return $this->getTableFactory()->getTable($name);
     } // }}}
@@ -231,7 +231,7 @@ class Zefram_Db implements Zefram_Db_TransactionManager
         return $db->quoteIdentifier($dbOrMatch['table']) . '.' . $db->quoteIdentifier($dbOrMatch['column']);
     } // }}}
 
-    public static function getTable($className, Zend_Db_Adapter_Abstract $db = null, $addPrefix = true)
+    public static function getTable2($className, Zend_Db_Adapter_Abstract $db = null, $addPrefix = true)
     {
         if (null === $db) {
             $db = Zefram_Db_Table::getDefaultAdapter();
