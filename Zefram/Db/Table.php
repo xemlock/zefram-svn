@@ -653,7 +653,7 @@ class Zefram_Db_Table extends Zend_Db_Table
             return $this->getTableFactory()->getTable($tableClass, $this->_db);
         }
 
-        return Zefram_Db::getTable($tableClass, $this->_db);        
+        return Zefram_Db::getTable2($tableClass, $this->_db);        
     } // }}}
 
     /**
