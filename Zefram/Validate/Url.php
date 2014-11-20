@@ -29,6 +29,13 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
      */
     protected $_allowLocal = true;
 
+    /**
+     * Should IP urls be allowed.
+     *
+     * @var bool
+     */
+    protected $_allowIp = true;
+
     protected $_messageTemplates = array(
         self::INVALID            => "This is not a valid URL",
         self::SCHEME_NOT_ALLOWED => "URL scheme '%scheme%' is not allowed",
@@ -102,6 +109,17 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
         return $this->_allowLocal;
     }
 
+    public function setAllowIp($flag)
+    {
+        $this->_allowIp = (bool) $flag;
+        return $this;
+    }
+
+    public function getAllowIp()
+    {
+        return $this->_allowIp;
+    }
+
     /**
      * @param  mixed $value
      * @return bool
@@ -132,17 +150,16 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
             return false;
         }
 
-        // Local domain names may end with a single dot to distinguish them
-        // from complete domain names whenever a name conflict arises, see:
-        // RFC3986 3.2.2
+        if (!$this->getAllowLocal()) {
+            $validator = new Zend_Validate_Hostname(
+                Zend_Validate_Hostname::ALLOW_DNS |
+                ($this->getAllowIp() ? Zend_Validate_Hostname::ALLOW_IP : 0)
+            );
 
-        $host = $uri->getHost();
-
-        if ((substr($host, -1) === '.' || strpos($host, '.') === false)
-            && !$this->_allowLocal
-        ) {
-            $this->_error(self::LOCAL_HOSTNAME);
-            return false;
+            if (!$validator->isValid($uri->getHost())) {
+                $this->_error(self::LOCAL_HOSTNAME);
+                return false;
+            }
         }
 
         return true;
