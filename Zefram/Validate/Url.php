@@ -11,9 +11,10 @@
  */
 class Zefram_Validate_Url extends Zend_Validate_Abstract
 {
-    const INVALID            = 'urlInvalid';
-    const SCHEME_NOT_ALLOWED = 'urlSchemeNotAllowed';
-    const LOCAL_HOSTNAME     = 'urlLocalHostname';
+    const INVALID                = 'urlInvalid';
+    const SCHEME_NOT_ALLOWED     = 'urlSchemeNotAllowed';
+    const IP_ADDRESS_NOT_ALLOWED = 'urlIpAddressNotAllowed';
+    const LOCAL_NAME_NOT_ALLOWED = 'urlLocalNameNotAllowed';
 
     /**
      * List of allowed schemes.
@@ -37,9 +38,10 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
     protected $_allowIp = true;
 
     protected $_messageTemplates = array(
-        self::INVALID            => "This is not a valid URL",
-        self::SCHEME_NOT_ALLOWED => "URL scheme '%scheme%' is not allowed",
-        self::LOCAL_HOSTNAME     => "Local hostname is not allowed",
+        self::INVALID                => "This is not a valid URL",
+        self::SCHEME_NOT_ALLOWED     => "URL scheme '%scheme%' is not allowed",
+        self::LOCAL_NAME_NOT_ALLOWED => "Local network names are not allowed",
+        self::IP_ADDRESS_NOT_ALLOWED => "IP addresses are not allowed",
     );
 
     protected $_messageVariables = array(
@@ -157,7 +159,23 @@ class Zefram_Validate_Url extends Zend_Validate_Abstract
             );
 
             if (!$validator->isValid($uri->getHost())) {
-                $this->_error(self::LOCAL_HOSTNAME);
+                $messages = $validator->getMessages();
+
+                switch (true) {
+                    case isset($messages[Zend_Validate_Hostname::IP_ADDRESS_NOT_ALLOWED]):
+                        $error = self::IP_ADDRESS_NOT_ALLOWED;
+                        break;
+
+                    case isset($messages[Zend_Validate_Hostname::LOCAL_NAME_NOT_ALLOWED]):
+                        $error = self::LOCAL_NAME_NOT_ALLOWED;
+                        break;
+
+                    default:
+                        $error = self::INVALID;
+                        break;
+                }
+
+                $this->_error($error);
                 return false;
             }
         }
