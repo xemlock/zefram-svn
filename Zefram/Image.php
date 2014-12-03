@@ -3,7 +3,7 @@
 /**
  * GD based image manipulation class.
  *
- * @version 2014-06-22
+ * @version 2014-12-03
  * @author xemlock
  */
 class Zefram_Image
@@ -240,12 +240,18 @@ class Zefram_Image
         $width  = max(0, (int) $width);
         $height = max(0, (int) $height);
 
+        if ($width + $height === 0) {
+            throw new Zefram_Image_Exception('Invalid resize dimensions');
+        }
+
+        $ratio = $this->_width / $this->_height;
+
         if (0 === $width) {
-            $width = $this->_width;
+            $width = $height * $ratio;
         }
 
         if (0 === $height) {
-            $height = $this->_height;
+            $height = $width / $ratio;
         }
 
         $handle = $this->_createImage($width, $height);
@@ -267,15 +273,20 @@ class Zefram_Image
         $width  = max(0, (int) $width);
         $height = max(0, (int) $height);
 
-        if (0 === $width) {
-            $width = $this->_width;
-        }
-
-        if (0 === $height) {
-            $height = $this->_height;
+        if ($width + $height === 0) {
+            throw new Zefram_Image_Exception('Invalid scale dimensions');
         }
 
         $ratio = $this->_width / $this->_height;
+
+        if (0 === $width) {
+            $width = $height * $ratio;
+        }
+
+        if (0 === $height) {
+            $height = $width / $ratio;
+        }
+
         $new_ratio = $width / $height;
 
         if ($crop) {
