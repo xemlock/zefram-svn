@@ -3,15 +3,36 @@
 /**
  * Conditional NotEmpty validator.
  *
- * @version 2014-02-25
+ * If used on a Zend_Form_Element instance an allowEmpty flag must be set to
+ * FALSE and required flag must be also set to FALSE (default).
+ *
+ * @version 2014-12-11 / 2014-02-25
  * @author xemlock
  */
 class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
 {
     /**
-     * @var callable
+     * @var Zefram_Stdlib_CallbackHandler
      */
     protected $_callback;
+
+    /**
+     * @var string|null
+     */
+    protected $_contextKey;
+
+    /**
+     * Optional context value to match against
+     * @var mixed|null
+     */
+    protected $_token;
+
+    /**
+     * Whether _contextCallback should be setup as a callback before performing
+     * validation
+     * @var bool
+     */
+    protected $_setupContextCallback;
 
     /**
      * @var bool
@@ -19,9 +40,11 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
     protected $_negate = false;
 
     /**
+     * Constructor.
+     *
      * Options:
-     *     type
      *     callback
+     *     messages
      *
      * @param  array $options
      * @return void
@@ -39,8 +62,49 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
     }
 
     /**
-     * @param  callback $callback
+     * As a side effect this function also resets callback.
+     *
+     * @param  string $key
      * @return Zefram_Validate_NotEmptyIf
+     */
+    public function setContextKey($key)
+    {
+        $this->_contextKey = (string) $key;
+        $this->_setupContextCallback = true;
+        return $this;
+    }
+
+    public function getContextKey()
+    {
+        return $this->_contextKey;
+    }
+
+    /**
+     * Set token to validate against when matching context.
+     *
+     * @param  mixed $token
+     * @return Zefram_Validate_NotEmptyIf
+     */
+    public function setToken($token)
+    {
+        $this->_token = $token;
+        return $this;
+    }
+
+    /**
+     * Retrieve token.
+     *
+     * @return mixed
+     */
+    public function getToken()
+    {
+        return $this->_token;
+    }
+
+    /**
+     * @param  callable $callback
+     * @return Zefram_Validate_NotEmptyIf
+     * @throws Zend_Validate_Exception
      */
     public function setCallback($callback)
     {
@@ -48,11 +112,12 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
             throw new Zend_Validate_Exception('Invalid callback given');
         }
         $this->_callback = $callback;
+        $this->_setupContextCallback = false;
         return $this;
     }
 
     /**
-     * @return callback|null
+     * @return callable
      */
     public function getCallback()
     {
@@ -70,6 +135,7 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
     }
 
     /**
+     * @deprecated
      * @return bool
      */
     public function getNegate()
@@ -84,10 +150,13 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
      */
     public function isValid($value, $context = null)
     {
-        $callback = $this->getCallback();
+        if ($this->_setupContextCallback) {
+            $this->_setupContextCallback = false;
+            $this->setCallback(array($this, '_contextCallback'));
+        }
 
-        if ($callback) {
-            $test = call_user_func($callback, $value, $context);
+        if ($this->_callback) {
+            $test = call_user_func($this->_callback, $value, $context);
             $negate = $this->getNegate();
 
             if (($test && !$negate) || (!$test && $negate)) {
@@ -99,5 +168,26 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
 
         // if no callback is given act as a standard NotEmpty validator
         return parent::isValid($value, $context);
+    }
+
+    /**
+     * Internal function used as callback when context key is set.
+     *
+     * It returns TRUE only if key equal to _contextKey property is present
+     * in context and, if _token value has been given, additionaly checks if
+     * these values are equal.
+     *
+     * @param  mixed $value
+     * @param  array $context
+     * @return bool
+     */
+    public function _contextCallback($value, $context)
+    {
+        return isset($context[$this->_contextKey]) && (
+            // checks only existence
+            $this->_token === null ||
+            // unless a value to match agains was provided
+            $this->_token == $context[$this->_contextKey]
+        );
     }
 }

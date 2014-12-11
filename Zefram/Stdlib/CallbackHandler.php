@@ -9,6 +9,12 @@
  * @uses    Zend_Stdlib_CallbackHandler
  * @version 2013-12-10
  * @author  xemlock
+ *
+ * ChangeLog:
+ *
+ * 2014-12-11  Xemlock
+ *
+ * * [new] added invoke() method
  */
 class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
 {
@@ -109,5 +115,22 @@ class Zefram_Stdlib_CallbackHandler extends Zend_Stdlib_CallbackHandler
             array_unshift($args, $this->_args[$i]);
         }
         return parent::call($args);
+    }
+
+    /**
+     * Invoke registered callback with explicitly listed arguments.
+     *
+     * @param  mixed $param OPTIONAL
+     * @param  mixed $param,... OPTIONAL
+     * @return mixed
+     */
+    public function invoke($param = null)
+    {
+        // arguments not provided won't be included, from PHP doc:
+        // func_get_args() returns a copy of the passed arguments only, and
+        // does not account for default (non-passed) arguments.
+        // http://php.net/manual/en/function.func-get-args.php
+        $args = func_get_args();
+        return $this->call($args);
     }
 }
