@@ -1,24 +1,44 @@
 <?php
 
 /**
+ * Validator chain.
+ *
  * Extension to Zend_Validate allowing validators to be passed the
  * same way as they are to {@see Zend_Form_Element::addValidator()}.
+ *
+ * Validator can be used in Zend_Form_Element in conjunction with
+ * allowEmpty=FALSE, required=FALSE and NotEmptyIf validator.
  *
  * @uses      Zend_Validate
  * @uses      Zend_Loader
  * @author    xemlock
- * @version   2013-10-18
+ * @version   2014-12-13 / 2013-10-18
+ *
+ * 2014-12-13: added allowEmpty feature
  */
 class Zefram_Validate extends Zend_Validate
 {
-    protected $_pluginLoader;
+    /**
+     * @var bool
+     */
+    protected $_allowEmpty = false;
 
+    /**
+     * @var bool
+     */
     protected $_breakChainOnFailure = false;
+
+    /**
+     * @var Zend_Loader
+     */
+    protected $_pluginLoader;
 
     protected $_translator;
 
     /**
-     * @param array|Zend_Config $options
+     * Constructor
+     *
+     * @param array|object $options
      */
     public function __construct($options = null)
     {
@@ -56,11 +76,58 @@ class Zefram_Validate extends Zend_Validate
                 }
             }
 
-            // treat any remaining options as validators
-            if ($options) {
+            if (isset($options['validators'])) {
+                $this->addValidators($options['validators']);
+
+            } elseif ($options) {
+                // treat any remaining options as validators, if no explicit
+                // 'validators' option is provided
                 $this->addValidators($options);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Additionally, if 'allow empty' flag is set, an empty value automatically
+     * passes validation.
+     *
+     * @param  mixed $value
+     * @return bool
+     */
+    public function isValid($value)
+    {
+        if ($this->_allowEmpty && ($value === '' || $value === null)) {
+            $this->_messages = array();
+            $this->_errors   = array();
+            return true;
+        }
+        return parent::isValid($value);
+    }
+
+    /**
+     * Set 'allow empty' flag
+     *
+     * When the 'allow empty' flag is enabled empty values will automatically
+     * pass validation.
+     *
+     * @param  bool $flag
+     */
+    public function setAllowEmpty($flag)
+    {
+        $this->_allowEmpty = (bool) $flag;
+        return $this;
+    }
+
+    /**
+     * Get 'allow empty' flag
+     *
+     * @return bool
+     */
+    public function getAllowEmpty()
+    {
+        return $this->_allowEmpty;
     }
 
     /**
