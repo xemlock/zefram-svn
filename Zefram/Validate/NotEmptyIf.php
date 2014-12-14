@@ -6,7 +6,7 @@
  * If used on a Zend_Form_Element instance an allowEmpty flag must be set to
  * FALSE and required flag must be also set to FALSE (default).
  *
- * @version 2014-12-11 / 2014-02-25
+ * @version 2014-12-13 / 2014-02-25
  * @author xemlock
  */
 class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
@@ -183,11 +183,10 @@ class Zefram_Validate_NotEmptyIf extends Zend_Validate_NotEmpty
      */
     public function _contextCallback($value, $context)
     {
-        return isset($context[$this->_contextKey]) && (
-            // checks only existence
-            $this->_token === null ||
-            // unless a value to match agains was provided
-            $this->_token == $context[$this->_contextKey]
+        $token = isset($context[$this->_contextKey]) ? $context[$this->_contextKey] : null;
+        return $token !== null && (
+            // checks emptiness unless a value to match agains was provided
+            ($this->_token === null && $token) || ($this->_token == $token)
         );
     }
 }
