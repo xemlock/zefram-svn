@@ -170,6 +170,7 @@ class Zefram_Validate extends Zend_Validate
             $messages = null;
         }
 
+        // TODO lazy validator loading
         if (!$validator instanceof Zend_Validate_Interface) {
             $className = $this->getPluginLoader()->load($validator);
 
@@ -247,6 +248,28 @@ class Zefram_Validate extends Zend_Validate
     {
         $this->clearValidators();
         return $this->addValidators($validators);
+    }
+
+    /**
+     * Remove a single validator by name
+     *
+     * @return Zefram_Validate
+     */
+    public function removeValidator($name)
+    {
+        $len = strlen($name);
+        foreach ($this->_validators as $key => $validator) {
+            $validatorClass = get_class($validator['instance']);
+            if ($len > strlen($validatorClass)) {
+                continue;
+            }
+            // substr_compare($haystack, $needle, $offset, $length, $case_insensitive)
+            if (0 === substr_compare($validatorClass, $name, -$len, $len, true)) {
+                unset($this->_validators[$key]);
+                break;
+            }
+        }
+        return $this;
     }
 
     /**

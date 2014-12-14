@@ -35,6 +35,14 @@ class Zefram_Form extends Zend_Form
         parent::__construct($options);
     }
 
+    public function addSubForm(Zend_Form $form, $name = null, $order = null)
+    {
+        if ($name === null) {
+            $name = $form->getName();
+        }
+        return parent::addSubForm($form, $name, $order);
+    }
+
     /**
      * Adds the specified class(es) to the class attribute of this form
      * instance.
