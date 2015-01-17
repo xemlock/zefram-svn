@@ -134,7 +134,8 @@ class Zefram_Filter_StringTruncate implements Zend_Filter_Interface
      * @param  string $encoding
      * @return string
      */
-    public static function truncate($string, $length = 80, $postfix = '...', $breakWords = false, $encoding = 'utf-8') {
+    public static function filterStatic($string, $length = 80, $postfix = '...', $breakWords = false, $encoding = 'utf-8')
+    {
         $length = (int) $length;
 
         if ($length <= 0) {
@@ -169,5 +170,13 @@ class Zefram_Filter_StringTruncate implements Zend_Filter_Interface
         }
 
         return $string;
+    }
+
+    /**
+     * @deprecated
+     */
+    public static function truncate($string, $length = 80, $postfix = '...', $breakWords = false, $encoding = 'utf-8')
+    {
+        return self::filterStatic($string, $length, $postfix, $breakWords, $encoding);
     }
 }
